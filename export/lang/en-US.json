@@ -1,0 +1,174 @@
+{
+  "languageTag": "en-US",
+  "fileDescription": "Strings for mikal_cannon_3d_physics.",
+  "text": {
+    "behaviors": {
+      "mikal_cannon_3d_physics": {
+        "name": "Cannon 3D Physics",
+        "description": "Description",
+        "help-url": "https://www.construct.net",
+        "aceCategories": {
+          "general": "General",
+          "world": "World",
+          "body": "Body"
+        },
+        "properties": {
+          "enable": {
+            "name": "Enable",
+            "desc": "Enable physics"
+          },
+          "immovable": {
+            "name": "Immovable",
+            "desc": "Immovable body."
+          },
+          "shape": {
+            "name": "Shape",
+            "desc": "Immovable body.",
+            "items": {
+              "auto": "Auto",
+              "box": "Box"
+            }
+          }
+        },
+        "actions": {
+          "SetWorldGravity": {
+            "list-name": "Set world gravity",
+            "display-text": "{my}: Set world gravity [i]{0},{1},{2}[/i]",
+            "description": "Set world gravity in x,y,z axis.",
+            "params": {
+              "gravityX": {
+                "name": "Gravity X",
+                "desc": "Gravity in X axis."
+              },
+              "gravityY": {
+                "name": "Gravity Y",
+                "desc": "Gravity in Y axis."
+              },
+              "gravityZ": {
+                "name": "Gravity Z",
+                "desc": "Gravity in Z axis."
+              }
+            }
+          },
+          "Raycast": {
+            "list-name": "Raycast from body",
+            "display-text": "{my}: Raycast , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i]",
+            "description": "Raycast from x0,y0,z0 to x1,y1,z1.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag for request."
+              },
+              "fromX": {
+                "name": "From x",
+                "desc": "From x."
+              },
+              "fromY": {
+                "name": "From y",
+                "desc": "From y."
+              },
+              "fromZ": {
+                "name": "From z",
+                "desc": "From z."
+              },
+              "toX": {
+                "name": "To x",
+                "desc": "To x."
+              },
+              "toY": {
+                "name": "To y",
+                "desc": "To y."
+              },
+              "toZ": {
+                "name": "To z",
+                "desc": "To z."
+              }
+            }
+          },
+          "ApplyImpulse": {
+            "list-name": "Apply impulse",
+            "display-text": "Apply {my} impulse {0}, {1} , {2}",
+            "description": "Apply impulse to body.",
+            "params": {
+              "impulseX": {
+                "name": "Impulse x",
+                "desc": "Impuese vector x."
+              },
+              "impulseY": {
+                "name": "Impulse y",
+                "desc": "Impuese vector y."
+              },
+              "impulseZ": {
+                "name": "Impulse z",
+                "desc": "Impuese vector z."
+              }
+            }
+          },
+          "SetImmovable": {
+            "list-name": "Set immovable",
+            "display-text": "Set {my} immovable {0}",
+            "description": "Set body immovable.",
+            "params": {
+              "immovable": {
+                "name": "Immovable",
+                "desc": "Immovable body."
+              }
+            }
+          },
+          "EnablePhysics": {
+            "list-name": "Enable physics",
+            "display-text": "Enable {my} physics {0}",
+            "description": "Enable body physics.",
+            "params": {
+              "enable": {
+                "name": "Enable",
+                "desc": "Enable body."
+              }
+            }
+          }
+        },
+        "conditions": {
+          "IsEnabled": {
+            "list-name": "Is enabled",
+            "display-text": "{my}: is enabled",
+            "description": "is physics enabled.",
+            "params": {}
+          },
+          "IsImmovable": {
+            "list-name": "Is immovable",
+            "display-text": "{my}: is immovable",
+            "description": "is immovable.",
+            "params": {}
+          }
+        },
+        "expressions": {
+          "RaycastResultAsJSON": {
+            "translated-name": "RaycastResultAsJSON",
+            "description": "Raycast result as JSON string.",
+            "params": {}
+          },
+          "Enable": {
+            "translated-name": "Enable",
+            "description": "Physics enabled.",
+            "params": {}
+          },
+          "WorldGravityX": {
+            "translated-name": "WorldGravityX",
+            "description": "World gravity x vector.",
+            "params": {}
+          },
+          "WorldGravityY": {
+            "translated-name": "WorldGravityY",
+            "description": "World gravity y vector.",
+            "params": {}
+          },
+          "WorldGravityZ": {
+            "translated-name": "WorldGravityZ",
+            "description": "World gravity z vector.",
+            "params": {}
+          }
+        }
+      }
+    }
+  }
+}

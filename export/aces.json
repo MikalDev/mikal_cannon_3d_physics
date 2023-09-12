@@ -1,0 +1,220 @@
+{
+  "general": {
+    "conditions": [],
+    "actions": [
+      {
+        "id": "Raycast",
+        "scriptName": "Raycast",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "value": ""
+          },
+          {
+            "id": "fromX",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "fromY",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "fromZ",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "toX",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "toY",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "toZ",
+            "type": "number",
+            "value": "0"
+          }
+        ]
+      }
+    ],
+    "expressions": [
+      {
+        "id": "RaycastResultAsJSON",
+        "scriptName": "RaycastResultAsJSON",
+        "expressionName": "RaycastResultAsJSON",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "string",
+        "isVariadicParameters": false,
+        "params": []
+      }
+    ]
+  },
+  "world": {
+    "conditions": [],
+    "actions": [
+      {
+        "id": "SetWorldGravity",
+        "scriptName": "SetWorldGravity",
+        "highlight": true,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "gravityX",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "gravityY",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "gravityZ",
+            "type": "number",
+            "value": "0"
+          }
+        ]
+      }
+    ],
+    "expressions": [
+      {
+        "id": "WorldGravityX",
+        "scriptName": "WorldGravityX",
+        "expressionName": "WorldGravityX",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "WorldGravityY",
+        "scriptName": "WorldGravityY",
+        "expressionName": "WorldGravityY",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "WorldGravityZ",
+        "scriptName": "WorldGravityZ",
+        "expressionName": "WorldGravityZ",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      }
+    ]
+  },
+  "body": {
+    "conditions": [
+      {
+        "id": "IsEnabled",
+        "scriptName": "IsEnabled",
+        "highlight": false,
+        "deprecated": false,
+        "isTrigger": false,
+        "isFakeTrigger": false,
+        "isStatic": false,
+        "isLooping": false,
+        "isInvertible": true,
+        "isCompatibleWithTriggers": true,
+        "params": []
+      },
+      {
+        "id": "IsImmovable",
+        "scriptName": "IsImmovable",
+        "highlight": false,
+        "deprecated": false,
+        "isTrigger": false,
+        "isFakeTrigger": false,
+        "isStatic": false,
+        "isLooping": false,
+        "isInvertible": true,
+        "isCompatibleWithTriggers": true,
+        "params": []
+      }
+    ],
+    "actions": [
+      {
+        "id": "ApplyImpulse",
+        "scriptName": "ApplyImpulse",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "impulseX",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "impulseY",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "impulseZ",
+            "type": "number",
+            "value": "0"
+          }
+        ]
+      },
+      {
+        "id": "SetImmovable",
+        "scriptName": "SetImmovable",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "immovable",
+            "type": "boolean",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "id": "EnablePhysics",
+        "scriptName": "EnablePhysics",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "enable",
+            "type": "boolean",
+            "value": "false"
+          }
+        ]
+      }
+    ],
+    "expressions": [
+      {
+        "id": "Enable",
+        "scriptName": "Enable",
+        "expressionName": "Enable",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      }
+    ]
+  }
+}
