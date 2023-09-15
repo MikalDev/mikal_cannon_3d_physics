@@ -80,7 +80,35 @@ B_C.Type = class extends C3.SDKBehaviorTypeBase {
     super.Release();
   }
 
-  OnCreate() {}
+  PostCreate() {
+		if (!this.body) {
+			this.body = this.DefineBody()
+		}
+		console.log('OnCreate', this.body)
+	}
+
+  DefineBody() {
+    const cannon = globalThis.Mikal_Cannon
+    const shapeInst = this._inst.GetSdkInstance()
+    const wi = this._inst.GetWorldInfo();
+    const world = globalThis.Mikal_Cannon_world
+    const zHeight = shapeInst._zHeight
+    const shape = new cannon.Box(new cannon.Vec3(wi.GetWidth() / 2, wi.GetHeight() / 2, zHeight/2))
+    const mass = this.immovable ? 0 : this.defaultMass
+    const body = new cannon.Body({
+      mass: mass,
+      position: new cannon.Vec3(wi.GetX(), wi.GetY(), wi.GetZElevation()+zHeight/2),
+      shape,
+      angularFactor: new cannon.Vec3(0, 0, 1),
+    })
+    // body.type = this.immovable ? cannon.Body.STATIC : cannon.Body.DYNAMIC
+    const damping = 0.1
+    body.linearDamping = damping
+    body.angularDamping = damping
+    world.addBody(body)
+    return body
+}
+
 
 };
 
