@@ -15,6 +15,11 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
     Release() {
       super.Release();
+	  const world = globalThis.Mikal_Cannon_world
+	  if (this.body) {
+		  world.removeBody(this.body)
+	  }
+
     }
 
     SaveToJson() {
@@ -33,6 +38,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		if (!body) return
 		if (!this.enable) return
 
+		const shapeInst = this._inst.GetSdkInstance()
+		const zHeight = shapeInst._zHeight
+
 		const wi = this._inst.GetWorldInfo();
 
 		if (this.lastX !== wi.GetX()) {
@@ -44,7 +52,13 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		}
 
 		if (this.lastZ !== wi.GetZElevation()) {
-			body.position.z = wi.GetZElevation()+body.shapes[0].halfExtents.z
+			// body.position.z = wi.GetZElevation()+body.shapes[0].halfExtents.z
+			body.position.z = wi.GetZElevation()+zHeight/2
+		}
+
+		if (this.lastZAngle !== wi.GetAngle()) {
+			const angle = wi.GetAngle()
+			body.quaternion.setFromEuler(0, 0, angle, "ZXY")
 		}
 		
 		const CannonPhysics = this._behaviorType._behavior
@@ -52,47 +66,60 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
 		wi.SetX(body.position.x)
 		wi.SetY(body.position.y)
-		wi.SetZElevation(body.position.z-body.shapes[0].halfExtents.z)
+		wi.SetZElevation(body.position.z-zHeight/2)
+		// angle
+		const quat = this.body.quaternion
+		const angles = new globalThis.Mikal_Cannon.Vec3()
+		quat.toEuler(angles, "ZYX")
+		const angle = angles.z
+		wi.SetAngle(angle)
 
 		this.lastX = wi.GetX()
 		this.lastY = wi.GetY()
 		this.lastZ = wi.GetZElevation()
+		this.lastZAngle = wi.GetAngle()
 
-		// angle
-		const quat = this.body.quaternion
-		const angles = new globalThis.Mikal_Cannon.Vec3()
-		quat.toEuler(angles)
-		const angle = angles.z
-		wi.SetAngle(angle)
 		wi.SetBboxChanged();
 	}
 
 	PostCreate() {
 		if (!this.body) {
-			this.body = this.DefineBody()
+			const shape = this._inst.GetSdkInstance()._shape
+			this.body = this.DefineBody(shape)
 		}
 	}
 
-  DefineBody() {
+  DefineBody(shapeType) {
     const cannon = globalThis.Mikal_Cannon
     const shapeInst = this._inst.GetSdkInstance()
     const wi = this._inst.GetWorldInfo();
     const world = globalThis.Mikal_Cannon_world
     const zHeight = shapeInst._zHeight
-    const shape = new cannon.Box(new cannon.Vec3(wi.GetWidth() / 2, wi.GetHeight() / 2, zHeight/2))
+	let shape = null
+	if (shapeType === 0) {
+    	shape = new cannon.Box(new cannon.Vec3(wi.GetWidth() / 2, wi.GetHeight() / 2, zHeight/2))
+	} else {
+		shape = this._createWedgeShape(wi.GetHeight(), wi.GetWidth(), zHeight)
+	}
     const mass = this.immovable ? 0 : this.defaultMass
 	const x = wi.GetX()
 	const y = wi.GetY()
 	const z = wi.GetZElevation()+zHeight/2
+	const angle = wi.GetAngle()
+
 	this.lastX = x
 	this.lastY = y
 	this.lastZ = z
+	this.lastZAngle = angle
     const body = new cannon.Body({
       mass: mass,
       position: new cannon.Vec3(x,y,z),
       shape,
       angularFactor: new cannon.Vec3(0, 0, 1),
     })
+	body.quaternion.setFromEuler(0, 0, angle, "ZXY")
+	let quatAngles = new cannon.Vec3()
+	body.quaternion.toEuler(quatAngles, "ZYX")
     // body.type = this.immovable ? cannon.Body.STATIC : cannon.Body.DYNAMIC
     const damping = 0.1
     body.linearDamping = damping
@@ -101,6 +128,37 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
     world.addBody(body)
     return body
 }
+
+	_createWedgeShape(height, width, depth) {
+		const cannon = globalThis.Mikal_Cannon
+		const vertices = [
+			new cannon.Vec3(0.5,0.5,0.5),
+			new cannon.Vec3(0.5,-0.5,0.5),
+			new cannon.Vec3(0.5,-0.5,-0.5),
+			new cannon.Vec3(0.5,0.5,-0.5),
+			new cannon.Vec3(-0.5,-0.5,-0.5),
+			new cannon.Vec3(-0.5,0.5,-0.5),
+		]
+		
+		const faces = [
+			[1,4,2],
+			[0,5,4,1],
+			[0,3,5],
+			[5,3,2,4],
+			[1,2,3],	
+		]
+				
+		for (const vertex of vertices) {
+			vertex.x = vertex.x * width
+			vertex.y = vertex.y * height
+			vertex.z = vertex.z * depth		
+		}
+					
+		const wedgeShape = new cannon.ConvexPolyhedron({faces:faces, vertices:vertices})
+
+		return wedgeShape
+		
+	}
 
     Trigger(method) {
       super.Trigger(method);
@@ -123,6 +181,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		const world = globalThis.Mikal_Cannon_world
 		const from = new cannon.Vec3(fromX, fromY, fromZ)
 		const to = new cannon.Vec3(x, y, z)
+		let dir = to.vsub(from)
+		dir.normalize()
 		const ray = new cannon.Ray(from,to)
 		const options = {mode: cannon.Ray.CLOSEST, skipBackfaces: true}
 		const hit = ray.intersectWorld(world, options)

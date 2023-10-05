@@ -1789,6 +1789,30 @@ class Quaternion {
         }
 
         break;
+      
+      case "ZYX": {
+        const sinr_cosp = 2 * (w * x + y * z);
+        const cosr_cosp = 1 - 2 * (x * x + y * y);
+        const roll = Math.atan2(sinr_cosp, cosr_cosp);
+    
+        const sinp = 2 * (w * y - z * x);
+        let pitch;
+        if (Math.abs(sinp) >= 1) {
+            pitch = Math.sign(sinp) * Math.PI / 2;
+        } else {
+            pitch = Math.asin(sinp);
+        }
+    
+        const siny_cosp = 2 * (w * z + x * y);
+        const cosy_cosp = 1 - 2 * (y * y + z * z);
+        const yaw = Math.atan2(siny_cosp, cosy_cosp);
+
+        attitude = yaw
+        heading = roll
+        bank = pitch
+        break
+      }
+
 
       default:
         throw new Error(`Euler order ${order} not supported yet.`);
@@ -4489,9 +4513,9 @@ class NaiveBroadphase extends Broadphase {
       } // Ugly hack until Body gets aabb
 
 
-      if (b.aabb.overlaps(aabb)) {
+      // if (b.aabb.overlaps(aabb)) {
         result.push(b);
-      }
+      // }
     }
 
     return result;
@@ -5601,9 +5625,9 @@ class SAPBroadphase extends Broadphase {
         b.updateAABB();
       }
 
-      if (b.aabb.overlaps(aabb)) {
+      //if (b.aabb.overlaps(aabb)) {
         result.push(b);
-      }
+      //}
     }
 
     return result;

@@ -3,7 +3,7 @@ module.exports = {
   addonType: "behavior",
   id: "mikal_cannon_3d_physics",
   name: "Cannon 3D Physics",
-  version: "1.0.0.0",
+  version: "1.2.0",
   category:
     // "attributes",
     "movements",
@@ -233,7 +233,7 @@ module.exports = {
           value: "0",
         },
       ],
-      listName: "Raycast from body",
+      listName: "Raycast from to",
       displayText: "{my}: Raycast , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i]",
       // The description of the action as it appears in the add action dialog
       description: "Raycast from x0,y0,z0 to x1,y1,z1.",
