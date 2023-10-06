@@ -115,6 +115,58 @@
               }
             }
           },
+          "SetDefaultLinearDamping": {
+            "list-name": "Set default linear damping",
+            "display-text": "Set {my} default linear damping to {0}",
+            "description": "Set default linear damping",
+            "params": {
+              "defaultLinearDamping": {
+                "name": "Default linear damping",
+                "desc": "Default linear damping for new bodies."
+              }
+            }
+          },
+          "SetLinearDamping": {
+            "list-name": "Set linear damping",
+            "display-text": "Set {my} linear damping to {0}",
+            "description": "Set linear damping",
+            "params": {
+              "linearDamping": {
+                "name": "Linear damping",
+                "desc": "Linear damping for body."
+              }
+            }
+          },
+          "SetAngularDamping": {
+            "list-name": "Set angular damping",
+            "display-text": "Set {my} angular damping to {0}",
+            "description": "Set angular damping",
+            "params": {
+              "angularDamping": {
+                "name": "Angular damping",
+                "desc": "Angular damping for body."
+              }
+            }
+          },
+          "SetVelocity": {
+            "list-name": "Set velocity",
+            "display-text": "Set {my} velocity {0}, {1} , {2}",
+            "description": "Set velocity to body.",
+            "params": {
+              "velocityX": {
+                "name": "Velocity x",
+                "desc": "Velocity vector x."
+              },
+              "velocityY": {
+                "name": "Velocity y",
+                "desc": "Velocity vector y."
+              },
+              "velocityZ": {
+                "name": "Velocity z",
+                "desc": "Velocity vector z."
+              }
+            }
+          },
           "EnablePhysics": {
             "list-name": "Enable physics",
             "display-text": "Enable {my} physics {0}",

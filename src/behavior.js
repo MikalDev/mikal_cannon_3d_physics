@@ -63,6 +63,7 @@ B_C.Type = class extends C3.SDKBehaviorTypeBase {
     const world = globalThis.Mikal_Cannon_world
     // Default gravity
     world.gravity.set(0, 0, -9.82); // m/s²
+    world.defaultLinearDamping = 0.1
     console.log('Mikal_Cannon_world', world)
   }
 

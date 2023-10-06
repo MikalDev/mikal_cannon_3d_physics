@@ -86,6 +86,20 @@
             "value": "0"
           }
         ]
+      },
+      {
+        "id": "SetDefaultLinearDamping",
+        "scriptName": "SetDefaultLinearDamping",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "defaultLinearDamping",
+            "type": "number",
+            "value": "0.1"
+          }
+        ]
       }
     ],
     "expressions": [
@@ -186,6 +200,58 @@
             "id": "immovable",
             "type": "boolean",
             "value": "false"
+          }
+        ]
+      },
+      {
+        "id": "SetLinearDamping",
+        "scriptName": "SetLinearDamping",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "linearDamping",
+            "type": "number",
+            "value": "0.1"
+          }
+        ]
+      },
+      {
+        "id": "SetAngularDamping",
+        "scriptName": "SetAngularDamping",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "angularDamping",
+            "type": "number",
+            "value": "0.1"
+          }
+        ]
+      },
+      {
+        "id": "SetVelocity",
+        "scriptName": "SetVelocity",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "velocityX",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "velocityY",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "velocityZ",
+            "type": "number",
+            "value": "0"
           }
         ]
       },

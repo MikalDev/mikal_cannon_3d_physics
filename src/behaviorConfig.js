@@ -3,7 +3,7 @@ module.exports = {
   addonType: "behavior",
   id: "mikal_cannon_3d_physics",
   name: "Cannon 3D Physics",
-  version: "1.2.0",
+  version: "1.4.0",
   category:
     // "attributes",
     "movements",
@@ -299,6 +299,118 @@ module.exports = {
       // The description of the action as it appears in the add action dialog
       description: "Set body immovable.",
     },
+    SetDefaultLinearDamping: {
+      // The category of the action as it appears in the add action dialog
+      category: "world",
+      forward: "_SetDefaultLinearDamping",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      isAsync: false,
+      // list of parameters
+      params: [
+        {
+          id: "defaultLinearDamping",
+          name: "Default linear damping",
+          desc: "Default linear damping for new bodies.",
+          type: "number",
+          value: "0.1",
+        },
+
+      ],
+      listName: "Set default linear damping",
+      displayText: "Set {my} default linear damping to {0}",
+      // The description of the action as it appears in the add action dialog
+      description: "Set default linear damping",
+    },
+    SetLinearDamping: {
+      // The category of the action as it appears in the add action dialog
+      category: "body",
+      forward: "_SetLinearDamping",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      isAsync: false,
+      // list of parameters
+      params: [
+        {
+          id: "linearDamping",
+          name: "Linear damping",
+          desc: "Linear damping for body.",
+          type: "number",
+          value: "0.1",
+        },
+
+      ],
+      listName: "Set linear damping",
+      displayText: "Set {my} linear damping to {0}",
+      // The description of the action as it appears in the add action dialog
+      description: "Set linear damping",
+    },
+    SetAngularDamping: {
+      // The category of the action as it appears in the add action dialog
+      category: "body",
+      forward: "_SetAngularDamping",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      isAsync: false,
+      // list of parameters
+      params: [
+        {
+          id: "angularDamping",
+          name: "Angular damping",
+          desc: "Angular damping for body.",
+          type: "number",
+          value: "0.1",
+        },
+
+      ],
+      listName: "Set angular damping",
+      displayText: "Set {my} angular damping to {0}",
+      // The description of the action as it appears in the add action dialog
+      description: "Set angular damping",
+    },
+
+    // Create object to set velocity of a body
+    SetVelocity: {
+      // The category of the action as it appears in the add action dialog
+      category: "body",
+      forward: "_SetVelocity",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      isAsync: false,
+      // list of parameters
+      params: [
+        {
+          id: "velocityX",
+          name: "Velocity x",
+          desc: "Velocity vector x.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "velocityY",
+          name: "Velocity y",
+          desc: "Velocity vector y.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "velocityZ",
+          name: "Velocity z",
+          desc: "Velocity vector z.",
+          type: "number",
+          value: "0",
+        }
+      ],
+      listName: "Set velocity",
+      displayText: "Set {my} velocity {0}, {1} , {2}",
+      // The description of the action as it appears in the add action dialog
+      description: "Set velocity to body.",
+    },
+
     EnablePhysics: {
       // The category of the action as it appears in the add action dialog
       category: "body",

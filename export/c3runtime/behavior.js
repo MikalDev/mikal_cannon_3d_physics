@@ -23,6 +23,26 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
             },
+"SetDefaultLinearDamping": {
+            "forward": (inst) => inst._SetDefaultLinearDamping,
+            
+            "autoScriptInterface": true,
+            },
+"SetLinearDamping": {
+            "forward": (inst) => inst._SetLinearDamping,
+            
+            "autoScriptInterface": true,
+            },
+"SetAngularDamping": {
+            "forward": (inst) => inst._SetAngularDamping,
+            
+            "autoScriptInterface": true,
+            },
+"SetVelocity": {
+            "forward": (inst) => inst._SetVelocity,
+            
+            "autoScriptInterface": true,
+            },
 "EnablePhysics": {
             "forward": (inst) => inst._EnablePhysics,
             
@@ -131,6 +151,7 @@ B_C.Type = class extends C3.SDKBehaviorTypeBase {
     const world = globalThis.Mikal_Cannon_world
     // Default gravity
     world.gravity.set(0, 0, -9.82); // m/s²
+    world.defaultLinearDamping = 0.1
     console.log('Mikal_Cannon_world', world)
   }
 
@@ -366,9 +387,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 	let quatAngles = new cannon.Vec3()
 	body.quaternion.toEuler(quatAngles, "ZYX")
     // body.type = this.immovable ? cannon.Body.STATIC : cannon.Body.DYNAMIC
-    const damping = 0.1
-    body.linearDamping = damping
-    body.angularDamping = damping
+    body.linearDamping = world.defaultLinearDamping
+    body.angularDamping = world.defaultLinearDamping
 	body.uid = this._inst.GetUID()
     world.addBody(body)
     return body
@@ -390,7 +410,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			[0,5,4,1],
 			[0,3,5],
 			[5,3,2,4],
-			[1,2,3],	
+			[0,1,2,3],	
 		]
 				
 		for (const vertex of vertices) {
@@ -465,6 +485,23 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		this.enable = enable
 	}
 
+	_SetDefaultLinearDamping(damping) {
+		const world = globalThis.Mikal_Cannon_world
+		if (!world) return
+		world.defaultLinearDamping = damping
+	}
+
+	_SetLinearDamping(damping) {
+		if (!this.body) return
+		this.body.linearDamping = damping
+	}
+
+	_SetAngularDamping(damping) {
+		if (!this.body) return
+		this.body.angularDamping = damping
+	}
+
+
 	_Enable()
 	{
 		return this.enable ? 1 : 0
@@ -493,6 +530,11 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 	_IsImmovable()
 	{
 		return this.immovable
+	}
+
+	_SetVelocity(x,y,z) {
+		if (!this.body) return
+		this.body.velocity.set(x,y,z)
 	}
 
     GetScriptInterfaceClass() {
