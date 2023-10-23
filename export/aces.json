@@ -162,6 +162,19 @@
         "isInvertible": true,
         "isCompatibleWithTriggers": true,
         "params": []
+      },
+      {
+        "id": "OnCollision",
+        "scriptName": "OnCollision",
+        "highlight": true,
+        "deprecated": false,
+        "isTrigger": true,
+        "isFakeTrigger": false,
+        "isStatic": false,
+        "isLooping": false,
+        "isInvertible": false,
+        "isCompatibleWithTriggers": false,
+        "params": []
       }
     ],
     "actions": [
@@ -184,6 +197,21 @@
           },
           {
             "id": "impulseZ",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointX",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointY",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointZ",
             "type": "number",
             "value": "0"
           }
@@ -268,6 +296,20 @@
             "value": "false"
           }
         ]
+      },
+      {
+        "id": "SetMass",
+        "scriptName": "SetMass",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "mass",
+            "type": "number",
+            "value": "0"
+          }
+        ]
       }
     ],
     "expressions": [
@@ -278,6 +320,16 @@
         "highlight": false,
         "deprecated": false,
         "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CollisionData",
+        "scriptName": "CollisionData",
+        "expressionName": "CollisionData",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "string",
         "isVariadicParameters": false,
         "params": []
       }

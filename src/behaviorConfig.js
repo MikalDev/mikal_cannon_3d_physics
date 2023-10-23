@@ -3,7 +3,7 @@ module.exports = {
   addonType: "behavior",
   id: "mikal_cannon_3d_physics",
   name: "Cannon 3D Physics",
-  version: "1.4.0",
+  version: "1.5.0",
   category:
     // "attributes",
     "movements",
@@ -434,7 +434,90 @@ module.exports = {
       displayText: "Enable {my} physics {0}",
       // The description of the action as it appears in the add action dialog
       description: "Enable body physics.",
-    },    
+    },
+    // Create a new action to apply a vec3 umpulse to a body relative point
+    ApplyImpulse: {
+      category : "body",
+      forward : "_ApplyImpulse",
+      autoScriptInterface : true,
+      highlight : false,
+      deprecated : false,
+      isAsync : false,
+      // list of parameters
+      params : [
+        {
+          id: "impulseX",
+          name: "Impulse x",
+          desc: "Impuese vector x.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "impulseY",
+          name: "Impulse y",
+          desc: "Impuese vector y.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "impulseZ",
+          name: "Impulse z",
+          desc: "Impuese vector z.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "pointX",
+          name: "Relative x",
+          desc: "Relative point x.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "pointY",
+          name: "Relative y",
+          desc: "Relative point y.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "pointZ",
+          name: "Relative z",
+          desc: "Relative point z.",
+          type: "number",
+          value: "0",
+        },
+      ],
+      listName: "Apply impulse",
+      displayText: "Apply {my} impulse {0}, {1} , {2} to relative {3}, {4}, {5}",
+      // The description of the action as it appears in the add action dialog
+      description: "Apply impulse to body at relative point.",
+    },
+
+    // Set mass to the body action
+    SetMass: {
+      category : "body",
+      forward : "_SetMass",
+      autoScriptInterface : true,
+      highlight : false,
+      deprecated : false,
+      isAsync : false,
+      // list of parameters
+      params : [
+        {
+          id: "mass",
+          name: "Mass",
+          desc: "Mass.",
+          type: "number",
+          value: "0",
+        },
+      ],
+      listName: "Set mass",
+      displayText: "Set {my} mass {0}",
+      // The description of the action as it appears in the add action dialog
+      description: "Set mass of body.",
+    },
+
     /*
     SampleAction: {
       // The category of the action as it appears in the add action dialog
@@ -569,6 +652,25 @@ module.exports = {
       listName: "Is immovable",
       displayText: "{my}: is immovable",
       description: "is immovable.",
+    },
+    OnCollision: {
+      // The category of the action as it appears in the add condition dialog
+      category: "body",
+      forward: "_OnCollision",
+      autoScriptInterface: true,
+      highlight: true,
+      deprecated: false,
+      isTrigger: true,
+      isFakeTrigger: false,
+      isStatic: false,
+      isLooping: false,
+      isInvertible: false,
+      isCompatibleWithTriggers: false,
+      params: [
+      ],
+      listName: "On collision",
+      displayText: "{my}: On collision",
+      description: "On body physics collision.",
     },
     /*
     SampleCondition: {
@@ -737,6 +839,21 @@ module.exports = {
       params: [
       ],
       description: "World gravity z vector.",
+    },
+    // CollisionData
+    CollisionData: {
+      // The category of the action as it appears in the expression picker
+      category: "body",
+      forward: "_CollisionData",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      returnType: "string",
+      // Set to true if the expression is variadic. False by default if not specified.
+      isVariadicParameters: false,
+      params: [
+      ],
+      description: "Collision data as JSON string.",
     },          
     /*
     SampleExpression: {

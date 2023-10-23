@@ -87,8 +87,8 @@
           },
           "ApplyImpulse": {
             "list-name": "Apply impulse",
-            "display-text": "Apply {my} impulse {0}, {1} , {2}",
-            "description": "Apply impulse to body.",
+            "display-text": "Apply {my} impulse {0}, {1} , {2} to relative {3}, {4}, {5}",
+            "description": "Apply impulse to body at relative point.",
             "params": {
               "impulseX": {
                 "name": "Impulse x",
@@ -101,6 +101,18 @@
               "impulseZ": {
                 "name": "Impulse z",
                 "desc": "Impuese vector z."
+              },
+              "pointX": {
+                "name": "Relative x",
+                "desc": "Relative point x."
+              },
+              "pointY": {
+                "name": "Relative y",
+                "desc": "Relative point y."
+              },
+              "pointZ": {
+                "name": "Relative z",
+                "desc": "Relative point z."
               }
             }
           },
@@ -177,6 +189,17 @@
                 "desc": "Enable body."
               }
             }
+          },
+          "SetMass": {
+            "list-name": "Set mass",
+            "display-text": "Set {my} mass {0}",
+            "description": "Set mass of body.",
+            "params": {
+              "mass": {
+                "name": "Mass",
+                "desc": "Mass."
+              }
+            }
           }
         },
         "conditions": {
@@ -190,6 +213,12 @@
             "list-name": "Is immovable",
             "display-text": "{my}: is immovable",
             "description": "is immovable.",
+            "params": {}
+          },
+          "OnCollision": {
+            "list-name": "On collision",
+            "display-text": "{my}: On collision",
+            "description": "On body physics collision.",
             "params": {}
           }
         },
@@ -217,6 +246,11 @@
           "WorldGravityZ": {
             "translated-name": "WorldGravityZ",
             "description": "World gravity z vector.",
+            "params": {}
+          },
+          "CollisionData": {
+            "translated-name": "CollisionData",
+            "description": "Collision data as JSON string.",
             "params": {}
           }
         }
