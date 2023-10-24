@@ -85,37 +85,6 @@
               }
             }
           },
-          "ApplyImpulse": {
-            "list-name": "Apply impulse",
-            "display-text": "Apply {my} impulse {0}, {1} , {2} to relative {3}, {4}, {5}",
-            "description": "Apply impulse to body at relative point.",
-            "params": {
-              "impulseX": {
-                "name": "Impulse x",
-                "desc": "Impuese vector x."
-              },
-              "impulseY": {
-                "name": "Impulse y",
-                "desc": "Impuese vector y."
-              },
-              "impulseZ": {
-                "name": "Impulse z",
-                "desc": "Impuese vector z."
-              },
-              "pointX": {
-                "name": "Relative x",
-                "desc": "Relative point x."
-              },
-              "pointY": {
-                "name": "Relative y",
-                "desc": "Relative point y."
-              },
-              "pointZ": {
-                "name": "Relative z",
-                "desc": "Relative point z."
-              }
-            }
-          },
           "SetImmovable": {
             "list-name": "Set immovable",
             "display-text": "Set {my} immovable {0}",
@@ -187,6 +156,37 @@
               "enable": {
                 "name": "Enable",
                 "desc": "Enable body."
+              }
+            }
+          },
+          "ApplyImpulse": {
+            "list-name": "Apply impulse",
+            "display-text": "Apply {my} impulse {0}, {1} , {2} to relative {3}, {4}, {5}",
+            "description": "Apply impulse to body at relative point.",
+            "params": {
+              "impulseX": {
+                "name": "Impulse x",
+                "desc": "Impuese vector x."
+              },
+              "impulseY": {
+                "name": "Impulse y",
+                "desc": "Impuese vector y."
+              },
+              "impulseZ": {
+                "name": "Impulse z",
+                "desc": "Impuese vector z."
+              },
+              "pointX": {
+                "name": "Relative x",
+                "desc": "Relative point x."
+              },
+              "pointY": {
+                "name": "Relative y",
+                "desc": "Relative point y."
+              },
+              "pointZ": {
+                "name": "Relative z",
+                "desc": "Relative point z."
               }
             }
           },

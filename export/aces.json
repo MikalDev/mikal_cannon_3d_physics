@@ -179,45 +179,6 @@
     ],
     "actions": [
       {
-        "id": "ApplyImpulse",
-        "scriptName": "ApplyImpulse",
-        "highlight": false,
-        "deprecated": false,
-        "isAsync": false,
-        "params": [
-          {
-            "id": "impulseX",
-            "type": "number",
-            "value": "0"
-          },
-          {
-            "id": "impulseY",
-            "type": "number",
-            "value": "0"
-          },
-          {
-            "id": "impulseZ",
-            "type": "number",
-            "value": "0"
-          },
-          {
-            "id": "pointX",
-            "type": "number",
-            "value": "0"
-          },
-          {
-            "id": "pointY",
-            "type": "number",
-            "value": "0"
-          },
-          {
-            "id": "pointZ",
-            "type": "number",
-            "value": "0"
-          }
-        ]
-      },
-      {
         "id": "SetImmovable",
         "scriptName": "SetImmovable",
         "highlight": false,
@@ -294,6 +255,45 @@
             "id": "enable",
             "type": "boolean",
             "value": "false"
+          }
+        ]
+      },
+      {
+        "id": "ApplyImpulse",
+        "scriptName": "ApplyImpulse",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "impulseX",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "impulseY",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "impulseZ",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointX",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointY",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointZ",
+            "type": "number",
+            "value": "0"
           }
         ]
       },

@@ -342,12 +342,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		return JSON.stringify(this.raycastResult)
 	}
 
-	_ApplyImpulse(x, y, z) {
-		if (!this.body) return
-		const cannon = globalThis.Mikal_Cannon
-		this.body.applyImpulse(new cannon.Vec3(x, y, z))
-	}
-
 	_EnablePhysics(enable) {
 		this.enable = enable
 	}

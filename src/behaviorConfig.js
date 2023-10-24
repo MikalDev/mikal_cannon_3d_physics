@@ -3,7 +3,7 @@ module.exports = {
   addonType: "behavior",
   id: "mikal_cannon_3d_physics",
   name: "Cannon 3D Physics",
-  version: "1.5.0",
+  version: "1.5.1",
   category:
     // "attributes",
     "movements",
@@ -238,43 +238,7 @@ module.exports = {
       // The description of the action as it appears in the add action dialog
       description: "Raycast from x0,y0,z0 to x1,y1,z1.",
     },
-    ApplyImpulse: {
-      // The category of the action as it appears in the add action dialog
-      category: "body",
-      forward: "_ApplyImpulse",
-      autoScriptInterface: true,
-      highlight: false,
-      deprecated: false,
-      isAsync: false,
-      // list of parameters
-      params: [
-        {
-          id: "impulseX",
-          name: "Impulse x",
-          desc: "Impuese vector x.",
-          type: "number",
-          value: "0",
-        },
-        {
-          id: "impulseY",
-          name: "Impulse y",
-          desc: "Impuese vector y.",
-          type: "number",
-          value: "0",
-        },
-        {
-          id: "impulseZ",
-          name: "Impulse z",
-          desc: "Impuese vector z.",
-          type: "number",
-          value: "0",
-        }
-      ],
-      listName: "Apply impulse",
-      displayText: "Apply {my} impulse {0}, {1} , {2}",
-      // The description of the action as it appears in the add action dialog
-      description: "Apply impulse to body.",
-    },
+
     SetImmovable: {
       // The category of the action as it appears in the add action dialog
       category: "body",
