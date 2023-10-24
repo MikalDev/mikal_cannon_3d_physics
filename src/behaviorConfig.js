@@ -3,7 +3,7 @@ module.exports = {
   addonType: "behavior",
   id: "mikal_cannon_3d_physics",
   name: "Cannon 3D Physics",
-  version: "1.5.1",
+  version: "1.6.0",
   category:
     // "attributes",
     "movements",
@@ -480,6 +480,51 @@ module.exports = {
       displayText: "Set {my} mass {0}",
       // The description of the action as it appears in the add action dialog
       description: "Set mass of body.",
+    },
+    SetCollisionFilterGroup: {
+      category : "body",
+      forward : "_SetCollisionFilterGroup",
+      autoScriptInterface : true,
+      highlight : false,
+      deprecated : false,
+      isAsync : false,
+      // list of parameters
+      params : [
+        {
+          id: "group",
+          name: "Group",
+          desc: "Group.",
+          type: "number",
+          value: "0",
+        },
+      ],
+      listName: "Set collision filter group",
+      displayText: "Set {my} collision filter group {0}",
+      // The description of the action as it appears in the add action dialog
+      description: "Set collision filter group of body, power of 2.",
+    },
+
+    SetCollisionFilterMask: {
+      category : "body",
+      forward : "_SetCollisionFilterMask",
+      autoScriptInterface : true,
+      highlight : false,
+      deprecated : false,
+      isAsync : false,
+      // list of parameters
+      params : [
+        {
+          id: "mask",
+          name: "Mask",
+          desc: "Mask.",
+          type: "number",
+          value: "0",
+        },
+      ],
+      listName: "Set collision filter mask",
+      displayText: "Set {my} collision filter mask {0}",
+      // The description of the action as it appears in the add action dialog
+      description: "Set collision filter mask of body.",
     },
 
     /*

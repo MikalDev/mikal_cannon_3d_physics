@@ -200,6 +200,28 @@
                 "desc": "Mass."
               }
             }
+          },
+          "SetCollisionFilterGroup": {
+            "list-name": "Set collision filter group",
+            "display-text": "Set {my} collision filter group {0}",
+            "description": "Set collision filter group of body, power of 2.",
+            "params": {
+              "group": {
+                "name": "Group",
+                "desc": "Group."
+              }
+            }
+          },
+          "SetCollisionFilterMask": {
+            "list-name": "Set collision filter mask",
+            "display-text": "Set {my} collision filter mask {0}",
+            "description": "Set collision filter mask of body.",
+            "params": {
+              "mask": {
+                "name": "Mask",
+                "desc": "Mask."
+              }
+            }
           }
         },
         "conditions": {

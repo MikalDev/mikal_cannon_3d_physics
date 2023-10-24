@@ -447,6 +447,16 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		this.body.mass = mass
 	}
 
+	_SetCollisionFilterGroup(group) {
+		if (!this.body) return
+		this.body.collisionFilterGroup = group
+	}
+
+	_SetCollisionFilterMask(mask) {
+		if (!this.body) return
+		this.body.collisionFilterMask = mask
+	}
+
     GetScriptInterfaceClass() {
       return scriptInterface;
     }

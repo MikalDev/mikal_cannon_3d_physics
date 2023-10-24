@@ -52,6 +52,16 @@ const BEHAVIOR_INFO = {
             "forward": (inst) => inst._SetMass,
             
             "autoScriptInterface": true,
+            },
+"SetCollisionFilterGroup": {
+            "forward": (inst) => inst._SetCollisionFilterGroup,
+            
+            "autoScriptInterface": true,
+            },
+"SetCollisionFilterMask": {
+            "forward": (inst) => inst._SetCollisionFilterMask,
+            
+            "autoScriptInterface": true,
             }
     },
     Cnds: {
@@ -726,6 +736,16 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 	_SetMass(mass) {
 		if (!this.body) return
 		this.body.mass = mass
+	}
+
+	_SetCollisionFilterGroup(group) {
+		if (!this.body) return
+		this.body.collisionFilterGroup = group
+	}
+
+	_SetCollisionFilterMask(mask) {
+		if (!this.body) return
+		this.body.collisionFilterMask = mask
 	}
 
     GetScriptInterfaceClass() {
