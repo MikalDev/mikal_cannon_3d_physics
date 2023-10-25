@@ -62,6 +62,16 @@ const BEHAVIOR_INFO = {
             "forward": (inst) => inst._SetCollisionFilterMask,
             
             "autoScriptInterface": true,
+            },
+"ApplyForce": {
+            "forward": (inst) => inst._ApplyForce,
+            
+            "autoScriptInterface": true,
+            },
+"ApplyTorque": {
+            "forward": (inst) => inst._ApplyTorque,
+            
+            "autoScriptInterface": true,
             }
     },
     Cnds: {
@@ -746,6 +756,21 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 	_SetCollisionFilterMask(mask) {
 		if (!this.body) return
 		this.body.collisionFilterMask = mask
+	}
+
+	_ApplyForce(x,y,z,pointX,pointY,pointZ) {
+		if (!this.body) return
+		const cannon = globalThis.Mikal_Cannon
+		const point = new cannon.Vec3(pointX, pointY, pointZ)
+		const force = new cannon.Vec3(x, y, z)
+		this.body.applyForce(force, point)
+	}
+
+	_ApplyTorque(x,y,z) {
+		if (!this.body) return
+		const cannon = globalThis.Mikal_Cannon
+		const torque = new cannon.Vec3(x, y, z)
+		this.body.applyTorque(torque)
 	}
 
     GetScriptInterfaceClass() {

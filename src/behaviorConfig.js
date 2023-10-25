@@ -3,7 +3,7 @@ module.exports = {
   addonType: "behavior",
   id: "mikal_cannon_3d_physics",
   name: "Cannon 3D Physics",
-  version: "1.6.0",
+  version: "1.8.0",
   category:
     // "attributes",
     "movements",
@@ -525,6 +525,100 @@ module.exports = {
       displayText: "Set {my} collision filter mask {0}",
       // The description of the action as it appears in the add action dialog
       description: "Set collision filter mask of body.",
+    },
+    ApplyForce: {
+      category: "body",
+      forward: "_ApplyForce",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      isAsync: false,
+      // list of parameters
+      params: [
+        {
+          id: "forceX",
+          name: "Force x",
+          desc: "Force vector x.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "forceY",
+          name: "Force y",
+          desc: "Force vector y.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "forceZ",
+          name: "Force z",
+          desc: "Force vector z.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "pointX",
+          name: "Relative x",
+          desc: "Relative point x.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "pointY",
+          name: "Relative y",
+          desc: "Relative point y.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "pointZ",
+          name: "Relative z",
+          desc: "Relative point z.",
+          type: "number",
+          value: "0",
+        },
+      ],
+      listName: "Apply force",
+      displayText: "Apply {my} force {0}, {1} , {2} to relative {3}, {4}, {5}",
+      // The description of the action as it appears in the add action dialog
+      description: "Apply force to body at relative point.",
+    },
+
+    ApplyTorque: {
+      category: "body",
+      forward: "_ApplyTorque",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      isAsync: false,
+      // list of parameters
+      params: [
+        {
+          id: "torqueX",
+          name: "Torque x",
+          desc: "Torque vector x.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "torqueY",
+          name: "Torque y",
+          desc: "Torque vector y.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "torqueZ",
+          name: "Torque z",
+          desc: "Torque vector z.",
+          type: "number",
+          value: "0",
+        },
+      ],
+      listName: "Apply torque",
+      displayText: "Apply {my} torque {0}, {1} , {2}",
+      // The description of the action as it appears in the add action dialog
+      description: "Apply torque to body.",
     },
 
     /*

@@ -222,6 +222,56 @@
                 "desc": "Mask."
               }
             }
+          },
+          "ApplyForce": {
+            "list-name": "Apply force",
+            "display-text": "Apply {my} force {0}, {1} , {2} to relative {3}, {4}, {5}",
+            "description": "Apply force to body at relative point.",
+            "params": {
+              "forceX": {
+                "name": "Force x",
+                "desc": "Force vector x."
+              },
+              "forceY": {
+                "name": "Force y",
+                "desc": "Force vector y."
+              },
+              "forceZ": {
+                "name": "Force z",
+                "desc": "Force vector z."
+              },
+              "pointX": {
+                "name": "Relative x",
+                "desc": "Relative point x."
+              },
+              "pointY": {
+                "name": "Relative y",
+                "desc": "Relative point y."
+              },
+              "pointZ": {
+                "name": "Relative z",
+                "desc": "Relative point z."
+              }
+            }
+          },
+          "ApplyTorque": {
+            "list-name": "Apply torque",
+            "display-text": "Apply {my} torque {0}, {1} , {2}",
+            "description": "Apply torque to body.",
+            "params": {
+              "torqueX": {
+                "name": "Torque x",
+                "desc": "Torque vector x."
+              },
+              "torqueY": {
+                "name": "Torque y",
+                "desc": "Torque vector y."
+              },
+              "torqueZ": {
+                "name": "Torque z",
+                "desc": "Torque vector z."
+              }
+            }
           }
         },
         "conditions": {

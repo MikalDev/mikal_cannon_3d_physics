@@ -338,6 +338,69 @@
             "value": "0"
           }
         ]
+      },
+      {
+        "id": "ApplyForce",
+        "scriptName": "ApplyForce",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "forceX",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "forceY",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "forceZ",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointX",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointY",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointZ",
+            "type": "number",
+            "value": "0"
+          }
+        ]
+      },
+      {
+        "id": "ApplyTorque",
+        "scriptName": "ApplyTorque",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "torqueX",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "torqueY",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "torqueZ",
+            "type": "number",
+            "value": "0"
+          }
+        ]
       }
     ],
     "expressions": [

@@ -457,6 +457,21 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		this.body.collisionFilterMask = mask
 	}
 
+	_ApplyForce(x,y,z,pointX,pointY,pointZ) {
+		if (!this.body) return
+		const cannon = globalThis.Mikal_Cannon
+		const point = new cannon.Vec3(pointX, pointY, pointZ)
+		const force = new cannon.Vec3(x, y, z)
+		this.body.applyForce(force, point)
+	}
+
+	_ApplyTorque(x,y,z) {
+		if (!this.body) return
+		const cannon = globalThis.Mikal_Cannon
+		const torque = new cannon.Vec3(x, y, z)
+		this.body.applyTorque(torque)
+	}
+
     GetScriptInterfaceClass() {
       return scriptInterface;
     }
