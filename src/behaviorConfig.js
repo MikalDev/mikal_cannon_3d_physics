@@ -3,7 +3,7 @@ module.exports = {
   addonType: "behavior",
   id: "mikal_cannon_3d_physics",
   name: "Cannon 3D Physics",
-  version: "1.8.0",
+  version: "1.9.0",
   category:
     // "attributes",
     "movements",
@@ -232,9 +232,30 @@ module.exports = {
           type: "number",
           value: "0",
         },
+        {
+          id: "collisionFilterGroup",
+          name: "Collision filter group",
+          desc: "Collision filter group (groups are 0,1,2,4,8...)",
+          type: "number",
+          initialValue: "-1"
+        },
+        {
+          id: "collisionFilterMask",
+          name: "Collision filter mask",
+          desc: "Collision filter mask (groups are 0,1,2,4,8...)",
+          type: "number",
+          initialValue: "-1"
+        },
+        {
+          id: "skipBackfaces",
+          name: "Skip backfaces",
+          desc: "Skip backfaces.",
+          type: "boolean",
+          initialValue: "true"
+        }
       ],
       listName: "Raycast from to",
-      displayText: "{my}: Raycast , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i]",
+      displayText: "{my}: Raycast , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i] {7}, {8}, {9}",
       // The description of the action as it appears in the add action dialog
       description: "Raycast from x0,y0,z0 to x1,y1,z1.",
     },

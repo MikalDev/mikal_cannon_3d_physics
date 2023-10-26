@@ -43,6 +43,21 @@
             "id": "toZ",
             "type": "number",
             "value": "0"
+          },
+          {
+            "id": "collisionFilterGroup",
+            "type": "number",
+            "initialValue": "-1"
+          },
+          {
+            "id": "collisionFilterMask",
+            "type": "number",
+            "initialValue": "-1"
+          },
+          {
+            "id": "skipBackfaces",
+            "type": "boolean",
+            "initialValue": "true"
           }
         ]
       }

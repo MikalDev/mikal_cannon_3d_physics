@@ -35,8 +35,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
     Tick2() {
 		const body = this.body
 
-		if (this.pluginType === "3DObject" && !body) {
-			return
+		if (this.pluginType === "3DObjectPlugin" && !body && this._inst.GetSdkInstance().loaded) {
 				const loaded = this._inst.GetSdkInstance().loaded
 				if (!loaded) return
 				// Get bbox of 3DObject
@@ -50,12 +49,21 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 				const z = xMaxBB[2] -xMinBB[2]
 				// define shape as cannon box
 				const cannon = globalThis.Mikal_Cannon
-				const shape = new cannon.Box(new cannon.Vec3(1, 1, 1))
-				this.body = this.DefineBody(shape)
+				const shape = new cannon.Box(new cannon.Vec3(x, y, z))
+				console.log('x', x, 'y', y, 'z', z)
+				this.body = this.DefineBody(this.pluginType, shape)
+				this._inst.GetSdkInstance()._setCannonBody(this.body, true)
 		}
 
 		if (!body) return
 		if (!this.enable) return
+
+		const CannonPhysics = this._behaviorType._behavior
+		if (this.pluginType === "3DObjectPlugin") {
+			// _setCannonBody is called from 3DObjectPlugin
+			CannonPhysics.Tick()
+			return
+		}
 
 		const shapeInst = this._inst.GetSdkInstance()
 		const zHeight = shapeInst._zHeight
@@ -80,7 +88,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			body.quaternion.setFromEuler(0, 0, angle, "ZXY")
 		}
 		
-		const CannonPhysics = this._behaviorType._behavior
 		CannonPhysics.Tick()
 
 		wi.SetX(body.position.x)
@@ -103,17 +110,19 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
 	PostCreate() {
 		const pluginType = this._inst.GetPlugin()
+		console.log('pluginType', pluginType)
 		if (pluginType instanceof C3?.Plugins?.Shape3D) {
 			this.pluginType = "Shape3DPlugin"
 			if (!this.body) {
 				const shape = this._inst.GetSdkInstance()._shape
-				this.body = this.DefineBody(pluginType, shape)
+				this.body = this.DefineBody(this.pluginType, shape)
 			}
 		} else if (pluginType instanceof C3?.Plugins?.Mikal_3DObject) {
 			this.pluginType = "3DObjectPlugin"
-			this.body = this.DefineBody(pluginType, null)
 		} else {
 			this.pluginType = "invalid"
+			console.error('invalid pluginType', pluginType)
+			debugger
 		}
 	}
 
@@ -126,7 +135,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		let shape = null
 		console.log('shapeType', shapeType, 'this.shape', this.shape)
 		let angularFactor = new cannon.Vec3(1, 1, 1)
-		if (pluginType instanceof C3?.Plugins?.Shape3D) {
+		if (pluginType === "Shape3DPlugin") {
 			if (shapeType === 0) {
 				shape = new cannon.Box(new cannon.Vec3(wi.GetWidth() / 2, wi.GetHeight() / 2, zHeight/2))
 			} else {
@@ -134,8 +143,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			}
 			// 3DShape can only rotate around z axis
 			angularFactor.set(0, 0, 1)
-		} else if (pluginType instanceof C3?.Plugins?.Mikal_3DObject) {
+		} else if (pluginType === "3DObjectPlugin") {
 			shape = this._create3DObjectShape()
+			console.log('3DObject shape', shape)
 		} else {
 			console.error('invalid pluginType', pluginType)
 			return null
@@ -155,11 +165,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			position: new cannon.Vec3(x,y,z),
 			shape,
 			angularFactor: angularFactor,
+			type: cannon.Body.DYNAMIC,
 		})
 		body.quaternion.setFromEuler(0, 0, angle, "ZXY")
-		let quatAngles = new cannon.Vec3()
-		body.quaternion.toEuler(quatAngles, "ZYX")
-		// body.type = this.immovable ? cannon.Body.STATIC : cannon.Body.DYNAMIC
 		body.linearDamping = world.defaultLinearDamping
 		body.angularDamping = world.defaultLinearDamping
 		body.uid = this._inst.GetUID()
@@ -307,7 +315,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		cannon.Vec3(x, y, z)
 	}
 
-	_Raycast(tag, fromX,fromY,fromZ,x,y,z) {
+	_Raycast(tag, fromX,fromY,fromZ,x,y,z, group, mask, skipBackfaces) {
 		// log parameters
 		const cannon = globalThis.Mikal_Cannon
 		const world = globalThis.Mikal_Cannon_world
@@ -316,7 +324,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		let dir = to.vsub(from)
 		dir.normalize()
 		const ray = new cannon.Ray(from,to)
-		const options = {mode: cannon.Ray.CLOSEST, skipBackfaces: true}
+		const options = {mode: cannon.Ray.CLOSEST, skipBackfaces: skipBackfaces, collisionFilterGroup: group, collisionFilterMask: mask}
 		const hit = ray.intersectWorld(world, options)
 		if (hit) {
 			const result = ray.result

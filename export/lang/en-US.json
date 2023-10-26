@@ -52,7 +52,7 @@
           },
           "Raycast": {
             "list-name": "Raycast from to",
-            "display-text": "{my}: Raycast , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i]",
+            "display-text": "{my}: Raycast , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i] {7}, {8}, {9}",
             "description": "Raycast from x0,y0,z0 to x1,y1,z1.",
             "params": {
               "tag": {
@@ -82,6 +82,18 @@
               "toZ": {
                 "name": "To z",
                 "desc": "To z."
+              },
+              "collisionFilterGroup": {
+                "name": "Collision filter group",
+                "desc": "Collision filter group (groups are 0,1,2,4,8...)"
+              },
+              "collisionFilterMask": {
+                "name": "Collision filter mask",
+                "desc": "Collision filter mask (groups are 0,1,2,4,8...)"
+              },
+              "skipBackfaces": {
+                "name": "Skip backfaces",
+                "desc": "Skip backfaces."
               }
             }
           },

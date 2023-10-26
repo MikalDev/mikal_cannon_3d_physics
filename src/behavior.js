@@ -64,17 +64,7 @@ B_C.Type = class extends C3.SDKBehaviorTypeBase {
     // Default gravity
     world.gravity.set(0, 0, -9.82); // m/s²
     world.defaultLinearDamping = 0.1
-    console.log('Mikal_Cannon_world', world)
-  }
-
-  Tick() {
-    const tickCount = this.runtime.GetTickCount();
-    if (tickCount === this.tickCount) return
-    this.tickCount = tickCount
-    const dt = this.runtime.GetDt(this._inst)*10;
-    const world = globalThis.Mikal_Cannon_world
-    if (world) world.step((1 / 60)*10, dt, 3);
-    this.runtime.UpdateRender()
+    // console.log('Mikal_Cannon_world', world)
   }
 
   Release() {

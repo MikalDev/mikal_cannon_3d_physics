@@ -1,0 +1,106 @@
+Certainly! Collision filtering in physics engines like Cannon.js is used to selectively enable or disable collisions between different bodies in the simulation based on certain criteria. Let’s breakdown how it works with the Body.collisionFilterGroup and Body.collisionFilterMask attributes.
+
+1. collisionFilterGroup
+This attribute is like a tag or a label that you give to a body.
+It should be a power of 2 (1, 2, 4, 8, 16, 32, etc.) to allow for bitwise operations.
+Example: You might give all your wall objects a group of 2, and all your player objects a group of 4.
+2. collisionFilterMask
+This attribute defines which groups this body should collide with.
+It is the result of an OR operation on all groups that should be included in collisions.
+Example: If you want a player (group 4) to collide with walls (group 2), the player’s mask would be 2+4=6 or 2|4=6 (bitwise OR).
+3. Collision Condition
+The formula (bodyA.collisionFilterGroup & bodyB.collisionFilterMask) && (bodyB.collisionFilterGroup & bodyA.collisionFilterMask) is used.
+This formula uses bitwise AND to check if a collision should occur.
+Bitwise Explanation:
+AND Operation (&): Compares each bit of the first operand to the corresponding bit of the second operand. If both bits are 1, the corresponding result bit is set to 1. Otherwise, the corresponding result bit is set to 0.
+
+OR Operation (|): Compares each bit of the first operand to the corresponding bit of the second operand. If either bit is 1, the corresponding result bit is set to 1. Otherwise, it sets the corresponding result bit to 0.
+
+Practical Example:
+Let's say we have:
+
+A player character (Player)
+A wall (Wall)
+An enemy character (Enemy)
+You could assign:
+
+Player:
+
+collisionFilterGroup = 4 (100 in binary)
+collisionFilterMask = 6 (110 in binary, because we want to collide with walls and enemies, which might be 2 and 6)
+Wall:
+
+collisionFilterGroup = 2 (010 in binary)
+collisionFilterMask = 4 (100 in binary, because it should only collide with players)
+Enemy:
+
+collisionFilterGroup = 8 (1000 in binary)
+collisionFilterMask = 4 (100 in binary, because it should only collide with players)
+Then the condition (bodyA.collisionFilterGroup & bodyB.collisionFilterMask) && (bodyB.collisionFilterGroup & bodyA.collisionFilterMask) will dictate whether collisions should occur between these entities based on their group and mask settings.
+
+Summary:
+collisionFilterGroup: A tag to identify the body.
+collisionFilterMask: Defines which groups it should interact with.
+Bitwise Operations: Used to efficiently evaluate whether collisions should occur based on groups and masks.
+
+
+
+User
+ok, please architect the following:
+
+I have 4 types of environment colliders currently:
+1. impactCameraRadial = TRUE and impactMovement = FALSE
+2. impactCameraRadial = FALSE and impactMovement = TRUE
+3. impactCameraRadial = TRUE and impactMovement = TRUE
+4. impactCameraRadial = FALSE and impactMovement = FALSE
+
+as well as a player and a group of enemies.
+
+my movement scheme uses raycasts from the library which I have to provide a group and mask in the raycast.  For the raycast I need to know what to set these values to for the following situations:
+casting for impactCameraRadial
+casting for impactMovement
+
+for both of these situations, I do not want the ray to be able to collide with the player or the enemies
+ChatGPT
+Certainly! To architect this, you should assign each type of object a unique collisionFilterGroup, and use the collisionFilterMask to specify what each raycast should interact with. I will denote each unique object with a power of two value.
+
+Assigning collisionFilterGroups:
+Environment colliders:
+
+impactCameraRadial = TRUE and impactMovement = FALSE: Group 1
+impactCameraRadial = FALSE and impactMovement = TRUE: Group 2
+impactCameraRadial = TRUE and impactMovement = TRUE: Group 4
+impactCameraRadial = FALSE and impactMovement = FALSE: Group 8
+Player: Group 16
+
+Enemies: Group 32
+
+Raycasts:
+Casting for impactCameraRadial:
+
+collisionFilterGroup: 64
+collisionFilterMask: Set it to interact only with environment colliders where impactCameraRadial = TRUE. So, it should be 1|4=5.
+Casting for impactMovement:
+
+collisionFilterGroup: 128
+collisionFilterMask: Set it to interact only with environment colliders where impactMovement = TRUE. So, it should be 2|4=6.
+Setting it up:
+Environment Colliders:
+
+For each environment collider, set the collisionFilterGroup as per the groupings above and set collisionFilterMask = 64|128 = 192 to allow them to interact with both raycasts.
+Raycasts:
+
+For impactCameraRadial raycast:
+
+collisionFilterGroup = 64
+collisionFilterMask = 5
+For impactMovement raycast:
+
+collisionFilterGroup = 128
+collisionFilterMask = 6
+Player and Enemies:
+
+Set collisionFilterGroup to 16 for the player and 32 for the enemies.
+Since you don’t want them to interact with the raycasts, set collisionFilterMask = 0 for both, or don’t include the raycast groups in their masks.
+Summary:
+This setup will allow the raycasts to interact with the relevant environment colliders based on their characteristics, while avoiding collisions with the player and enemies as per your requirement. Remember to adjust the collisionFilterMask and collisionFilterGroup values based on the bitwise OR operation to ensure that the collision interactions occur as desired.
