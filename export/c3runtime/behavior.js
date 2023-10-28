@@ -330,18 +330,14 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 				const loaded = this._inst.GetSdkInstance().loaded
 				if (!loaded) return
 				// Get bbox of 3DObject
-				console.log('3DObject loaded', loaded)
 				const xMinBB = this._inst.GetSdkInstance().xMinBB
 				const xMaxBB = this._inst.GetSdkInstance().xMaxBB
-				console.log('xMinBB', xMinBB)
-				console.log('xMaxBB', xMaxBB)
 				const x = xMaxBB[0] -xMinBB[0]
 				const y = xMaxBB[1] -xMinBB[1]
 				const z = xMaxBB[2] -xMinBB[2]
 				// define shape as cannon box
 				const cannon = globalThis.Mikal_Cannon
 				const shape = new cannon.Box(new cannon.Vec3(x, y, z))
-				console.log('x', x, 'y', y, 'z', z)
 				this.body = this.DefineBody(this.pluginType, shape)
 				this._inst.GetSdkInstance()._setCannonBody(this.body, true)
 		}
@@ -401,7 +397,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
 	PostCreate() {
 		const pluginType = this._inst.GetPlugin()
-		console.log('pluginType', pluginType)
 		if (pluginType instanceof C3?.Plugins?.Shape3D) {
 			this.pluginType = "Shape3DPlugin"
 			if (!this.body) {
@@ -424,19 +419,23 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		const world = globalThis.Mikal_Cannon_world
 		const zHeight = shapeInst._zHeight
 		let shape = null
-		console.log('shapeType', shapeType, 'this.shape', this.shape)
 		let angularFactor = new cannon.Vec3(1, 1, 1)
 		if (pluginType === "Shape3DPlugin") {
 			if (shapeType === 0) {
 				shape = new cannon.Box(new cannon.Vec3(wi.GetWidth() / 2, wi.GetHeight() / 2, zHeight/2))
-			} else {
+			} else if (shapeType === 1) {
+				shape = this._createPrismShape(wi.GetHeight(), wi.GetWidth(), zHeight)
+			} else if (shapeType === 2) {
 				shape = this._createWedgeShape(wi.GetHeight(), wi.GetWidth(), zHeight)
+			} else if (shapeType === 5) {
+				shape = this._createCornerInShape(wi.GetHeight(), wi.GetWidth(), zHeight)
+			} else if (shapeType === 4) {
+				shape = this._createCornerOutShape(wi.GetHeight(), wi.GetWidth(), zHeight)
 			}
 			// 3DShape can only rotate around z axis
 			angularFactor.set(0, 0, 1)
 		} else if (pluginType === "3DObjectPlugin") {
 			shape = this._create3DObjectShape()
-			console.log('3DObject shape', shape)
 		} else {
 			console.error('invalid pluginType', pluginType)
 			return null
@@ -479,8 +478,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		const xMinBB = inst.xMinBB
 		const xMaxBB = inst.xMaxBB
 		// log bbox
-		console.log('xMinBB', xMinBB)
-		console.log('xMaxBB', xMaxBB)
 		// calculate width, height, depth from xMinBB and xMaxBB 3 element arrays
 		const width = xMaxBB[0] -xMinBB[0]
 		const height = xMaxBB[1] -xMinBB[1]
@@ -521,6 +518,88 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		
 	}
 
+	_createCornerOutShape(height, width, depth) {
+		const cannon = globalThis.Mikal_Cannon
+		const vertices = [
+			new cannon.Vec3(-0.5,-0.5,-0.5),// 0 - - -
+			// new cannon.Vec3(-0.5,-0.5,0.5), // 1 - - +
+			new cannon.Vec3(-0.5,0.5,-0.5), // 2 - + -
+			// new cannon.Vec3(-0.5,0.5,0.5),  // 3 - + +
+			new cannon.Vec3(0.5,-0.5,-0.5), // 4 + - -
+			new cannon.Vec3(0.5,-0.5,0.5),  // 5 + - +
+			new cannon.Vec3(0.5,0.5,-0.5),  // 6 + + -
+			// new cannon.Vec3(0.5,0.5,0.5),   // 7 + + +
+		]
+
+		// right hand rule CCW
+		const faces =[[3,0,2],[3,1,0],[4,1,3],[4,3,2],[4,2,0],[4,0,1]] 
+	
+		for (const vertex of vertices) {
+			vertex.x = vertex.x * width
+			vertex.y = vertex.y * height
+			vertex.z = vertex.z * depth		
+		}
+					
+		const cornerInShape = new cannon.ConvexPolyhedron({faces:faces, vertices:vertices})
+
+		return cornerInShape
+	}
+
+	_createCornerInShape(height, width, depth) {
+		const cannon = globalThis.Mikal_Cannon
+		const vertices = [
+			new cannon.Vec3(-0.5,-0.5,-0.5),// 0 - - -
+			new cannon.Vec3(-0.5,-0.5,0.5), // 1 - - +
+			new cannon.Vec3(-0.5,0.5,-0.5), // 2 - + -
+			// new cannon.Vec3(-0.5,0.5,0.5),  // 3 - + +
+			new cannon.Vec3(0.5,-0.5,-0.5), // 4 + - -
+			new cannon.Vec3(0.5,-0.5,0.5),  // 5 + - +
+			new cannon.Vec3(0.5,0.5,-0.5),  // 6 + + -
+			new cannon.Vec3(0.5,0.5,0.5),   // 7 + + +
+		]
+
+		const faces =   
+			[[4,6,1],[4,1,0],[4,0,3],[4,3,5],[4,5,6],[2,6,5],[2,5,3],[2,3,0],[2,0,1],[2,1,6]] 
+	
+		for (const vertex of vertices) {
+			vertex.x = vertex.x * width
+			vertex.y = vertex.y * height
+			vertex.z = vertex.z * depth		
+		}
+					
+		const cornerInShape = new cannon.ConvexPolyhedron({faces:faces, vertices:vertices})
+
+		return cornerInShape
+	}
+
+	_createPrismShape(height, width, depth) {
+		const cannon = globalThis.Mikal_Cannon
+		const vertices = [
+			new cannon.Vec3(-0.5,-0.5,-0.5),// 0 - - -
+			new cannon.Vec3(-0.5,0.0,0.5), // 1 - - +
+			new cannon.Vec3(-0.5,0.5,-0.5), // 2 - + -
+//			new cannon.Vec3(-0.5,0.5,0.5),  // X - + +
+			new cannon.Vec3(0.5,-0.5,-0.5), // 3 + - -
+//			new cannon.Vec3(0.5,-0.5,0.5),  // X + - +
+			new cannon.Vec3(0.5,0.5,-0.5),  // 4 + + -
+			new cannon.Vec3(0.5,0.0,0.5),   // 5 + + +
+		]
+
+		const faces =   
+			[[2,0,1],[5,1,0,3],[4,2,1,5],[4,5,3],[4,3,0,2]] 
+	
+		for (const vertex of vertices) {
+			vertex.x = vertex.x * width
+			vertex.y = vertex.y * height
+			vertex.z = vertex.z * depth		
+		}
+		
+
+		const prismShape = new cannon.ConvexPolyhedron({faces:faces, vertices:vertices})
+		return prismShape
+	}
+
+
 	// create cannon-es mesh shape 
 	_createMeshShape(worldInfo) {
 		const cannon = globalThis.Mikal_Cannon
@@ -555,7 +634,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			}
 		}
 		const shape = new cannon.Trimesh(vertices, indices)
-		console.log('mesh shape', shape)
 		return shape
 	}
 
@@ -565,10 +643,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		const points = wi?._meshInfo?.transformedMesh?._pts
 		const width = wi.GetWidth()
 		const height = wi.GetHeight()
-		console.log('width', width)
-		console.log('height', height)
-		console.log('meshInfo', wi?._meshInfo)
-		console.log('points', points)
 		if (!points) return null
 		const meshPoints = []
 		for (const rows of points) {
@@ -578,11 +652,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 				const y = point._y * height
 				const z = point._zElevation
 				meshRow.push(new cannon.Vec3(x,y,z))
-				if (z > 0) console.log('z', z)
 			}
 			meshPoints.push(meshRow)
 		}
-		console.log('meshPoints', meshPoints)
 		return meshPoints
 	}
 
@@ -711,7 +783,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 	}
 
 	_OnCollision() {
-		console.log('OnCollision')
 		return true
 	}
 
