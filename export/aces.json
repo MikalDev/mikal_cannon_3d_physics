@@ -1,6 +1,39 @@
 {
   "general": {
-    "conditions": [],
+    "conditions": [
+      {
+        "id": "OnAnyRaycastResult",
+        "scriptName": "OnAnyRaycastResult",
+        "highlight": false,
+        "deprecated": false,
+        "isTrigger": true,
+        "isFakeTrigger": false,
+        "isStatic": false,
+        "isLooping": false,
+        "isInvertible": false,
+        "isCompatibleWithTriggers": false,
+        "params": []
+      },
+      {
+        "id": "OnRaycastResult",
+        "scriptName": "OnRaycastResult",
+        "highlight": false,
+        "deprecated": false,
+        "isTrigger": true,
+        "isFakeTrigger": false,
+        "isStatic": false,
+        "isLooping": false,
+        "isInvertible": false,
+        "isCompatibleWithTriggers": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "value": ""
+          }
+        ]
+      }
+    ],
     "actions": [
       {
         "id": "Raycast",
@@ -58,6 +91,16 @@
             "id": "skipBackfaces",
             "type": "boolean",
             "initialValue": "true"
+          },
+          {
+            "id": "mode",
+            "type": "combo",
+            "initialValue": "closest",
+            "items": [
+              "closest",
+              "any",
+              "all"
+            ]
           }
         ]
       }

@@ -52,7 +52,7 @@
           },
           "Raycast": {
             "list-name": "Raycast from to",
-            "display-text": "{my}: Raycast , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i] {7}, {8}, {9}",
+            "display-text": "{my}: Raycast , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i] {7}, {8}, {9} {10}",
             "description": "Raycast from x0,y0,z0 to x1,y1,z1.",
             "params": {
               "tag": {
@@ -94,6 +94,15 @@
               "skipBackfaces": {
                 "name": "Skip backfaces",
                 "desc": "Skip backfaces."
+              },
+              "mode": {
+                "name": "Mode",
+                "desc": "Mode.",
+                "items": {
+                  "closest": "Closest",
+                  "any": "Any",
+                  "all": "All"
+                }
               }
             }
           },
@@ -304,6 +313,23 @@
             "display-text": "{my}: On collision",
             "description": "On body physics collision.",
             "params": {}
+          },
+          "OnAnyRaycastResult": {
+            "list-name": "On any raycast result",
+            "display-text": "{my}: On any raycast result",
+            "description": "On any raycast result.",
+            "params": {}
+          },
+          "OnRaycastResult": {
+            "list-name": "On raycast result",
+            "display-text": "{my}: On raycast result {0}",
+            "description": "On raycast result.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag for raycast."
+              }
+            }
           }
         },
         "expressions": {

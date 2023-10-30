@@ -3,7 +3,7 @@ module.exports = {
   addonType: "behavior",
   id: "mikal_cannon_3d_physics",
   name: "Cannon 3D Physics",
-  version: "1.12.0",
+  version: "1.13.0",
   category:
     // "attributes",
     "movements",
@@ -252,10 +252,22 @@ module.exports = {
           desc: "Skip backfaces.",
           type: "boolean",
           initialValue: "true"
+        },
+        {
+          id: "mode",
+          name: "Mode",
+          desc: "Mode.",
+          type: "combo",
+          initialValue: "closest",
+          items: [
+            { "closest": "Closest" },
+            { "any": "Any" },
+            { "all": "All" },
+          ]
         }
       ],
       listName: "Raycast from to",
-      displayText: "{my}: Raycast , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i] {7}, {8}, {9}",
+      displayText: "{my}: Raycast , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i] {7}, {8}, {9} {10}",
       // The description of the action as it appears in the add action dialog
       description: "Raycast from x0,y0,z0 to x1,y1,z1.",
     },
@@ -795,6 +807,51 @@ module.exports = {
       listName: "On collision",
       displayText: "{my}: On collision",
       description: "On body physics collision.",
+    },
+    OnAnyRaycastResult: {
+      // The category of the action as it appears in the add condition dialog
+      category: "general",
+      forward: "_OnAnyRaycastResult",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      isTrigger: true,
+      isFakeTrigger: false,
+      isStatic: false,
+      isLooping: false,
+      isInvertible: false,
+      isCompatibleWithTriggers: false,
+      params: [
+      ],
+      listName: "On any raycast result",
+      displayText: "{my}: On any raycast result",
+      description: "On any raycast result.",
+    },
+    OnRaycastResult: {
+      // The category of the action as it appears in the add condition dialog
+      category: "general",
+      forward: "_OnRaycastResult",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      isTrigger: true,
+      isFakeTrigger: false,
+      isStatic: false,
+      isLooping: false,
+      isInvertible: false,
+      isCompatibleWithTriggers: false,
+      params: [
+        {
+          id: "tag",
+          name: "Tag",
+          desc: "Tag for raycast.",
+          type: "string",
+          value: "",
+        },
+      ],
+      listName: "On raycast result",
+      displayText: "{my}: On raycast result {0}",
+      description: "On raycast result.",
     },
     /*
     SampleCondition: {

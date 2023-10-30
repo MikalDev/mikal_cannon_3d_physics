@@ -89,6 +89,16 @@ const BEHAVIOR_INFO = {
             "forward": (inst) => inst._OnCollision,
             
             "autoScriptInterface": true,
+          },
+"OnAnyRaycastResult": {
+            "forward": (inst) => inst._OnAnyRaycastResult,
+            
+            "autoScriptInterface": true,
+          },
+"OnRaycastResult": {
+            "forward": (inst) => inst._OnRaycastResult,
+            
+            "autoScriptInterface": true,
           }
     },
     Exps: {
@@ -733,7 +743,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		cannon.Vec3(x, y, z)
 	}
 
-	_Raycast(tag, fromX,fromY,fromZ,x,y,z, group, mask, skipBackfaces) {
+	_Raycast(tag, fromX,fromY,fromZ,x,y,z, group, mask, skipBackfaces, mode) {
 		// log parameters
 		const cannon = globalThis.Mikal_Cannon
 		const world = globalThis.Mikal_Cannon_world
@@ -741,31 +751,56 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		const to = new cannon.Vec3(x, y, z)
 		let dir = to.vsub(from)
 		dir.normalize()
+		const rayMode = mode == 0 ? cannon.Ray.CLOSEST : mode == 1 ? cannon.Ray.ANY : cannon.Ray.ALL
 		const ray = new cannon.Ray(from,to)
-		const options = {mode: cannon.Ray.CLOSEST, skipBackfaces: skipBackfaces, collisionFilterGroup: group, collisionFilterMask: mask}
-		const hit = ray.intersectWorld(world, options)
-		if (hit) {
+
+		const callback = () => {
 			const result = ray.result
-			// log result with message
-			this.raycastResult = 
-			{
-				hasHit: result.hasHit,
-				hitFaceIndex: result.hitFaceIndex,
-				hitPointWorld: result.hitPointWorld.toArray(),
-				hitNormalWorld: result.hitNormalWorld.toArray(),
-				distance: result.distance,
-				hitUID: result.body.uid,
-				// shape: result.shape,
-				shouldStop: result.shouldStop		
+			if (result.hasHit) {
+				// log result with message
+				this.raycastResult = 
+				{
+					hasHit: result.hasHit,
+					hitFaceIndex: result.hitFaceIndex,
+					hitPointWorld: result.hitPointWorld.toArray(),
+					hitNormalWorld: result.hitNormalWorld.toArray(),
+					distance: result.distance,
+					hitUID: result.body.uid,
+					// shape: result.shape,
+					shouldStop: result.shouldStop,
+					tag,
+				}
+				console.log('hit tag', tag,)
+			} else {
+				this.raycastResult = {hasHit: false, tag}
+				console.log('miss tag', tag,)
+				// log miss
 			}
-		} else {
-			this.raycastResult = null
-			// log miss
-		}	
+			this.Trigger(C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyRaycastResult)
+			this.Trigger(C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnRaycastResult)
 	}
+
+		const options = {callback, mode: rayMode, skipBackfaces: skipBackfaces, collisionFilterGroup: group, collisionFilterMask: mask}		
+		ray.intersectWorld(world, options)
+
+		// If mode is "all" then callback is called for each hit already
+		if (rayMode !== cannon.Ray.ALL) {
+			callback()
+		}
+	}
+
+
 
 	_RaycastResultAsJSON () {
 		return JSON.stringify(this.raycastResult)
+	}
+
+	_OnAnyRaycastResult() {
+		return true
+	}
+
+	_OnRaycastResult(tag) {
+		return this.raycastResult.tag === tag
 	}
 
 	_EnablePhysics(enable) {
