@@ -81,7 +81,11 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
 		if (this.lastZAngle !== wi.GetAngle()) {
 			const angle = wi.GetAngle()
+			const angles = new globalThis.Mikal_Cannon.Vec3()
+			// body.quaternion.toEuler(angles, "ZYX")
+			// body.quaternion.setFromEuler(angle.x, angle.y, angle, "ZXY")
 			body.quaternion.setFromEuler(0, 0, angle, "ZXY")
+			if (this.rotate3D) this.rotate3D._zAngle = angle * 180 / Math.PI
 		}
 		
 		CannonPhysics.Tick()
@@ -90,11 +94,16 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		wi.SetY(body.position.y)
 		wi.SetZElevation(body.position.z-zHeight/2)
 		// angle
-		const quat = this.body.quaternion
-		const angles = new globalThis.Mikal_Cannon.Vec3()
-		quat.toEuler(angles, "ZYX")
-		const angle = angles.z
-		wi.SetAngle(angle)
+		const quatRot = this.body.quaternion
+	if (this.rotate3D) {
+			this.rotate3D._useQuaternion = true
+			this.rotate3D._quaternion = quatRot.toArray()
+		} else {
+			const angles = new globalThis.Mikal_Cannon.Vec3()
+			quatRot.toEuler(angles, "ZYX")
+			const angle = angles.z
+			wi.SetAngle(angle)
+		}
 
 		this.lastX = wi.GetX()
 		this.lastY = wi.GetY()
@@ -105,6 +114,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 	}
 
 	PostCreate() {
+		this.rotate3D = this._Behavior3DRotate()
 		const pluginType = this._inst.GetPlugin()
 		if (pluginType instanceof C3?.Plugins?.Shape3D) {
 			this.pluginType = "Shape3DPlugin"
@@ -117,7 +127,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		} else {
 			this.pluginType = "invalid"
 			console.error('invalid pluginType', pluginType)
-			debugger
 		}
 	}
 
@@ -136,13 +145,15 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 				shape = this._createPrismShape(wi.GetHeight(), wi.GetWidth(), zHeight)
 			} else if (shapeType === 2) {
 				shape = this._createWedgeShape(wi.GetHeight(), wi.GetWidth(), zHeight)
+			} else if (shapeType === 3) {
+				shape = this._createPyramidShape(wi.GetHeight(), wi.GetWidth(), zHeight)
 			} else if (shapeType === 5) {
 				shape = this._createCornerInShape(wi.GetHeight(), wi.GetWidth(), zHeight)
 			} else if (shapeType === 4) {
 				shape = this._createCornerOutShape(wi.GetHeight(), wi.GetWidth(), zHeight)
 			}
 			// 3DShape can only rotate around z axis
-			angularFactor.set(0, 0, 1)
+			if (!this.rotate3D) angularFactor.set(0, 0, 1)
 		} else if (pluginType === "3DObjectPlugin") {
 			shape = this._create3DObjectShape()
 		} else {
@@ -153,12 +164,17 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		const x = wi.GetX()
 		const y = wi.GetY()
 		const z = wi.GetZElevation()+zHeight/2
-		const angle = wi.GetAngle()
+		let angleX = 0
+		let angleY = 0
+		let angleZ = wi.GetAngle()
 
 		this.lastX = x
 		this.lastY = y
 		this.lastZ = z
-		this.lastZAngle = angle
+		this.lastZAngle = angleZ
+		this.lastYAngle = angleY
+		this.lastXAngle = angleX
+
 		const body = new cannon.Body({
 			mass: mass,
 			position: new cannon.Vec3(x,y,z),
@@ -166,7 +182,15 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			angularFactor: angularFactor,
 			type: cannon.Body.DYNAMIC,
 		})
-		body.quaternion.setFromEuler(0, 0, angle, "ZXY")
+
+		if (this.rotate3D) {
+			angleX = this.rotate3D._xAngle * Math.PI / 180
+			angleY = this.rotate3D._yAngle * Math.PI / 180
+			this.rotate3D._zAngle = angleZ * 180 / Math.PI
+			// angleZ = this.rotate3D._zAngle * Math.PI / 180
+		}
+
+		body.quaternion.setFromEuler(angleX, angleY, angleZ, "ZXY")
 		body.linearDamping = world.defaultLinearDamping
 		body.angularDamping = world.defaultLinearDamping
 		body.uid = this._inst.GetUID()
@@ -308,6 +332,33 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		return prismShape
 	}
 
+	_createPyramidShape(height, width, depth) {
+		const cannon = globalThis.Mikal_Cannon
+		const vertices = [
+			new cannon.Vec3(-0.5,-0.5,-0.5),// 0 - - -
+			new cannon.Vec3(-0.5,0.0,0.5), // 1 - - +
+			new cannon.Vec3(-0.5,0.5,-0.5), // 2 - + -
+//			new cannon.Vec3(-0.5,0.5,0.5),  // X - + +
+			new cannon.Vec3(0.5,-0.5,-0.5), // 3 + - -
+//			new cannon.Vec3(0.5,-0.5,0.5),  // X + - +
+			new cannon.Vec3(0.5,0.5,-0.5),  // 4 + + -
+			new cannon.Vec3(0.0,0.0,0.5),   // 5 + + +
+		]
+
+		const faces =   
+			[[2,0,5],[5,0,3],[4,2,5],[4,5,3],[4,3,0,2]] 
+	
+		for (const vertex of vertices) {
+			vertex.x = vertex.x * width
+			vertex.y = vertex.y * height
+			vertex.z = vertex.z * depth		
+		}
+		
+
+		const prismShape = new cannon.ConvexPolyhedron({faces:faces, vertices:vertices})
+		return prismShape
+	}
+
 
 	// create cannon-es mesh shape 
 	_createMeshShape(worldInfo) {
@@ -367,8 +418,12 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		return meshPoints
 	}
 
-
-
+	_Behavior3DRotate() {
+		const inst = this._inst
+		const rotate3D = inst.GetBehaviorSdkInstanceFromCtor(C3.Behaviors.mikal_rotate_shape)
+		if (!rotate3D) return null
+		return rotate3D
+	}
 
 	/*
     Trigger(method) {
