@@ -72,6 +72,11 @@ const BEHAVIOR_INFO = {
             "forward": (inst) => inst._ApplyTorque,
             
             "autoScriptInterface": true,
+            },
+"AttachSpring": {
+            "forward": (inst) => inst._AttachSpring,
+            
+            "autoScriptInterface": true,
             }
     },
     Cnds: {
@@ -184,6 +189,13 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
     const world = globalThis.Mikal_Cannon_world
     if (world) world.step((1 / 60)*10, dt, 3);
     this.runtime.UpdateRender()
+    const bodies = world.bodies
+    for (const body of bodies) {
+      // apply forces from springs
+      for (let [key,spring] of body.springs) {
+        spring.applyForce();
+      }
+    }
   }
 
 };
@@ -503,6 +515,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			this.Trigger(C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision)
 		} )
 
+		body.springs = new Map();
+
 		world.addBody(body)
 		return body
 }
@@ -770,10 +784,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 					shouldStop: result.shouldStop,
 					tag,
 				}
-				console.log('hit tag', tag,)
 			} else {
 				this.raycastResult = {hasHit: false, tag}
-				console.log('miss tag', tag,)
 				// log miss
 			}
 			this.Trigger(C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyRaycastResult)
@@ -931,6 +943,20 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		const torque = new cannon.Vec3(x, y, z)
 		this.body.applyTorque(torque)
 	}
+
+	_AttachSpring(tag, otherUID, restLength, stiffness, damping, x, y, z, otherX, otherY, otherZ ) {
+		if (!this.body) return
+		const cannon = globalThis.Mikal_Cannon
+		const world = globalThis.Mikal_Cannon_world
+		const otherBody = world.bodies.find((body) => body.uid === otherUID)
+		if (!otherBody) return
+		const localPivot = new cannon.Vec3(x, y, z)
+		const otherLocalPivot = new cannon.Vec3(otherX, otherY, otherZ)
+		const spring = new cannon.Spring(this.body, otherBody, {localPivotA: localPivot, localPivotB: otherLocalPivot, restLength, stiffness, damping})
+		debugger;
+		this.body.springs.set(tag, spring)
+	}
+	
 
     GetScriptInterfaceClass() {
       return scriptInterface;

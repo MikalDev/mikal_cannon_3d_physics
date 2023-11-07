@@ -459,6 +459,70 @@
             "value": "0"
           }
         ]
+      },
+      {
+        "id": "AttachSpring",
+        "scriptName": "AttachSpring",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": "\"a\""
+          },
+          {
+            "id": "otherBodyUID",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "restLength",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "stiffness",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "damping",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "localAnchorX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "localAnchorY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "localAnchorZ",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "otherLocalAnchorX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "otherLocalAnchorY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "otherLocalAnchorZ",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
       }
     ],
     "expressions": [

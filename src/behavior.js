@@ -51,6 +51,13 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
     const world = globalThis.Mikal_Cannon_world
     if (world) world.step((1 / 60)*10, dt, 3);
     this.runtime.UpdateRender()
+    const bodies = world.bodies
+    for (const body of bodies) {
+      // apply forces from springs
+      for (let [key,spring] of body.springs) {
+        spring.applyForce();
+      }
+    }
   }
 
 };

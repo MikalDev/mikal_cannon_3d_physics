@@ -293,6 +293,57 @@
                 "desc": "Torque vector z."
               }
             }
+          },
+          "AttachSpring": {
+            "list-name": "Attach spring",
+            "display-text": "{my} Attach spring {0} to uid {1}, length {2}, stiffness {3}, damping {4}, {5}, {6}, {7}, {8}, {9}, {10}",
+            "description": "Attach spring from this body to another body.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag for spring."
+              },
+              "otherBodyUID": {
+                "name": "Other body uid",
+                "desc": "Other body uid."
+              },
+              "restLength": {
+                "name": "Rest length",
+                "desc": "Rest length."
+              },
+              "stiffness": {
+                "name": "Stiffness",
+                "desc": "Stiffness."
+              },
+              "damping": {
+                "name": "Damping",
+                "desc": "Damping."
+              },
+              "localAnchorX": {
+                "name": "Local anchor x",
+                "desc": "Local anchor x."
+              },
+              "localAnchorY": {
+                "name": "Local anchor y",
+                "desc": "Local anchor y."
+              },
+              "localAnchorZ": {
+                "name": "Local anchor z",
+                "desc": "Local anchor z."
+              },
+              "otherLocalAnchorX": {
+                "name": "Other local anchor x",
+                "desc": "Other body local anchor x."
+              },
+              "otherLocalAnchorY": {
+                "name": "Other local anchor y",
+                "desc": "Other body local anchor y."
+              },
+              "otherLocalAnchorZ": {
+                "name": "Other local anchor z",
+                "desc": "Other body local anchor z."
+              }
+            }
           }
         },
         "conditions": {
