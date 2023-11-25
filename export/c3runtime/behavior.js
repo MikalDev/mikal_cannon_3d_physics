@@ -53,6 +53,11 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
             },
+"UpdateHeightfield": {
+            "forward": (inst) => inst._UpdateHeightfield,
+            
+            "autoScriptInterface": true,
+            },
 "SetCollisionFilterGroup": {
             "forward": (inst) => inst._SetCollisionFilterGroup,
             
@@ -134,6 +139,21 @@ const BEHAVIOR_INFO = {
           },
 "CollisionData": {
             "forward": (inst) => inst._CollisionData,
+            
+            "autoScriptInterface": true,
+          },
+"VelocityX": {
+            "forward": (inst) => inst._VelocityX,
+            
+            "autoScriptInterface": true,
+          },
+"VelocityY": {
+            "forward": (inst) => inst._VelocityY,
+            
+            "autoScriptInterface": true,
+          },
+"VelocityZ": {
+            "forward": (inst) => inst._VelocityZ,
             
             "autoScriptInterface": true,
           }
@@ -319,11 +339,14 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
       if (properties) {
 		this.enable = properties[0];
 		this.immovable = properties[1];
-		this.shape = properties[2];
+		this.shapeProperty = properties[2];
       }
       this._StartTicking2()
       this.defaultMass = 1
       this.body = null
+	  this.shapePositionOffset = null
+	  this.offsetPosition = null
+	  this.shapeAngleOffset = null
     }
 
     Release() {
@@ -351,16 +374,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		if (this.pluginType === "3DObjectPlugin" && !body && this._inst.GetSdkInstance().loaded) {
 				const loaded = this._inst.GetSdkInstance().loaded
 				if (!loaded) return
-				// Get bbox of 3DObject
-				const xMinBB = this._inst.GetSdkInstance().xMinBB
-				const xMaxBB = this._inst.GetSdkInstance().xMaxBB
-				const x = xMaxBB[0] -xMinBB[0]
-				const y = xMaxBB[1] -xMinBB[1]
-				const z = xMaxBB[2] -xMinBB[2]
-				// define shape as cannon box
-				const cannon = globalThis.Mikal_Cannon
-				const shape = new cannon.Box(new cannon.Vec3(x, y, z))
-				this.body = this.DefineBody(this.pluginType, shape)
+				this.body = this.DefineBody(this.pluginType, this.shapeProperty)
 				this._inst.GetSdkInstance()._setCannonBody(this.body, true)
 		}
 
@@ -368,14 +382,11 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		if (!this.enable) return
 
 		const CannonPhysics = this._behaviorType._behavior
-		if (this.pluginType === "3DObjectPlugin") {
-			// _setCannonBody is called from 3DObjectPlugin
-			CannonPhysics.Tick()
-			return
-		}
 
 		const shapeInst = this._inst.GetSdkInstance()
-		const zHeight = shapeInst._zHeight
+		let zHeight = shapeInst._zHeight
+		if (!zHeight) zHeight = 0
+
 
 		const wi = this._inst.GetWorldInfo();
 
@@ -403,9 +414,15 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		
 		CannonPhysics.Tick()
 
-		wi.SetX(body.position.x)
-		wi.SetY(body.position.y)
-		wi.SetZElevation(body.position.z-zHeight/2)
+		const position = body.position
+
+		wi.SetX(position.x)
+		wi.SetY(position.y)
+		if (this.pluginType == "3DObjectPlugin") {
+			wi.SetZElevation(position.z)
+		} else {
+			wi.SetZElevation(position.z-zHeight/2)
+		}
 		// angle
 		const quatRot = this.body.quaternion
 	if (this.rotate3D) {
@@ -429,13 +446,16 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 	PostCreate() {
 		this.rotate3D = this._Behavior3DRotate()
 		const pluginType = this._inst.GetPlugin()
-		if (pluginType instanceof C3?.Plugins?.Shape3D) {
+		if (C3?.Plugins?.Shape3D && pluginType instanceof C3?.Plugins?.Shape3D) {
 			this.pluginType = "Shape3DPlugin"
 			if (!this.body) {
 				const shape = this._inst.GetSdkInstance()._shape
 				this.body = this.DefineBody(this.pluginType, shape)
 			}
-		} else if (pluginType instanceof C3?.Plugins?.Mikal_3DObject) {
+		} else if (C3?.Plugins?.Sprite && pluginType instanceof C3?.Plugins?.Sprite) {
+			this.pluginType = "SpritePlugin"
+			this.body = this.DefineBody(this.pluginType, null);
+		} else if (C3?.Plugins?.Mikal_3DObject && pluginType instanceof C3?.Plugins?.Mikal_3DObject) {
 			this.pluginType = "3DObjectPlugin"
 		} else {
 			this.pluginType = "invalid"
@@ -448,7 +468,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		const shapeInst = this._inst.GetSdkInstance()
 		const wi = this._inst.GetWorldInfo();
 		const world = globalThis.Mikal_Cannon_world
-		const zHeight = shapeInst._zHeight
+		let zHeight = shapeInst._zHeight
+		if (!zHeight) zHeight = 0
 		let shape = null
 		let angularFactor = new cannon.Vec3(1, 1, 1)
 		if (pluginType === "Shape3DPlugin") {
@@ -468,7 +489,16 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			// 3DShape can only rotate around z axis
 			if (!this.rotate3D) angularFactor.set(0, 0, 1)
 		} else if (pluginType === "3DObjectPlugin") {
-			shape = this._create3DObjectShape()
+			shape = this._create3DObjectShape(this.shapeProperty)
+		} else if (pluginType === "SpritePlugin") {
+			const width = wi.GetWidth()
+			const height = wi.GetHeight()
+			const offsetX = width/2
+			const offsetY = height/2
+			this.shapePositionOffset = new cannon.Vec3(-offsetX, (offsetY), 0)
+			this.shapeAngleOffset = new cannon.Quaternion()
+			this.shapeAngleOffset.setFromEuler(0, 0, -90*Math.PI/180, "ZXY")
+			shape = this._createMeshShape(wi)
 		} else {
 			console.error('invalid pluginType', pluginType)
 			return null
@@ -488,13 +518,20 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		this.lastYAngle = angleY
 		this.lastXAngle = angleX
 
+		const position = new cannon.Vec3(x,y,z)
+
 		const body = new cannon.Body({
 			mass: mass,
-			position: new cannon.Vec3(x,y,z),
-			shape,
+			position: position,
 			angularFactor: angularFactor,
 			type: cannon.Body.DYNAMIC,
 		})
+		
+		if (this.shapePositionOffset) {
+			body.addShape(shape, this.shapePositionOffset, this.shapeAngleOffset)
+		} else {
+			body.addShape(shape)
+		}
 
 		if (this.rotate3D) {
 			angleX = this.rotate3D._xAngle * Math.PI / 180
@@ -520,18 +557,33 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		world.addBody(body)
 		return body
 }
-	_create3DObjectShape() {
+	_create3DObjectShape(shapeProperty) {
+		// Get bbox of 3DObject
 		const cannon = globalThis.Mikal_Cannon
 		const inst = this._inst.GetSdkInstance()
 		const xMinBB = inst.xMinBB
 		const xMaxBB = inst.xMaxBB
-		// log bbox
-		// calculate width, height, depth from xMinBB and xMaxBB 3 element arrays
-		const width = xMaxBB[0] -xMinBB[0]
-		const height = xMaxBB[1] -xMinBB[1]
-		const depth = xMaxBB[2] -xMinBB[2]
-		// create cannon box shape
-		const shape = new cannon.Box(new cannon.Vec3(width/2, height/2, depth/2))
+		const x = xMaxBB[0] -xMinBB[0]
+		const y = xMaxBB[1] -xMinBB[1]
+		const z = xMaxBB[2] -xMinBB[2]
+		let shape = null
+		// define shape
+		switch (shapeProperty) {
+			case 0:
+			case 1:
+				shape = new cannon.Box(new cannon.Vec3(x/2, y/2, z/2))
+				break;
+			case 2:
+				shape = new cannon.Sphere(x/2)
+				break
+			case 3: 
+				// 12 segments
+				shape = new cannon.Cylinder(x/2, x/2, z, 12)
+				break
+			default:
+				console.error('invalid shape', this.shape)
+				return
+		}
 		return shape
 	}
 
@@ -674,6 +726,34 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		return prismShape
 	}
 
+	_createMeshPointsForSprite(worldInfo) {
+		const wi = worldInfo
+		// create 2x2 grid of points for sprite
+		// 2d array of points
+		// use worldinfo width and height and zElevation
+		// All should have same zElevation
+		// 0,0,0 is top left of sprite mesh
+		const width = wi.GetWidth()
+		const height = wi.GetHeight()
+		const zElevation = wi.GetZElevation()
+		const xMin = 0
+		const xMax = width
+		const yMin = 0
+		const yMax = height
+		const xStep = width
+		const yStep = height
+		const meshPoints = []
+		for (let y = yMin; y <= yMax; y+=yStep) {
+			const row = []
+			for (let x = xMin; x <= xMax; x+=xStep) {
+				const point = new globalThis.Mikal_Cannon.Vec3(x,y,0)
+				row.push(point)
+			}
+			meshPoints.push(row)
+		}
+		console.log('meshPoints Sprite', meshPoints)
+		return meshPoints
+	}
 
 	// create cannon-es mesh shape 
 	_createMeshShape(worldInfo) {
@@ -684,41 +764,56 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		const wi = worldInfo;
 		// Get mesh points
 		const meshPoints = this._getMeshPoints(wi)
+		console.log('meshPoints', meshPoints)
+		this._createMeshPointsForSprite(wi)
 		const vertices = []
 		// Create vertices list [x,y,z,x,y,z,...]
 		for (const row of meshPoints) {
 			for (const point of row) {
-				vertices.push(point.x)
-				vertices.push(point.y)
-				vertices.push(point.z)
+				vertices.push(point)
 			}
 		}
-		// Create indices list [0,1,2, 1,2,3, ...]
-		const indices = []
-		for (let r = 0; r < meshPoints.length-1; r++) {
-			const row = meshPoints[r]
-			for (let p = 0; p < row.length-1; p++) {
-				// tri top
-				indices.push(p)
-				indices.push(p+row.length)
-				indices.push(p+row.length+1)
-				// tri bottom
-				indices.push(p)
-				indices.push(p+row.length+1)
-				indices.push(p+1)
-			}
+
+		const gridWidth = meshPoints[0].length
+		const gridHeight = meshPoints.length
+
+		// Check if square grid, if not console.warn and return null
+		if (gridWidth !== gridHeight) {
+			console.warn('Mesh must be a square grid')
+			return null
 		}
-		const shape = new cannon.Trimesh(vertices, indices)
+
+		// Get delta X and Y from first two vertices
+		const deltaX = Math.abs(vertices[1].x - vertices[0].x)
+		const deltaY = Math.abs(vertices[1].y - vertices[0].y)
+
+		// Create two dimensional heightfield array using only z values from vertices
+		const heightfield = new Array(meshPoints.length).fill(0).map(() => new Array(meshPoints[0].length).fill(0))
+		let index = meshPoints.length-1
+		for (const row of meshPoints) {
+			let index2 = 0
+			for (const point of row) {
+				heightfield[index][index2] = point.z
+				index2++
+			}
+			index--
+		}
+		
+		// Create heightfield shape
+		const shape = new cannon.Heightfield(heightfield, {
+			elementSize: deltaX,
+		})
+
 		return shape
 	}
 
 	_getMeshPoints(worldInfo) {
 		const cannon = globalThis.Mikal_Cannon
 		const wi = worldInfo
-		const points = wi?._meshInfo?.transformedMesh?._pts
+		const points = wi?._meshInfo?.sourceMesh?._pts
+		if (!points) return this._createMeshPointsForSprite(wi)
 		const width = wi.GetWidth()
 		const height = wi.GetHeight()
-		if (!points) return null
 		const meshPoints = []
 		for (const rows of points) {
 			const meshRow = []
@@ -730,6 +825,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			}
 			meshPoints.push(meshRow)
 		}
+
 		return meshPoints
 	}
 
@@ -953,13 +1049,48 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		const localPivot = new cannon.Vec3(x, y, z)
 		const otherLocalPivot = new cannon.Vec3(otherX, otherY, otherZ)
 		const spring = new cannon.Spring(this.body, otherBody, {localPivotA: localPivot, localPivotB: otherLocalPivot, restLength, stiffness, damping})
-		debugger;
 		this.body.springs.set(tag, spring)
 	}
-	
+
+	_VelocityX() {
+		if (!this.body) return 0
+		return this.body.velocity.x
+	}
+
+	_VelocityY() {
+		if (!this.body) return 0
+		return this.body.velocity.y
+	}
+
+	_VelocityZ() {
+		if (!this.body) return 0
+		return this.body.velocity.z
+	}
+
+	_UpdateHeightfield() {
+		if (!this.body) return;
+		const shape = this.body.shapes[0];
+		const meshPoints = this._getMeshPoints(this._inst.GetWorldInfo());
+		// Create two dimensional heightfield array using only z values from vertices
+		const heightfield = new Array(meshPoints.length)
+			.fill(0)
+			.map(() => new Array(meshPoints[0].length).fill(0));
+		let index = meshPoints.length - 1;
+		for (const row of meshPoints) {
+			let index2 = 0;
+			for (const point of row) {
+			heightfield[index][index2] = point.z;
+			index2++;
+			}
+			index--;
+		}
+		shape.data = heightfield;
+		shape.update();
+	}	
+		
 
     GetScriptInterfaceClass() {
-      return scriptInterface;
+		return scriptInterface;
     }
   };
 }

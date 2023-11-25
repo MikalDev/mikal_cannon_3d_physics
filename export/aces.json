@@ -370,6 +370,20 @@
         ]
       },
       {
+        "id": "UpdateHeightfield",
+        "scriptName": "UpdateHeightfield",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "heightfield",
+            "type": "number",
+            "initialValue": 0
+          }
+        ]
+      },
+      {
         "id": "SetCollisionFilterGroup",
         "scriptName": "SetCollisionFilterGroup",
         "highlight": false,
@@ -543,6 +557,36 @@
         "highlight": false,
         "deprecated": false,
         "returnType": "string",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "VelocityX",
+        "scriptName": "VelocityX",
+        "expressionName": "VelocityX",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "VelocityY",
+        "scriptName": "VelocityY",
+        "expressionName": "VelocityY",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "VelocityZ",
+        "scriptName": "VelocityZ",
+        "expressionName": "VelocityZ",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
         "isVariadicParameters": false,
         "params": []
       }

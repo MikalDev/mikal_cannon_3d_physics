@@ -26,7 +26,9 @@
             "desc": "Immovable body.",
             "items": {
               "auto": "Auto",
-              "box": "Box"
+              "box": "Box",
+              "sphere": "Sphere",
+              "cylinder": "Cylinder"
             }
           }
         },
@@ -222,6 +224,17 @@
               }
             }
           },
+          "UpdateHeightfield": {
+            "list-name": "Update heightfield",
+            "display-text": "Update {my} heightfield {0}",
+            "description": "Update heightfield for mesh/heightfield.",
+            "params": {
+              "heightfield": {
+                "name": "Heightfield",
+                "desc": "Heightfield."
+              }
+            }
+          },
           "SetCollisionFilterGroup": {
             "list-name": "Set collision filter group",
             "display-text": "Set {my} collision filter group {0}",
@@ -412,6 +425,21 @@
           "CollisionData": {
             "translated-name": "CollisionData",
             "description": "Collision data as JSON string.",
+            "params": {}
+          },
+          "VelocityX": {
+            "translated-name": "VelocityX",
+            "description": "Velocity x vector.",
+            "params": {}
+          },
+          "VelocityY": {
+            "translated-name": "VelocityY",
+            "description": "Velocity y vector.",
+            "params": {}
+          },
+          "VelocityZ": {
+            "translated-name": "VelocityZ",
+            "description": "Velocity z vector.",
             "params": {}
           }
         }

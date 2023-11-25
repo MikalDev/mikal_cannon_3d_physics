@@ -3,7 +3,7 @@ module.exports = {
   addonType: "behavior",
   id: "mikal_cannon_3d_physics",
   name: "Cannon 3D Physics",
-  version: "1.14.0",
+  version: "1.18.0",
   category:
     // "attributes",
     "movements",
@@ -117,6 +117,8 @@ module.exports = {
       items: [
         { "auto": "Auto" },
         { "box": "Box" },
+        { "sphere": "Sphere" },
+        { "cylinder": "Cylinder" },
       ]
     }
    },
@@ -514,6 +516,31 @@ module.exports = {
       // The description of the action as it appears in the add action dialog
       description: "Set mass of body.",
     },
+
+    // Update heightfield body action
+    UpdateHeightfield: {
+      category : "body",
+      forward : "_UpdateHeightfield",
+      autoScriptInterface : true,
+      highlight : false,
+      deprecated : false,
+      isAsync : false,
+      // list of parameters
+      params : [
+        {
+          id: "heightfield",
+          name: "Heightfield",
+          desc: "Heightfield.",
+          type: "number",
+          initialValue: 0
+        }
+      ],
+      listName: "Update heightfield",
+      displayText: "Update {my} heightfield {0}",
+      // The description of the action as it appears in the add action dialog
+      description: "Update heightfield for mesh/heightfield.",
+    },
+
     SetCollisionFilterGroup: {
       category : "body",
       forward : "_SetCollisionFilterGroup",
@@ -1128,6 +1155,51 @@ module.exports = {
       params: [
       ],
       description: "Collision data as JSON string.",
+    },
+    // Velocity X
+    VelocityX: {
+      // The category of the action as it appears in the expression picker
+      category: "body",
+      forward: "_VelocityX",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      returnType: "number",
+      // Set to true if the expression is variadic. False by default if not specified.
+      isVariadicParameters: false,
+      params: [
+      ],
+      description: "Velocity x vector.",
+    },
+    // Velocity Y
+    VelocityY: {
+      // The category of the action as it appears in the expression picker
+      category: "body",
+      forward: "_VelocityY",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      returnType: "number",
+      // Set to true if the expression is variadic. False by default if not specified.
+      isVariadicParameters: false,
+      params: [
+      ],
+      description: "Velocity y vector.",
+    },
+    // Velocity Z
+    VelocityZ: {
+      // The category of the action as it appears in the expression picker
+      category: "body",
+      forward: "_VelocityZ",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      returnType: "number",
+      // Set to true if the expression is variadic. False by default if not specified.
+      isVariadicParameters: false,
+      params: [
+      ],
+      description: "Velocity z vector.",
     },          
     /*
     SampleExpression: {
