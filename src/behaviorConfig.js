@@ -3,7 +3,7 @@ module.exports = {
   addonType: "behavior",
   id: "mikal_cannon_3d_physics",
   name: "Cannon 3D Physics",
-  version: "1.18.0",
+  version: "2.0.0",
   category:
     // "attributes",
     "movements",

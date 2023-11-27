@@ -1,3 +1,4 @@
+import RAPIER from 'https://cdn.skypack.dev/@dimforge/rapier3d-compat';
 const C3 = self.C3;
 
 const BEHAVIOR_INFO = {
@@ -207,8 +208,9 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
     this.tickCount = tickCount
     const dt = this.runtime.GetDt(this._inst)*10;
     const world = globalThis.Mikal_Cannon_world
-    if (world) world.step((1 / 60)*10, dt, 3);
+    if (world) world.step() // world.step((1 / 60)*10, dt, 3);
     this.runtime.UpdateRender()
+    return
     const bodies = world.bodies
     for (const body of bodies) {
       // apply forces from springs
@@ -224,12 +226,21 @@ B_C.Type = class extends C3.SDKBehaviorTypeBase {
   constructor(objectClass) {
     super(objectClass);
     if (globalThis.Mikal_Cannon_world) return
-    globalThis.Mikal_Cannon_world = new globalThis.Mikal_Cannon.World();
-    const world = globalThis.Mikal_Cannon_world
-    // Default gravity
-    world.gravity.set(0, 0, -9.82); // m/s²
-    world.defaultLinearDamping = 0.1
-    // console.log('Mikal_Cannon_world', world)
+    if (true) {
+      RAPIER.init().then(() => {
+        // Use the RAPIER module here.
+        let gravity = { x: 0.0, y: 0.0, z: -90.81 };
+        globalThis.Mikal_Cannon_world = new RAPIER.World(gravity)
+        globalThis.Mikal_Rapier = RAPIER
+      });
+    } else {
+      globalThis.Mikal_Cannon_world = new globalThis.Mikal_Cannon.World();
+      const world = globalThis.Mikal_Cannon_world
+      // Default gravity
+      world.gravity.set(0, 0, -9.82); // m/s²
+      world.defaultLinearDamping = 0.1
+      // console.log('Mikal_Cannon_world', world)
+    }
   }
 
   Release() {
@@ -389,18 +400,28 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
 
 		const wi = this._inst.GetWorldInfo();
+		if (this.lastZ !== wi.GetZElevation()) {
+			// body.position.z = wi.GetZElevation()+body.shapes[0].halfExtents.z
+			const position = body.translation();
+			body.setTranslation({ x: position.x, y: position.y, z:wi.GetZElevation()+zHeight/2}, true);
+		}
 
+		if (this.lastZAngle !== wi.GetAngle()) {
+			const angle = wi.GetAngle()
+			const angles = new globalThis.Mikal_Cannon.Vec3()
+			const quat = gloalThis.glMatrix.quat
+			const rotate = quatFromEuler(quat.create(), 0, 0, angle)
+			body.setRotation({ x: rotate[0], y: rotate[1], z: rotate[2], w: rotate[3] }, true)
+			if (this.rotate3D) this.rotate3D._zAngle = angle * 180 / Math.PI
+		}
+
+		/*
 		if (this.lastX !== wi.GetX()) {
 			body.position.x = wi.GetX()
 		}
 
 		if (this.lastY !== wi.GetY()) {
 			body.position.y = wi.GetY()
-		}
-
-		if (this.lastZ !== wi.GetZElevation()) {
-			// body.position.z = wi.GetZElevation()+body.shapes[0].halfExtents.z
-			body.position.z = wi.GetZElevation()+zHeight/2
 		}
 
 		if (this.lastZAngle !== wi.GetAngle()) {
@@ -411,10 +432,13 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			body.quaternion.setFromEuler(0, 0, angle, "ZXY")
 			if (this.rotate3D) this.rotate3D._zAngle = angle * 180 / Math.PI
 		}
+		*/
 		
 		CannonPhysics.Tick()
 
-		const position = body.position
+		// const position = body.position
+		const position = body.translation();
+		const quatRot = body.rotation()
 
 		wi.SetX(position.x)
 		wi.SetY(position.y)
@@ -424,10 +448,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			wi.SetZElevation(position.z-zHeight/2)
 		}
 		// angle
-		const quatRot = this.body.quaternion
 	if (this.rotate3D) {
 			this.rotate3D._useQuaternion = true
-			this.rotate3D._quaternion = quatRot.toArray()
+			this.rotate3D._quaternion = [quatRot.x, quatRot.y, quatRot.z, quatRot.w]
 		} else {
 			const angles = new globalThis.Mikal_Cannon.Vec3()
 			quatRot.toEuler(angles, "ZYX")
@@ -474,7 +497,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		let angularFactor = new cannon.Vec3(1, 1, 1)
 		if (pluginType === "Shape3DPlugin") {
 			if (shapeType === 0) {
-				shape = new cannon.Box(new cannon.Vec3(wi.GetWidth() / 2, wi.GetHeight() / 2, zHeight/2))
+				// shape = new cannon.Box(new cannon.Vec3(wi.GetWidth() / 2, wi.GetHeight() / 2, zHeight/2))		  
+				// Create a cuboid collider attached to the dynamic rigidBody.
+				shape = RAPIER.ColliderDesc.cuboid(wi.GetWidth() / 2, wi.GetHeight() / 2, zHeight/2);
 			} else if (shapeType === 1) {
 				shape = this._createPrismShape(wi.GetHeight(), wi.GetWidth(), zHeight)
 			} else if (shapeType === 2) {
@@ -520,6 +545,18 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
 		const position = new cannon.Vec3(x,y,z)
 
+		    // Create a dynamic rigid-body.
+		let rigidBodyDesc = null
+		if (this.immovable) {
+			rigidBodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(x, y, z);
+		} else {
+			rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(x, y, z);
+		}
+    	const body = world.createRigidBody(rigidBodyDesc);
+    	const collider = world.createCollider(shape, body);
+		
+		return body
+		/*
 		const body = new cannon.Body({
 			mass: mass,
 			position: position,
@@ -556,6 +593,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
 		world.addBody(body)
 		return body
+		*/
 }
 	_create3DObjectShape(shapeProperty) {
 		// Get bbox of 3DObject
@@ -751,7 +789,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			}
 			meshPoints.push(row)
 		}
-		console.log('meshPoints Sprite', meshPoints)
 		return meshPoints
 	}
 
@@ -764,7 +801,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		const wi = worldInfo;
 		// Get mesh points
 		const meshPoints = this._getMeshPoints(wi)
-		console.log('meshPoints', meshPoints)
 		this._createMeshPointsForSprite(wi)
 		const vertices = []
 		// Create vertices list [x,y,z,x,y,z,...]
@@ -855,46 +891,57 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
 	_Raycast(tag, fromX,fromY,fromZ,x,y,z, group, mask, skipBackfaces, mode) {
 		// log parameters
-		const cannon = globalThis.Mikal_Cannon
+		const rapier = globalThis.Mikal_Rapier
 		const world = globalThis.Mikal_Cannon_world
-		const from = new cannon.Vec3(fromX, fromY, fromZ)
-		const to = new cannon.Vec3(x, y, z)
-		let dir = to.vsub(from)
-		dir.normalize()
-		const rayMode = mode == 0 ? cannon.Ray.CLOSEST : mode == 1 ? cannon.Ray.ANY : cannon.Ray.ALL
-		const ray = new cannon.Ray(from,to)
-
-		const callback = () => {
-			const result = ray.result
-			if (result.hasHit) {
-				// log result with message
-				this.raycastResult = 
+		const vec3 = globalThis.glMatrix.vec3
+		const from = vec3.fromValues(fromX, fromY, fromZ)
+		const to = vec3.fromValues(x, y, z)
+		let maxToi = vec3.distance(from, to)
+		vec3.sub(to, to, from)
+		vec3.normalize(to,to)
+		const ray = new rapier.Ray({x:from[0], y:from[1], z:from[2]}, {x:to[0], y:to[1], z:to[2]})
+		maxToi = maxToi/vec3.length(to)
+		const solid = skipBackfaces ? false : true
+		const callback = (result) => {
+			if (result === null) {
+				this.raycastResult =
 				{
-					hasHit: result.hasHit,
-					hitFaceIndex: result.hitFaceIndex,
-					hitPointWorld: result.hitPointWorld.toArray(),
-					hitNormalWorld: result.hitNormalWorld.toArray(),
-					distance: result.distance,
-					hitUID: result.body.uid,
-					// shape: result.shape,
-					shouldStop: result.shouldStop,
+					hasHit: false,
+					hitFaceIndex: 0,
+					hitPointWorld: [0,0,0],
+					hitNormalWorld: [0,0,0],
+					distance: 0,
+					hitUID: 0,
+					shouldStop: false,
 					tag,
 				}
-			} else {
-				this.raycastResult = {hasHit: false, tag}
-				// log miss
+				this.Trigger(C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyRaycastResult)
+				this.Trigger(C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnRaycastResult)
+				return
+			}
+			// log result with message
+			const hitPointWorld = ray.pointAt(result.toi)
+			this.raycastResult = 
+			{
+				hasHit: true,
+				hitFaceIndex: 0,
+				// origin + dir * toi
+				hitPointWorld: [hitPointWorld.x, hitPointWorld.y, hitPointWorld.z],
+				hitNormalWorld: [result.normal.x, result.normal.y, result.normal.z],
+				distance: vec3.distance(from, [hitPointWorld.x, hitPointWorld.y, hitPointWorld.z]),
+				hitUID: result.collider.parent.uid,
+				shouldStop: false,
+				tag,
 			}
 			this.Trigger(C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyRaycastResult)
 			this.Trigger(C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnRaycastResult)
-	}
-
-		const options = {callback, mode: rayMode, skipBackfaces: skipBackfaces, collisionFilterGroup: group, collisionFilterMask: mask}		
-		ray.intersectWorld(world, options)
-
-		// If mode is "all" then callback is called for each hit already
-		if (rayMode !== cannon.Ray.ALL) {
-			callback()
+			return true
 		}
+
+		// const hit = world.castRayAndGetNormal(ray, maxToi, solid)
+		const hit = world.castRayAndGetNormal(ray, maxToi*100, true)
+		// Log results and parameters
+		callback(hit)
 	}
 
 
@@ -1005,9 +1052,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 	_ApplyImpulse(x,y,z,pointX,pointY,pointZ) {
 		if (!this.body) return
 		const cannon = globalThis.Mikal_Cannon
-		const point = new cannon.Vec3(pointX, pointY, pointZ)
-		const impulse = new cannon.Vec3(x, y, z)
-		this.body.applyImpulse(impulse, point)
+		// this.body.applyImpulse(impulse, point)
+		this.body.applyImpulseAtPoint({ x: x, y: y, z: z }, { x: pointX, y: pointY, z: pointZ }, true);
 	}
 
 	_SetMass(mass) {

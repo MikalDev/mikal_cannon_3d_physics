@@ -1,3 +1,4 @@
+import RAPIER from 'https://cdn.skypack.dev/@dimforge/rapier3d-compat';
 const C3 = self.C3;
 
 //<-- BEHAVIOR_INFO -->
@@ -49,8 +50,9 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
     this.tickCount = tickCount
     const dt = this.runtime.GetDt(this._inst)*10;
     const world = globalThis.Mikal_Cannon_world
-    if (world) world.step((1 / 60)*10, dt, 3);
+    if (world) world.step() // world.step((1 / 60)*10, dt, 3);
     this.runtime.UpdateRender()
+    return
     const bodies = world.bodies
     for (const body of bodies) {
       // apply forces from springs
@@ -66,12 +68,21 @@ B_C.Type = class extends C3.SDKBehaviorTypeBase {
   constructor(objectClass) {
     super(objectClass);
     if (globalThis.Mikal_Cannon_world) return
-    globalThis.Mikal_Cannon_world = new globalThis.Mikal_Cannon.World();
-    const world = globalThis.Mikal_Cannon_world
-    // Default gravity
-    world.gravity.set(0, 0, -9.82); // m/s²
-    world.defaultLinearDamping = 0.1
-    // console.log('Mikal_Cannon_world', world)
+    if (true) {
+      RAPIER.init().then(() => {
+        // Use the RAPIER module here.
+        let gravity = { x: 0.0, y: 0.0, z: -90.81 };
+        globalThis.Mikal_Cannon_world = new RAPIER.World(gravity)
+        globalThis.Mikal_Rapier = RAPIER
+      });
+    } else {
+      globalThis.Mikal_Cannon_world = new globalThis.Mikal_Cannon.World();
+      const world = globalThis.Mikal_Cannon_world
+      // Default gravity
+      world.gravity.set(0, 0, -9.82); // m/s²
+      world.defaultLinearDamping = 0.1
+      // console.log('Mikal_Cannon_world', world)
+    }
   }
 
   Release() {
