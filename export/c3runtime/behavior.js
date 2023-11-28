@@ -452,9 +452,10 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			this.rotate3D._useQuaternion = true
 			this.rotate3D._quaternion = [quatRot.x, quatRot.y, quatRot.z, quatRot.w]
 		} else {
-			const angles = new globalThis.Mikal_Cannon.Vec3()
-			quatRot.toEuler(angles, "ZYX")
-			const angle = angles.z
+			const quat = globalThis.glMatrix.quat
+			const zRot = quat.fromValues(quatRot.x, quatRot.y, quatRot.z, quatRot.w)
+			const angles = this._quaternionToEuler(zRot)
+			const angle = angles[2]
 			wi.SetAngle(angle)
 		}
 
@@ -494,7 +495,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		let zHeight = shapeInst._zHeight
 		if (!zHeight) zHeight = 0
 		let shape = null
-		let angularFactor = new cannon.Vec3(1, 1, 1)
+		const enableRot = [true, true, true]
 		if (pluginType === "Shape3DPlugin") {
 			if (shapeType === 0) {
 				// shape = new cannon.Box(new cannon.Vec3(wi.GetWidth() / 2, wi.GetHeight() / 2, zHeight/2))		  
@@ -512,7 +513,10 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 				shape = this._createCornerOutShape(wi.GetHeight(), wi.GetWidth(), zHeight)
 			}
 			// 3DShape can only rotate around z axis
-			if (!this.rotate3D) angularFactor.set(0, 0, 1)
+			if (!this.rotate3D) {
+				enableRot[0] = false
+				enableRot[1] = false
+			}
 		} else if (pluginType === "3DObjectPlugin") {
 			shape = this._create3DObjectShape(this.shapeProperty)
 		} else if (pluginType === "SpritePlugin") {
@@ -553,6 +557,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(x, y, z);
 		}
     	const body = world.createRigidBody(rigidBodyDesc);
+		body.setEnabledRotations(enableRot[0],enableRot[1],enableRot[2],true)
     	const collider = world.createCollider(shape, body);
 		
 		return body
@@ -595,6 +600,32 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		return body
 		*/
 }
+
+_quaternionToEuler(quat) {
+	// XYZ
+	// Quaternion components
+	const q0 = quat[3];
+	const q1 = quat[0];
+	const q2 = quat[1];
+	const q3 = quat[2];
+	// Roll (z-axis rotation)
+	const sinr_cosp = 2 * (q0 * q3 + q1 * q2);
+	const cosr_cosp = 1 - 2 * (q2 * q2 + q3 * q3);
+	const roll = Math.atan2(sinr_cosp, cosr_cosp);
+	// Pitch (x-axis rotation)
+	const sinp = 2 * (q0 * q1 - q2 * q3);
+	let pitch;
+	if (Math.abs(sinp) >= 1) {
+	  pitch = Math.copySign(Math.PI / 2, sinp); // Use 90 degrees if out of range
+	} else {
+		pitch = Math.asin(sinp);
+	}
+	// Yaw (y-axis rotation)
+	const siny_cosp = 2 * (q0 * q2 + q3 * q1);
+	const cosy_cosp = 1 - 2 * (q1 * q1 + q2 * q2);
+	const yaw = Math.atan2(siny_cosp, cosy_cosp);
+	return [pitch, yaw, roll]; // Returns Euler angles in radians
+}   
 	_create3DObjectShape(shapeProperty) {
 		// Get bbox of 3DObject
 		const cannon = globalThis.Mikal_Cannon
