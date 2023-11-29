@@ -819,7 +819,13 @@ _quaternionToEuler(quat) {
 		}
 		shape.data = heightfield;
 		shape.update();
-	}	
+	}
+	
+	_EnableDebugRender(enable, width) {
+		const behavior = this._behaviorType._behavior
+		behavior.debugRender = enable
+		behavior.debugRenderWidth = width
+	}
 		
 
     GetScriptInterfaceClass() {

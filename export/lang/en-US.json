@@ -357,6 +357,21 @@
                 "desc": "Other body local anchor z."
               }
             }
+          },
+          "EnableDebugRender": {
+            "list-name": "Enable debug render",
+            "display-text": "Enable {my} debug render {0} width {1}",
+            "description": "Enable debug render.",
+            "params": {
+              "enable": {
+                "name": "Enable",
+                "desc": "Enable debug render."
+              },
+              "width": {
+                "name": "Width",
+                "desc": "Width of debug render."
+              }
+            }
           }
         },
         "conditions": {

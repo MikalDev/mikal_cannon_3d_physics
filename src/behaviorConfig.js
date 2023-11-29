@@ -3,7 +3,7 @@ module.exports = {
   addonType: "behavior",
   id: "mikal_cannon_3d_physics",
   name: "Cannon 3D Physics",
-  version: "2.0.1",
+  version: "2.1.0",
   category:
     // "attributes",
     "movements",
@@ -772,6 +772,36 @@ module.exports = {
       displayText: "{my} Attach spring {0} to uid {1}, length {2}, stiffness {3}, damping {4}, {5}, {6}, {7}, {8}, {9}, {10}",
       // The description of the action as it appears in the add action dialog
       description: "Attach spring from this body to another body.",
+    },
+
+    EnableDebugRender: {
+      category: "world",
+      forward: "_EnableDebugRender",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      isAsync: false,
+      // list of parameters
+      params: [
+        {
+          id: "enable",
+          name: "Enable",
+          desc: "Enable debug render.",
+          type: "boolean",
+          value: "false",
+        },
+        {
+          id: "width",
+          name: "Width",
+          desc: "Width of debug render.",
+          type: "number",
+          value: "1",
+        },
+      ],
+      listName: "Enable debug render",
+      displayText: "Enable {my} debug render {0} width {1}",
+      // The description of the action as it appears in the add action dialog
+      description: "Enable debug render.",
     },
 
     /*

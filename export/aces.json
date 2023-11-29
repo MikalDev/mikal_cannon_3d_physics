@@ -158,6 +158,25 @@
             "value": "0.1"
           }
         ]
+      },
+      {
+        "id": "EnableDebugRender",
+        "scriptName": "EnableDebugRender",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "enable",
+            "type": "boolean",
+            "value": "false"
+          },
+          {
+            "id": "width",
+            "type": "number",
+            "value": "1"
+          }
+        ]
       }
     ],
     "expressions": [

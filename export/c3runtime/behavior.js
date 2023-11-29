@@ -83,6 +83,11 @@ const BEHAVIOR_INFO = {
             "forward": (inst) => inst._AttachSpring,
             
             "autoScriptInterface": true,
+            },
+"EnableDebugRender": {
+            "forward": (inst) => inst._EnableDebugRender,
+            
+            "autoScriptInterface": true,
             }
     },
     Cnds: {
@@ -196,6 +201,8 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
   constructor(opts) {
     super(opts);
     this.runtime = opts.runtime;
+    this.debugRenderWidth = 1
+    this.debugRender = false
   }
 
   Release() {
@@ -209,38 +216,28 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
     const dt = this.runtime.GetDt(this._inst)*10;
     const world = globalThis.Mikal_Cannon_world
     if (world) world.step() // world.step((1 / 60)*10, dt, 3);
-    this.runtime.UpdateRender()
-    return
-    const bodies = world.bodies
-    for (const body of bodies) {
-      // apply forces from springs
-      for (let [key,spring] of body.springs) {
-        spring.applyForce();
-      }
-    }
-  }
 
+    if (this.debugRender) {
+      globalThis.Mikal_Rapier_debug_buffers = world.debugRender();
+      globalThis.Mikal_Rapier_debug_buffers.width = this.debugRenderWidth
+    } else {
+      globalThis.Mikal_Rapier_debug_buffers = null
+    }
+
+    this.runtime.UpdateRender()
+  }
 };
 const B_C = C3.Behaviors[BEHAVIOR_INFO.id];
 B_C.Type = class extends C3.SDKBehaviorTypeBase {
   constructor(objectClass) {
     super(objectClass);
     if (globalThis.Mikal_Cannon_world) return
-    if (true) {
       RAPIER.init().then(() => {
-        // Use the RAPIER module here.
-        let gravity = { x: 0.0, y: 0.0, z: -90.81 };
-        globalThis.Mikal_Cannon_world = new RAPIER.World(gravity)
-        globalThis.Mikal_Rapier = RAPIER
-      });
-    } else {
-      globalThis.Mikal_Cannon_world = new globalThis.Mikal_Cannon.World();
-      const world = globalThis.Mikal_Cannon_world
-      // Default gravity
-      world.gravity.set(0, 0, -9.82); // m/s²
-      world.defaultLinearDamping = 0.1
-      // console.log('Mikal_Cannon_world', world)
-    }
+      // Use the RAPIER module here.
+      let gravity = { x: 0.0, y: 0.0, z: -90.81 };
+      globalThis.Mikal_Cannon_world = new RAPIER.World(gravity)
+      globalThis.Mikal_Rapier = RAPIER
+    });
   }
 
   Release() {
@@ -1163,7 +1160,13 @@ _quaternionToEuler(quat) {
 		}
 		shape.data = heightfield;
 		shape.update();
-	}	
+	}
+	
+	_EnableDebugRender(enable, width) {
+		const behavior = this._behaviorType._behavior
+		behavior.debugRender = enable
+		behavior.debugRenderWidth = width
+	}
 		
 
     GetScriptInterfaceClass() {
