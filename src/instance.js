@@ -14,6 +14,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 	  this.shapePositionOffset = null
 	  this.offsetPosition = null
 	  this.shapeAngleOffset = null
+	  this.uid = this._inst.GetUID()
     }
 
     Release() {
@@ -48,7 +49,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		if (!body) return
 		if (!this.enable) return
 
-		const CannonPhysics = this._behaviorType._behavior
+		const PhysicsType = this._behaviorType._behavior
 
 		const shapeInst = this._inst.GetSdkInstance()
 		let zHeight = shapeInst._zHeight
@@ -70,37 +71,25 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			body.setRotation({ x: rotate[0], y: rotate[1], z: rotate[2], w: rotate[3] }, true)
 			if (this.rotate3D) this.rotate3D._zAngle = angle * 180 / Math.PI
 		}
-
-		/*
-		if (this.lastX !== wi.GetX()) {
-			body.position.x = wi.GetX()
-		}
-
-		if (this.lastY !== wi.GetY()) {
-			body.position.y = wi.GetY()
-		}
-
-		if (this.lastZAngle !== wi.GetAngle()) {
-			const angle = wi.GetAngle()
-			const angles = new globalThis.Mikal_Cannon.Vec3()
-			// body.quaternion.toEuler(angles, "ZYX")
-			// body.quaternion.setFromEuler(angle.x, angle.y, angle, "ZXY")
-			body.quaternion.setFromEuler(0, 0, angle, "ZXY")
-			if (this.rotate3D) this.rotate3D._zAngle = angle * 180 / Math.PI
-		}
-		*/
 		
-		CannonPhysics.Tick()
+		PhysicsType.Tick()
 
 		// const position = body.position
 		const position = body.translation();
 		const quatRot = body.rotation()
+		/*if (!globalThis.Mikal_Rapier_Bodies) return
+		const wBody = globalThis.Mikal_Rapier_Bodies.get(this.uid)
+		if (!wBody) return
+		const position = wBody.translation
+		const quatRot = wBody.rotation
+		*/
 
 		wi.SetX(position.x)
 		wi.SetY(position.y)
 		if (this.pluginType == "3DObjectPlugin") {
 			wi.SetZElevation(position.z)
 		} else {
+			globalThis.enableUpdateRendererStateGroup  = false
 			wi.SetZElevation(position.z-zHeight/2)
 		}
 		// angle
@@ -145,6 +134,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
 	DefineBody(pluginType, shapeType) {
 		const cannon = globalThis.Mikal_Cannon
+		const PhysicsType = this._behaviorType._behavior
 		const shapeInst = this._inst.GetSdkInstance()
 		const wi = this._inst.GetWorldInfo();
 		const world = globalThis.Mikal_Cannon_world
@@ -157,6 +147,21 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 				// shape = new cannon.Box(new cannon.Vec3(wi.GetWidth() / 2, wi.GetHeight() / 2, zHeight/2))		  
 				// Create a cuboid collider attached to the dynamic rigidBody.
 				shape = RAPIER.ColliderDesc.cuboid(wi.GetWidth() / 2, wi.GetHeight() / 2, zHeight/2);
+				const worker = PhysicsType.rapierWorker
+				worker.postMessage({type: 'addBody', config: {
+					uid: this._inst.GetUID(),
+					x: wi.GetX(),
+					y: wi.GetY(),
+					z: wi.GetZElevation(),
+					qx: 0,
+					qy: 0,
+					qz: 0,
+					qw: 0,
+					width: wi.GetWidth(),
+					height: wi.GetHeight(),
+					depth: zHeight,
+					immovable: this.immovable,
+				}});
 			} else if (shapeType === 1) {
 				shape = this._createPrismShape(wi.GetHeight(), wi.GetWidth(), zHeight)
 			} else if (shapeType === 2) {

@@ -1,4 +1,5 @@
 import RAPIER from 'https://cdn.skypack.dev/@dimforge/rapier3d-compat';
+console.log('rapier-imported')
 const C3 = self.C3;
 
 const BEHAVIOR_INFO = {
@@ -203,16 +204,69 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
     this.runtime = opts.runtime;
     this.debugRenderWidth = 1
     this.debugRender = false
+    this.initWorker(this.runtime)
+    this.rapierWorker = null
   }
 
   Release() {
     super.Release();
+    this.msgPort.postMessage({type: 'release'});
+  }
+
+  async initWorker(runtime) {
+    await this.createWorker(runtime)
+    console.log('->w init')
+    await this.rapierWorker.postMessage({type: 'init'});
+  }
+
+  async createWorker(runtime)
+  {
+      // Create the worker with the runtime.createWorker() method.
+      // This must be awaited and resolves with a messagePort.
+      let path = await runtime.GetAssetManager().GetProjectFileUrl("rapierWorker.js")
+      this.rapierWorker = new Worker(path, { type: 'module' });
+      // Add an onmessage handler to receive message
+      this.rapierWorker.onmessage = ((e) =>
+      {
+          switch(e.data.type) {
+              case 'init':
+                  console.log('w init', e.data.id)
+                  break;
+              case 'tick':
+                  this.updateBodies(e.data.bodies)
+                  break;
+              case 'addBody':
+                  break;
+              default:
+                  console.warn('unknown message type:', e.data.type)
+          }
+      });
+  }
+
+  updateBodies(bodies) {
+    globalThis.Mikal_Rapier_Bodies = new Map()
+    for (let i = 0; i < bodies.length; i+=8) {
+      const uid = bodies[i]
+      const x = bodies[i+1]
+      const y = bodies[i+2]
+      const z = bodies[i+3]
+      const rx = bodies[i+4]
+      const ry = bodies[i+5]
+      const rz = bodies[i+6]
+      const rw = bodies[i+7]
+      globalThis.Mikal_Rapier_Bodies.set(uid, {translation: {x, y, z}, rotation: {x:rx, y:ry, z:rz, w:rw}})
+    }
   }
 
   Tick() {
     const tickCount = this.runtime.GetTickCount();
     if (tickCount === this.tickCount) return
     this.tickCount = tickCount
+    if (this.rapierWorker) {
+      // this.rapierWorker.postMessage({type: 'tick'});
+      this.runtime.UpdateRender()
+      // return
+    }
     const dt = this.runtime.GetDt(this._inst)*10;
     const world = globalThis.Mikal_Cannon_world
     if (world) world.step() // world.step((1 / 60)*10, dt, 3);
@@ -224,7 +278,6 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
       globalThis.Mikal_Rapier_debug_buffers = null
     }
 
-    this.runtime.UpdateRender()
   }
 };
 const B_C = C3.Behaviors[BEHAVIOR_INFO.id];
@@ -232,9 +285,9 @@ B_C.Type = class extends C3.SDKBehaviorTypeBase {
   constructor(objectClass) {
     super(objectClass);
     if (globalThis.Mikal_Cannon_world) return
-      RAPIER.init().then(() => {
+    RAPIER.init().then(() => {
       // Use the RAPIER module here.
-      let gravity = { x: 0.0, y: 0.0, z: -90.81 };
+      let gravity = { x: 0.0, y: 0.0, z: -9.81 };
       globalThis.Mikal_Cannon_world = new RAPIER.World(gravity)
       globalThis.Mikal_Rapier = RAPIER
     });
@@ -355,6 +408,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 	  this.shapePositionOffset = null
 	  this.offsetPosition = null
 	  this.shapeAngleOffset = null
+	  this.uid = this._inst.GetUID()
     }
 
     Release() {
@@ -389,7 +443,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		if (!body) return
 		if (!this.enable) return
 
-		const CannonPhysics = this._behaviorType._behavior
+		const PhysicsType = this._behaviorType._behavior
 
 		const shapeInst = this._inst.GetSdkInstance()
 		let zHeight = shapeInst._zHeight
@@ -411,37 +465,26 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			body.setRotation({ x: rotate[0], y: rotate[1], z: rotate[2], w: rotate[3] }, true)
 			if (this.rotate3D) this.rotate3D._zAngle = angle * 180 / Math.PI
 		}
-
-		/*
-		if (this.lastX !== wi.GetX()) {
-			body.position.x = wi.GetX()
-		}
-
-		if (this.lastY !== wi.GetY()) {
-			body.position.y = wi.GetY()
-		}
-
-		if (this.lastZAngle !== wi.GetAngle()) {
-			const angle = wi.GetAngle()
-			const angles = new globalThis.Mikal_Cannon.Vec3()
-			// body.quaternion.toEuler(angles, "ZYX")
-			// body.quaternion.setFromEuler(angle.x, angle.y, angle, "ZXY")
-			body.quaternion.setFromEuler(0, 0, angle, "ZXY")
-			if (this.rotate3D) this.rotate3D._zAngle = angle * 180 / Math.PI
-		}
-		*/
 		
-		CannonPhysics.Tick()
+		PhysicsType.Tick()
 
 		// const position = body.position
 		const position = body.translation();
 		const quatRot = body.rotation()
+		/*if (!globalThis.Mikal_Rapier_Bodies) return
+		const wBody = globalThis.Mikal_Rapier_Bodies.get(this.uid)
+		if (!wBody) return
+		const position = wBody.translation
+		const quatRot = wBody.rotation
+		*/
 
 		wi.SetX(position.x)
 		wi.SetY(position.y)
 		if (this.pluginType == "3DObjectPlugin") {
 			wi.SetZElevation(position.z)
 		} else {
+			globalThis.enableUpdateRendererStateGroup  = false
+			wi._ReleaseStateGroup = () => {}
 			wi.SetZElevation(position.z-zHeight/2)
 		}
 		// angle
@@ -486,6 +529,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
 	DefineBody(pluginType, shapeType) {
 		const cannon = globalThis.Mikal_Cannon
+		const PhysicsType = this._behaviorType._behavior
 		const shapeInst = this._inst.GetSdkInstance()
 		const wi = this._inst.GetWorldInfo();
 		const world = globalThis.Mikal_Cannon_world
@@ -498,6 +542,21 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 				// shape = new cannon.Box(new cannon.Vec3(wi.GetWidth() / 2, wi.GetHeight() / 2, zHeight/2))		  
 				// Create a cuboid collider attached to the dynamic rigidBody.
 				shape = RAPIER.ColliderDesc.cuboid(wi.GetWidth() / 2, wi.GetHeight() / 2, zHeight/2);
+				const worker = PhysicsType.rapierWorker
+				worker.postMessage({type: 'addBody', config: {
+					uid: this._inst.GetUID(),
+					x: wi.GetX(),
+					y: wi.GetY(),
+					z: wi.GetZElevation(),
+					qx: 0,
+					qy: 0,
+					qz: 0,
+					qw: 0,
+					width: wi.GetWidth(),
+					height: wi.GetHeight(),
+					depth: zHeight,
+					immovable: this.immovable,
+				}});
 			} else if (shapeType === 1) {
 				shape = this._createPrismShape(wi.GetHeight(), wi.GetWidth(), zHeight)
 			} else if (shapeType === 2) {

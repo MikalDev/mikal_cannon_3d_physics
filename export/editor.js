@@ -18,6 +18,11 @@ const BEHAVIOR_INFO = {
     {
       "filename": "cannon-es.js",
       "type": "inline-script"
+    },
+    {
+      "filename": "rapierWorker.js",
+      "type": "copy-to-output",
+      "fileType": "text/javascript"
     }
   ]
 },
