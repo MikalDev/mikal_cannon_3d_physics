@@ -73,6 +73,16 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
             },
+"ApplyForceTowardsPosition": {
+            "forward": (inst) => inst._ApplyForceTowardsPosition,
+            
+            "autoScriptInterface": true,
+            },
+"ApplyImpulseTowardsPosition": {
+            "forward": (inst) => inst._ApplyImpulseTowardsPosition,
+            
+            "autoScriptInterface": true,
+            },
 "ApplyTorque": {
             "forward": (inst) => inst._ApplyTorque,
             
@@ -1086,7 +1096,33 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 		}
 		shape.data = heightfield;
 		shape.update();
-	}	
+	}
+	
+	_ApplyForceTowardsPosition(force, x, y, z, pointX, pointY, pointZ) {
+		if (!this.body) return
+		const cannon = globalThis.Mikal_Cannon
+		const world = globalThis.Mikal_Cannon_world
+		const position = new cannon.Vec3(x, y, z)
+		const direction = position.vsub(this.body.position)
+		direction.normalize()
+		direction.scale(force, direction)
+		const point = new cannon.Vec3(pointX, pointY, pointZ)
+		console.log('direction', direction, force, 'point', point)
+		this.body.applyForce(direction, point)
+	}
+
+	_ApplyImpulseTowardsPosition(impulse, x, y, z, pointX, pointY, pointZ) {
+		if (!this.body) return
+		const cannon = globalThis.Mikal_Cannon
+		const world = globalThis.Mikal_Cannon_world
+		const position = new cannon.Vec3(x, y, z)
+		const direction = position.vsub(this.body.position)
+		direction.normalize()
+		direction.scale(impulse, direction)
+		const point = new cannon.Vec3(pointX, pointY, pointZ)
+		console.log('direction', direction, impulse, 'point', point)
+		this.body.applyImpulse(direction, point)
+	}
 		
 
     GetScriptInterfaceClass() {

@@ -3,7 +3,7 @@ module.exports = {
   addonType: "behavior",
   id: "mikal_cannon_3d_physics",
   name: "Cannon 3D Physics",
-  version: "1.18.0",
+  version: "1.19.0",
   category:
     // "attributes",
     "movements",
@@ -642,6 +642,136 @@ module.exports = {
       displayText: "Apply {my} force {0}, {1} , {2} to relative {3}, {4}, {5}",
       // The description of the action as it appears in the add action dialog
       description: "Apply force to body at relative point.",
+    },
+
+    ApplyForceTowardsPosition: {
+      category: "body",
+      forward: "_ApplyForceTowardsPosition",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      isAsync: false,
+      // list of parameters
+      params: [
+        {
+          id: "force",
+          name: "Force",
+          desc: "Force.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "x",
+          name: "X",
+          desc: "X.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "y",
+          name: "Y",
+          desc: "Y.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "z",
+          name: "Z",
+          desc: "Z.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "pointX",
+          name: "Relative x",
+          desc: "Relative point x.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "pointY",
+          name: "Relative y",
+          desc: "Relative point y.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "pointZ",
+          name: "Relative z",
+          desc: "Relative point z.",
+          type: "number",
+          value: "0",
+        },
+      ],
+      listName: "Apply force towards position",
+      displayText: "Apply {my} force {0} towards position {1}, {2} , {3} on relative {4}, {5}, {6}",
+      // The description of the action as it appears in the add action dialog
+      description: "Apply force to body towards position.",
+    },
+
+    ApplyImpulseTowardsPosition: {
+      category: "body",
+      forward: "_ApplyImpulseTowardsPosition",
+      autoScriptInterface: true,
+      highlight: false,
+      deprecated: false,
+      isAsync: false,
+      // list of parameters
+      params: [
+        {
+          id: "impulse",
+          name: "Impulse",
+          desc: "Impulse.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "x",
+          name: "X",
+          desc: "X.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "y",
+          name: "Y",
+          desc: "Y.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "z",
+          name: "Z",
+          desc: "Z.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "pointX",
+          name: "Relative x",
+          desc: "Relative point x.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "pointY",
+          name: "Relative y",
+          desc: "Relative point y.",
+          type: "number",
+          value: "0",
+        },
+        {
+          id: "pointZ",
+          name: "Relative z",
+          desc: "Relative point z.",
+          type: "number",
+          value: "0",
+        },
+      ],
+      listName: "Apply impulse towards position",
+      displayText: "Apply {my} impulse {0} towards position {1}, {2} , {3} on relative {4}, {5}, {6}",
+      // The description of the action as it appears in the add action dialog
+      description: "Apply impulse to body towards position.",
     },
 
     ApplyTorque: {
