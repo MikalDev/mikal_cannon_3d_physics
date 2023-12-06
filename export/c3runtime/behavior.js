@@ -484,7 +484,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 			wi.SetZElevation(position.z)
 		} else {
 			globalThis.enableUpdateRendererStateGroup  = false
-			wi._ReleaseStateGroup = () => {}
 			wi.SetZElevation(position.z-zHeight/2)
 		}
 		// angle
