@@ -1023,6 +1023,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 	_SetMass(mass) {
 		if (!this.body) return
 		this.body.mass = mass
+		this.body.updateMassProperties()
 	}
 
 	_SetCollisionFilterGroup(group) {

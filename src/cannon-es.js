@@ -10479,7 +10479,9 @@ class Narrowphase {
 
     if (friction > 0) {
       // Create 2 tangent equations
-      const mug = friction * world.gravity.length();
+      // XXX const mug = friction * world.gravity.length();
+      // Users may provide a force different from global gravity to use when computing contact friction.
+      const mug = friction * (world.frictionGravity || world.gravity).length();
       let reducedMass = bodyA.invMass + bodyB.invMass;
 
       if (reducedMass > 0) {
@@ -12211,6 +12213,11 @@ class World extends EventTarget {
 
     if (options.gravity) {
       this.gravity.copy(options.gravity);
+    }
+    // XXX next four lines
+    if (options.frictionGravity) {
+      this.frictionGravity = new Vec3();
+      this.frictionGravity.copy(options.frictionGravity);
     }
 
     this.broadphase = options.broadphase !== undefined ? options.broadphase : new NaiveBroadphase();
