@@ -1,5 +1,5 @@
-import RAPIER from 'https://cdn.skypack.dev/@dimforge/rapier3d-compat';
-console.log('rapier-imported')
+import * as Comlink from "https://cdn.skypack.dev/comlink";
+console.log("comlink-imported");
 const C3 = self.C3;
 
 //<-- BEHAVIOR_INFO -->
@@ -7,132 +7,104 @@ const C3 = self.C3;
 const camelCasedMap = new Map();
 
 function camelCasify(str) {
-  // If the string is already camelCased, return it
-  if (camelCasedMap.has(str)) {
-    return camelCasedMap.get(str);
-  }
-  // Replace any non-valid JavaScript identifier characters with spaces
-  let cleanedStr = str.replace(/[^a-zA-Z0-9$_]/g, " ");
+    // If the string is already camelCased, return it
+    if (camelCasedMap.has(str)) {
+        return camelCasedMap.get(str);
+    }
+    // Replace any non-valid JavaScript identifier characters with spaces
+    let cleanedStr = str.replace(/[^a-zA-Z0-9$_]/g, " ");
 
-  // Split the string on spaces
-  let words = cleanedStr.split(" ").filter(Boolean);
+    // Split the string on spaces
+    let words = cleanedStr.split(" ").filter(Boolean);
 
-  // Capitalize the first letter of each word except for the first one
-  for (let i = 1; i < words.length; i++) {
-    words[i] = words[i].charAt(0).toUpperCase() + words[i].substring(1);
-  }
+    // Capitalize the first letter of each word except for the first one
+    for (let i = 1; i < words.length; i++) {
+        words[i] = words[i].charAt(0).toUpperCase() + words[i].substring(1);
+    }
 
-  // Join the words back together
-  let result = words.join("");
+    // Join the words back together
+    let result = words.join("");
 
-  // If the first character is a number, prepend an underscore
-  if (!isNaN(parseInt(result.charAt(0)))) {
-    result = "_" + result;
-  }
+    // If the first character is a number, prepend an underscore
+    if (!isNaN(parseInt(result.charAt(0)))) {
+        result = "_" + result;
+    }
 
-  camelCasedMap.set(str, result);
+    camelCasedMap.set(str, result);
 
-  return result;
+    return result;
 }
 
 C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
-  constructor(opts) {
-    super(opts);
-    this.runtime = opts.runtime;
-    this.debugRenderWidth = 1
-    this.debugRender = false
-    this.initWorker(this.runtime)
-    this.rapierWorker = null
-  }
-
-  Release() {
-    super.Release();
-    this.msgPort.postMessage({type: 'release'});
-  }
-
-  async initWorker(runtime) {
-    await this.createWorker(runtime)
-    console.log('->w init')
-    await this.rapierWorker.postMessage({type: 'init'});
-  }
-
-  async createWorker(runtime)
-  {
-      // Create the worker with the runtime.createWorker() method.
-      // This must be awaited and resolves with a messagePort.
-      let path = await runtime.GetAssetManager().GetProjectFileUrl("rapierWorker.js")
-      this.rapierWorker = new Worker(path, { type: 'module' });
-      // Add an onmessage handler to receive message
-      this.rapierWorker.onmessage = ((e) =>
-      {
-          switch(e.data.type) {
-              case 'init':
-                  console.log('w init', e.data.id)
-                  break;
-              case 'tick':
-                  this.updateBodies(e.data.bodies)
-                  break;
-              case 'addBody':
-                  break;
-              default:
-                  console.warn('unknown message type:', e.data.type)
-          }
-      });
-  }
-
-  updateBodies(bodies) {
-    globalThis.Mikal_Rapier_Bodies = new Map()
-    for (let i = 0; i < bodies.length; i+=8) {
-      const uid = bodies[i]
-      const x = bodies[i+1]
-      const y = bodies[i+2]
-      const z = bodies[i+3]
-      const rx = bodies[i+4]
-      const ry = bodies[i+5]
-      const rz = bodies[i+6]
-      const rw = bodies[i+7]
-      globalThis.Mikal_Rapier_Bodies.set(uid, {translation: {x, y, z}, rotation: {x:rx, y:ry, z:rz, w:rw}})
-    }
-  }
-
-  Tick() {
-    const tickCount = this.runtime.GetTickCount();
-    if (tickCount === this.tickCount) return
-    this.tickCount = tickCount
-    if (this.rapierWorker) {
-      // this.rapierWorker.postMessage({type: 'tick'});
-      this.runtime.UpdateRender()
-      // return
-    }
-    const dt = this.runtime.GetDt(this._inst)*10;
-    const world = globalThis.Mikal_Cannon_world
-    if (world) world.step() // world.step((1 / 60)*10, dt, 3);
-
-    if (this.debugRender) {
-      globalThis.Mikal_Rapier_debug_buffers = world.debugRender();
-      globalThis.Mikal_Rapier_debug_buffers.width = this.debugRenderWidth
-    } else {
-      globalThis.Mikal_Rapier_debug_buffers = null
+    constructor(opts) {
+        super(opts);
+        this.runtime = opts.runtime;
+        this.debugRenderWidth = 1;
+        this.debugRender = false;
+        this.rapierWorker = null;
+        console.log("rapierBehavior created");
+        this.initWorker(this.runtime);
     }
 
-  }
+    Release() {
+        super.Release();
+        this.msgPort.postMessage({ type: "release" });
+    }
+
+    async initWorker(runtime) {
+        let path = await runtime
+            .GetAssetManager()
+            .GetProjectFileUrl("rapierWorker.js");
+        console.log("rapierWorker path, init", path);
+        this.rapierWorker = new Worker(path, { type: "module" });
+        console.log("after new Worker", this.rapierWorker);
+        this.comRapier = Comlink.wrap(this.rapierWorker);
+        console.log("after Comlink.wrap", this.comRapier);
+        this.comRapier.initWorld();
+    }
+
+    updateBodies(bodies) {
+        globalThis.Mikal_Rapier_Bodies = new Map();
+        for (let i = 0; i < bodies.length; i += 8) {
+            const uid = bodies[i];
+            const x = bodies[i + 1];
+            const y = bodies[i + 2];
+            const z = bodies[i + 3];
+            const rx = bodies[i + 4];
+            const ry = bodies[i + 5];
+            const rz = bodies[i + 6];
+            const rw = bodies[i + 7];
+            globalThis.Mikal_Rapier_Bodies.set(uid, {
+                translation: { x, y, z },
+                rotation: { x: rx, y: ry, z: rz, w: rw },
+            });
+        }
+    }
+
+    async Tick() {
+        const tickCount = this.runtime.GetTickCount();
+        if (tickCount === this.tickCount) return;
+        this.tickCount = tickCount;
+        if (!this.comRapier) return;
+        const bodies = await this.comRapier.stepWorld();
+        this.updateBodies(bodies);
+
+        this.runtime.UpdateRender();
+
+        // Debug render - must done in worker thread and sent back
+        // globalThis.Mikal_Rapier_debug_buffers = world.debugRender();
+        // globalThis.Mikal_Rapier_debug_buffers.width = this.debugRenderWidth;
+    }
 };
 const B_C = C3.Behaviors[BEHAVIOR_INFO.id];
 B_C.Type = class extends C3.SDKBehaviorTypeBase {
-  constructor(objectClass) {
-    super(objectClass);
-    if (globalThis.Mikal_Cannon_world) return
-    RAPIER.init().then(() => {
-      // Use the RAPIER module here.
-      let gravity = { x: 0.0, y: 0.0, z: -9.81 };
-      globalThis.Mikal_Cannon_world = new RAPIER.World(gravity)
-      globalThis.Mikal_Rapier = RAPIER
-    });
-  }
+    constructor(objectClass) {
+        super(objectClass);
+    }
 
-  Release() {
-    super.Release();
-  }
+    Release() {
+        super.Release();
+    }
 };
 
 //====== SCRIPT INTERFACE ======
@@ -144,47 +116,50 @@ const scriptInterface = getScriptInterface(self.IBehaviorInstance, map);
 
 // extend script interface with plugin actions
 Object.keys(BEHAVIOR_INFO.Acts).forEach((key) => {
-  const ace = BEHAVIOR_INFO.Acts[key];
-  if (!ace.autoScriptInterface) return;
-  scriptInterface.prototype[camelCasify(key)] = function (...args) {
-    const sdkInst = map.get(this);
-    B_C.Acts[camelCasify(key)].call(sdkInst, ...args);
-  };
+    const ace = BEHAVIOR_INFO.Acts[key];
+    if (!ace.autoScriptInterface) return;
+    scriptInterface.prototype[camelCasify(key)] = function (...args) {
+        const sdkInst = map.get(this);
+        B_C.Acts[camelCasify(key)].call(sdkInst, ...args);
+    };
 });
 
 const addonTriggers = [];
 
 // extend script interface with plugin conditions
 Object.keys(BEHAVIOR_INFO.Cnds).forEach((key) => {
-  const ace = BEHAVIOR_INFO.Cnds[key];
-  if (!ace.autoScriptInterface || ace.isStatic || ace.isLooping) return;
-  if (ace.isTrigger) {
-    scriptInterface.prototype[camelCasify(key)] = function (callback, ...args) {
-      const callbackWrapper = () => {
-        const sdkInst = map.get(this);
-        if (B_C.Cnds[camelCasify(key)].call(sdkInst, ...args)) {
-          callback();
-        }
-      };
-      this.addEventListener(key, callbackWrapper, false);
-      return () => this.removeEventListener(key, callbackWrapper, false);
-    };
-  } else {
-    scriptInterface.prototype[camelCasify(key)] = function (...args) {
-      const sdkInst = map.get(this);
-      return B_C.Cnds[camelCasify(key)].call(sdkInst, ...args);
-    };
-  }
+    const ace = BEHAVIOR_INFO.Cnds[key];
+    if (!ace.autoScriptInterface || ace.isStatic || ace.isLooping) return;
+    if (ace.isTrigger) {
+        scriptInterface.prototype[camelCasify(key)] = function (
+            callback,
+            ...args
+        ) {
+            const callbackWrapper = () => {
+                const sdkInst = map.get(this);
+                if (B_C.Cnds[camelCasify(key)].call(sdkInst, ...args)) {
+                    callback();
+                }
+            };
+            this.addEventListener(key, callbackWrapper, false);
+            return () => this.removeEventListener(key, callbackWrapper, false);
+        };
+    } else {
+        scriptInterface.prototype[camelCasify(key)] = function (...args) {
+            const sdkInst = map.get(this);
+            return B_C.Cnds[camelCasify(key)].call(sdkInst, ...args);
+        };
+    }
 });
 
 // extend script interface with plugin expressions
 Object.keys(BEHAVIOR_INFO.Exps).forEach((key) => {
-  const ace = BEHAVIOR_INFO.Exps[key];
-  if (!ace.autoScriptInterface) return;
-  scriptInterface.prototype[camelCasify(key)] = function (...args) {
-    const sdkInst = map.get(this);
-    return B_C.Exps[camelCasify(key)].call(sdkInst, ...args);
-  };
+    const ace = BEHAVIOR_INFO.Exps[key];
+    if (!ace.autoScriptInterface) return;
+    scriptInterface.prototype[camelCasify(key)] = function (...args) {
+        const sdkInst = map.get(this);
+        return B_C.Exps[camelCasify(key)].call(sdkInst, ...args);
+    };
 });
 //====== SCRIPT INTERFACE ======
 
@@ -193,39 +168,39 @@ B_C.Acts = {};
 B_C.Cnds = {};
 B_C.Exps = {};
 Object.keys(BEHAVIOR_INFO.Acts).forEach((key) => {
-  const ace = BEHAVIOR_INFO.Acts[key];
-  B_C.Acts[camelCasify(key)] = function (...args) {
-    if (ace.forward) ace.forward(this).call(this, ...args);
-    else if (ace.handler) ace.handler.call(this, ...args);
-  };
+    const ace = BEHAVIOR_INFO.Acts[key];
+    B_C.Acts[camelCasify(key)] = function (...args) {
+        if (ace.forward) ace.forward(this).call(this, ...args);
+        else if (ace.handler) ace.handler.call(this, ...args);
+    };
 });
 Object.keys(BEHAVIOR_INFO.Cnds).forEach((key) => {
-  const ace = BEHAVIOR_INFO.Cnds[key];
-  B_C.Cnds[camelCasify(key)] = function (...args) {
-    if (ace.forward) return ace.forward(this).call(this, ...args);
-    if (ace.handler) return ace.handler.call(this, ...args);
-  };
-  if (ace.isTrigger && ace.autoScriptInterface) {
-    addonTriggers.push({
-      method: B_C.Cnds[camelCasify(key)],
-      id: key,
-    });
-  }
+    const ace = BEHAVIOR_INFO.Cnds[key];
+    B_C.Cnds[camelCasify(key)] = function (...args) {
+        if (ace.forward) return ace.forward(this).call(this, ...args);
+        if (ace.handler) return ace.handler.call(this, ...args);
+    };
+    if (ace.isTrigger && ace.autoScriptInterface) {
+        addonTriggers.push({
+            method: B_C.Cnds[camelCasify(key)],
+            id: key,
+        });
+    }
 });
 Object.keys(BEHAVIOR_INFO.Exps).forEach((key) => {
-  const ace = BEHAVIOR_INFO.Exps[key];
-  B_C.Exps[camelCasify(key)] = function (...args) {
-    if (ace.forward) return ace.forward(this).call(this, ...args);
-    if (ace.handler) return ace.handler.call(this, ...args);
-  };
+    const ace = BEHAVIOR_INFO.Exps[key];
+    B_C.Exps[camelCasify(key)] = function (...args) {
+        if (ace.forward) return ace.forward(this).call(this, ...args);
+        if (ace.handler) return ace.handler.call(this, ...args);
+    };
 });
 //============ ACES ============
 
 //<-- INSTANCE -->
 
 B_C.Instance = getInstanceJs(
-  C3.SDKBehaviorInstanceBase,
-  scriptInterface,
-  addonTriggers,
-  C3
+    C3.SDKBehaviorInstanceBase,
+    scriptInterface,
+    addonTriggers,
+    C3
 );

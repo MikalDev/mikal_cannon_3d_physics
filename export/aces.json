@@ -556,6 +556,38 @@
             "initialValue": "0"
           }
         ]
+      },
+      {
+        "id": "EnableCharacterController",
+        "scriptName": "EnableCharacterController",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": []
+      },
+      {
+        "id": "TranslateCharacterController",
+        "scriptName": "TranslateCharacterController",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "value": "0"
+          }
+        ]
       }
     ],
     "expressions": [

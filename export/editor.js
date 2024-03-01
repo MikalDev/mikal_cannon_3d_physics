@@ -16,10 +16,6 @@ const BEHAVIOR_INFO = {
   },
   "fileDependencies": [
     {
-      "filename": "cannon-es.js",
-      "type": "inline-script"
-    },
-    {
       "filename": "rapierWorker.js",
       "type": "copy-to-output",
       "fileType": "text/javascript"
@@ -65,6 +61,23 @@ const BEHAVIOR_INFO = {
   "box",
   "sphere",
   "cylinder"
+],
+            },
+          },
+{
+            type: "combo",
+            id: "bodyType",
+            options: {
+              ...{
+  "initialValue": "dynamic"
+},
+              
+              
+              items: [
+  "dynamic",
+  "fixed",
+  "kinematic-position",
+  "kinematic-velocity"
 ],
             },
           }

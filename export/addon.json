@@ -23,7 +23,6 @@
     "addon.json",
     "icon.svg",
     "editor.js",
-    "c3runtime/cannon-es.js",
     "c3runtime/rapierWorker.js"
   ]
 }

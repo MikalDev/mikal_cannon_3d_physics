@@ -30,6 +30,16 @@
               "sphere": "Sphere",
               "cylinder": "Cylinder"
             }
+          },
+          "bodyType": {
+            "name": "Body type",
+            "desc": "Body type.",
+            "items": {
+              "dynamic": "Dynamic",
+              "fixed": "Fixed",
+              "kinematic-position": "Kinematic position",
+              "kinematic-velocity": "Kinematic velocity"
+            }
           }
         },
         "actions": {
@@ -370,6 +380,31 @@
               "width": {
                 "name": "Width",
                 "desc": "Width of debug render."
+              }
+            }
+          },
+          "EnableCharacterController": {
+            "list-name": "Enable character controller",
+            "display-text": "{my} Enable character controller",
+            "description": "Enable character controller.",
+            "params": {}
+          },
+          "TranslateCharacterController": {
+            "list-name": "Translate character controller",
+            "display-text": "{my} Translate character controller {0}, {1}, {2}",
+            "description": "Translate character controller.",
+            "params": {
+              "x": {
+                "name": "X",
+                "desc": "X."
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Y."
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Z."
               }
             }
           }
