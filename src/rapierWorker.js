@@ -43,14 +43,13 @@ const BodyType = {
     LinematicVelocity: 3,
 };
 
-const ShapeType = {
-    Cuboid: 0,
-    Ball: 1,
-    Capsule: 2,
-    Cylinder: 3,
-    Cone: 4,
-    TriMesh: 5,
-    HeightField: 6,
+const Shape = {
+    Box: 0,
+    Prism: 1,
+    Wedge: 2,
+    Pyramid: 3,
+    CornerOut: 4,
+    CornerIn: 5,
 };
 
 async function initWorld() {
@@ -62,10 +61,41 @@ async function initWorld() {
 }
 
 function createCollider(config) {
-    const shapeType = config.shapeType;
+    const shape = config.shape;
     let colliderDesc;
-    switch (shapeType) {
-
+    switch (shape) {
+        case Shape.Box:
+        case Shape.Prism:
+        case Shape.Pyramid:
+        case Shape.CornerIn:
+        case Shape.CornerOut:
+            colliderDesc = RAPIER.ColliderDesc.cuboid(
+                config.width / 2,
+                config.height / 2,
+                config.depth / 2
+            );
+            break;
+        case Shape.Wedge:
+            const points = [
+                new RAPIER.Vector3(0.0, 0.0, 0.0),
+                new RAPIER.Vector3(1.0, 0.0, 0.0),
+                new RAPIER.Vector3(1.0, 0.0, 1.0),
+                new RAPIER.Vector3(1.0, 1.0, 1.0),
+                new RAPIER.Vector3(1.0, 1.0, 0.0),
+                new RAPIER.Vector3(0.0, 1.0, 0.0),
+            ];
+            colliderDesc = RAPIER.ColliderDesc.convexHull(points);
+            break;
+        default:
+            colliderDesc = RAPIER.ColliderDesc.cuboid(
+                config.width / 2,
+                config.height / 2,
+                config.depth / 2
+            );
+            break;
+    }
+    return colliderDesc;
+}
 
 function addBody(config) {
     if (!rapierWorld) return;
@@ -101,7 +131,7 @@ function addBody(config) {
     rigidBodyDesc.setRotation(q);
 
     const body = rapierWorld.createRigidBody(rigidBodyDesc);
-    
+
     const colliderDesc = RAPIER.ColliderDesc.cuboid(
         config.width / 2,
         config.height / 2,

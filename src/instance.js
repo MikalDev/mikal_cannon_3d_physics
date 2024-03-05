@@ -218,6 +218,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     enableRot[1] = false;
                 }
 
+                const shape = this._inst.GetSdkInstance()._shape;
                 const command = {
                     type: this.CommandType.AddBody,
                     uid: this._inst.GetUID(),
@@ -237,6 +238,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     enableRot2: enableRot[2],
                     shapeType: shapeType,
                     bodyType,
+                    shape,
                 };
                 this.PhysicsType.commands.push(command);
             }
