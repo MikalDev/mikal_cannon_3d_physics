@@ -9,7 +9,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 this.shapeProperty = properties[2];
                 this.bodyType = properties[3];
             }
-            this._StartTicking2();
             this.defaultMass = 1;
             this.body = null;
             this.shapePositionOffset = null;
@@ -18,6 +17,24 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             this.uid = this._inst.GetUID();
             this.PhysicsType = this._behaviorType._behavior;
             this.comRapier = this.PhysicsType.comRapier;
+            this.CommandType = {
+                AddBody: 0,
+                StepWorld: 1,
+                ApplyImpulse: 2,
+                ApplyImpulseAtPoint: 3,
+                ApplyForce: 4,
+                Raycast: 5,
+                SetWorldGravity: 6,
+                SetLinearDamping: 7,
+                ApplyTorque: 8,
+                SetMass: 9,
+                EnablePhysics: 10,
+                SetDefaultLinearDamping: 11,
+                CreateCharacterController: 12,
+                TranslateCharacterController: 13,
+            };
+            this._StartTicking();
+            this._StartTicking2();
         }
 
         Release() {
@@ -37,6 +54,11 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             // load state for savegames
         }
 
+        Tick() {
+            // console.log("tick");
+            this.PhysicsType.sendCommandsToWorker();
+        }
+
         Tick2() {
             const wi = this._inst.GetWorldInfo();
             const shapeInst = this._inst.GetSdkInstance();
@@ -52,7 +74,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 if (!loaded) return;
                 this.body = this.DefineBody(
                     this.pluginType,
-                    this.shapeProperty
+                    this.shapeProperty,
+                    this.bodyType
                 );
                 this._inst.GetSdkInstance()._setCannonBody(this.body, true);
             }
@@ -108,7 +131,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             if (this.pluginType == "3DObjectPlugin") {
                 wi.SetZElevation(position.z);
             } else {
-                wi.SetZElevation(position.z - zHeight / 2);
+                const zElevation = position.z - zHeight / 2;
+                wi.SetZElevation(zElevation);
             }
             // angle
             if (this.rotate3D) {
@@ -150,14 +174,22 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 this.pluginType = "Shape3DPlugin";
                 if (!this.body) {
                     const shape = this._inst.GetSdkInstance()._shape;
-                    this.body = this.DefineBody(this.pluginType, shape);
+                    this.body = this.DefineBody(
+                        this.pluginType,
+                        shape,
+                        this.bodyType
+                    );
                 }
             } else if (
                 C3?.Plugins?.Sprite &&
                 pluginType instanceof C3?.Plugins?.Sprite
             ) {
                 this.pluginType = "SpritePlugin";
-                this.body = this.DefineBody(this.pluginType, null);
+                this.body = this.DefineBody(
+                    this.pluginType,
+                    null,
+                    this.bodyType
+                );
             } else if (
                 C3?.Plugins?.Mikal_3DObject &&
                 pluginType instanceof C3?.Plugins?.Mikal_3DObject
@@ -169,7 +201,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             }
         }
 
-        async DefineBody(pluginType, shapeType) {
+        async DefineBody(pluginType, shapeType, bodyType) {
             const cannon = globalThis.Mikal_Cannon;
             const PhysicsType = this._behaviorType._behavior;
             const shapeInst = this._inst.GetSdkInstance();
@@ -180,16 +212,14 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             let shape = null;
             const enableRot = [true, true, true];
             if (pluginType === "Shape3DPlugin") {
-                const comRapier = this.comRapier;
-
                 // 3DShape can only rotate around z axis
                 if (!this.rotate3D) {
                     enableRot[0] = false;
                     enableRot[1] = false;
                 }
 
-                console.log("comRapier add body", this._inst.GetUID());
-                const id = await comRapier.addBody({
+                const command = {
+                    type: this.CommandType.AddBody,
                     uid: this._inst.GetUID(),
                     x: wi.GetX(),
                     y: wi.GetY(),
@@ -206,7 +236,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     enableRot1: enableRot[1],
                     enableRot2: enableRot[2],
                     shapeType: shapeType,
-                });
+                    bodyType,
+                };
+                this.PhysicsType.commands.push(command);
             }
             const x = wi.GetX();
             const y = wi.GetY();
@@ -581,12 +613,15 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 	*/
 
         _SetWorldGravity(x, y, z) {
-            const cannon = globalThis.Mikal_Cannon;
-            const world = globalThis.Mikal_Cannon_world;
-            world.gravity = new cannon.Vec3(x, y, z);
+            const gravity = { x, y, z };
+            const command = {
+                type: this.CommandType.SetWorldGravity,
+                gravity,
+            };
+            this.PhysicsType.commands.push(command);
         }
 
-        _Raycast(
+        async _Raycast(
             tag,
             fromX,
             fromY,
@@ -599,81 +634,61 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             skipBackfaces,
             mode
         ) {
-            // log parameters
-            const rapier = globalThis.Mikal_Rapier;
-            const world = globalThis.Mikal_Cannon_world;
             const vec3 = globalThis.glMatrix.vec3;
-            const from = vec3.fromValues(fromX, fromY, fromZ);
+            const origin = vec3.fromValues(fromX, fromY, fromZ);
             const to = vec3.fromValues(x, y, z);
-            let maxToi = vec3.distance(from, to);
-            vec3.sub(to, to, from);
+            let maxToI = vec3.distance(origin, to);
+            vec3.sub(to, to, origin);
+            // Normalize to, making dir vector
             vec3.normalize(to, to);
-            const ray = new rapier.Ray(
-                { x: from[0], y: from[1], z: from[2] },
-                { x: to[0], y: to[1], z: to[2] }
-            );
-            maxToi = maxToi / vec3.length(to);
-            const solid = skipBackfaces ? false : true;
-            const callback = (result) => {
-                if (result === null) {
-                    this.raycastResult = {
-                        hasHit: false,
-                        hitFaceIndex: 0,
-                        hitPointWorld: [0, 0, 0],
-                        hitNormalWorld: [0, 0, 0],
-                        distance: 0,
-                        hitUID: 0,
-                        shouldStop: false,
-                        tag,
-                    };
-                    this.Trigger(
-                        C3.Behaviors.mikal_cannon_3d_physics.Cnds
-                            .OnAnyRaycastResult
-                    );
-                    this.Trigger(
-                        C3.Behaviors.mikal_cannon_3d_physics.Cnds
-                            .OnRaycastResult
-                    );
-                    return;
-                }
-                // log result with message
-                const hitPointWorld = ray.pointAt(result.toi);
-                this.raycastResult = {
-                    hasHit: true,
-                    hitFaceIndex: 0,
-                    // origin + dir * toi
-                    hitPointWorld: [
-                        hitPointWorld.x,
-                        hitPointWorld.y,
-                        hitPointWorld.z,
-                    ],
-                    hitNormalWorld: [
-                        result.normal.x,
-                        result.normal.y,
-                        result.normal.z,
-                    ],
-                    distance: vec3.distance(from, [
-                        hitPointWorld.x,
-                        hitPointWorld.y,
-                        hitPointWorld.z,
-                    ]),
-                    hitUID: result.collider.parent.uid,
-                    shouldStop: false,
-                    tag,
-                };
-                this.Trigger(
-                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyRaycastResult
-                );
-                this.Trigger(
-                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnRaycastResult
-                );
-                return true;
+            const dir = to;
+            maxToI = maxToI / vec3.length(dir);
+            const command = {
+                type: this.CommandType.Raycast,
+                origin: { x: fromX, y: fromY, z: fromZ },
+                dir: { x: dir[0], y: dir[1], z: dir[2] },
+                maxToI,
             };
-
-            // const hit = world.castRayAndGetNormal(ray, maxToi, solid)
-            const hit = world.castRayAndGetNormal(ray, maxToi * 100, true);
-            // Log results and parameters
-            callback(hit);
+            const result = await this.comRapier.raycast(command);
+            const hitPointWorld = vec3.create();
+            vec3.add(
+                hitPointWorld,
+                origin,
+                vec3.mul(
+                    dir,
+                    dir,
+                    vec3.fromValues(result.toi, result.toi, result.toi)
+                )
+            );
+            this.raycastResult = {
+                hasHit: true,
+                hitFaceIndex: 0,
+                // origin + dir * toi
+                hitPointWorld: [
+                    hitPointWorld[0],
+                    hitPointWorld[1],
+                    hitPointWorld[2],
+                ],
+                hitNormalWorld: [
+                    result.normal.x,
+                    result.normal.y,
+                    result.normal.z,
+                ],
+                distance: vec3.distance(origin, [
+                    hitPointWorld[0],
+                    hitPointWorld[1],
+                    hitPointWorld[2],
+                ]),
+                hitUID: result.hitUID,
+                tag,
+            };
+            this.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyRaycastResult
+            );
+            this.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnRaycastResult
+            );
+            return true;
         }
 
         _RaycastResultAsJSON() {
@@ -690,74 +705,83 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
         _EnablePhysics(enable) {
             this.enable = enable;
+            const command = {
+                uid: this.uid,
+                type: this.CommandType.EnablePhysics,
+                enable,
+            };
+            this.PhysicsType.commands.push(command);
         }
 
         _SetDefaultLinearDamping(damping) {
-            const world = globalThis.Mikal_Cannon_world;
-            if (!world) return;
-            world.defaultLinearDamping = damping;
+            const command = {
+                type: this.CommandType.SetDefaultLinearDamping,
+                damping,
+            };
+            this.PhysicsType.commands.push(command);
         }
 
         _SetLinearDamping(damping) {
-            if (!this.body) return;
-            this.body.linearDamping = damping;
+            const command = {
+                uid: this.uid,
+                type: this.CommandType.SetLinearDamping,
+                defaultLinearDamping: damping,
+            };
+            this.PhysicsType.commands.push(command);
         }
 
         _SetAngularDamping(damping) {
-            if (!this.body) return;
-            this.body.angularDamping = damping;
+            const command = {
+                uid: this.uid,
+                type: this.CommandType.SetLinearDamping,
+                defaultLinearDamping: damping,
+            };
+            this.PhysicsType.commands.push(command);
         }
 
-        _EnableCharacterController() {
-            if (this.characterController) {
-                console.warn("Character controller already enabled");
-                return;
-            }
-            if (this.bodyType !== RAPIER.RigidBodyType.KinematicPositionBased) {
-                console.warn(
-                    "Character controller only works with KinematicPositionBased"
-                );
-                return;
-            }
-            // The gap the controller will leave between the character and its environment.
-            const offset = 0.01;
-            const world = globalThis.Mikal_Cannon_world;
-            // Create the controller.
-            const characterController = world.createCharacterController(offset);
-            characterController.setUp({ x: 0.0, y: 0.0, z: 1.0 });
-            characterController.setMaxSlopeClimbAngle((45 * Math.PI) / 180);
-            // Automatically slide down on slopes smaller than 30 degrees.
-            characterController.setMinSlopeSlideAngle((30 * Math.PI) / 180);
-            // characterController.enableAutostep(50, 20, true);
-            // characterController.enableSnapToGround(10);
-            characterController.setApplyImpulsesToDynamicBodies(true);
-            this.characterController = characterController;
+        _CreateCharacterController(
+            tag,
+            offset,
+            upX,
+            upY,
+            upZ,
+            maxSlopeClimbAngle,
+            minSlopeSlideAngle,
+            applyImpulsesToDynamicBodies,
+            enableAutostep,
+            autostepMinWidth,
+            autostepMaxHeight,
+            enableSnapToGround,
+            snapToGroundMaxDistance
+        ) {
+            const command = {
+                type: this.CommandType.CreateCharacterController,
+                uid: this.uid,
+                tag,
+                offset,
+                up: { x: upX, y: upY, z: upZ },
+                maxSlopeClimbAngle,
+                minSlopeSlideAngle,
+                applyImpulsesToDynamicBodies,
+                enableAutostep,
+                autostepMinWidth,
+                autostepMaxHeight,
+                enableSnapToGround,
+                snapToGroundMaxDistance,
+            };
+            this.PhysicsType.commands.push(command);
         }
 
-        _TranslateCharacterController(x, y, z) {
-            if (!this.characterController) return;
-            const characterController = this.characterController;
-            const velocity = new RAPIER.Vector3(x, y, z);
-            characterController.computeColliderMovement(
-                this.collider, // The collider we would like to move.
-                velocity // The movement we would like to apply if there wasn’t any obstacle.
-            );
-            // (optional) Check collisions
-            for (
-                let i = 0;
-                i < characterController.numComputedCollisions();
-                i++
-            ) {
-                let collision = characterController.computedCollision(i);
-            }
-
-            // Read the result.
-            const correctedMovement = characterController.computedMovement();
-            const t = this.body.translation();
-            correctedMovement.x = correctedMovement.x + t.x;
-            correctedMovement.y = correctedMovement.y + t.y;
-            correctedMovement.z = correctedMovement.z + t.z;
-            this.body.setNextKinematicTranslation(correctedMovement);
+        _TranslateCharacterController(tag, x, y, z) {
+            const command = {
+                type: this.CommandType.TranslateCharacterController,
+                uid: this.uid,
+                tag,
+                x,
+                y,
+                z,
+            };
+            this.PhysicsType.commands.push(command);
         }
 
         _Enable() {
@@ -827,16 +851,28 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             return JSON.stringify(result);
         }
 
-        _ApplyImpulse(x, y, z, pointX, pointY, pointZ) {
+        _ApplyImpulse(x, y, z) {
             if (!this.body) return;
-            /*
-            this.comRapier.applyImpulseAtPoint(
-                this.uid,
-                { x: x, y: y, z: z },
-                { x: pointX, y: pointY, z: pointZ }
-            );
-			*/
-            this.comRapier.applyImpulse(this.uid, { x: x, y: y, z: z });
+            const impulse = { x: x, y: y, z: z };
+            const command = {
+                type: this.CommandType.ApplyImpulse,
+                uid: this.uid,
+                impulse,
+            };
+            this.PhysicsType.commands.push(command);
+        }
+
+        _ApplyImpulseAtPoint(x, y, z, pointX, pointY, pointZ) {
+            if (!this.body) return;
+            const impulse = { x: x, y: y, z: z };
+            const point = { x: pointX, y: pointY, z: pointZ };
+            const command = {
+                type: this.CommandType.ApplyImpulseAtPoint,
+                uid: this.uid,
+                impulse,
+                point,
+            };
+            this.PhysicsType.commands.push(command);
         }
 
         _SetMass(mass) {
@@ -856,10 +892,15 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
         _ApplyForce(x, y, z, pointX, pointY, pointZ) {
             if (!this.body) return;
-            const PhysicsType = this._behaviorType._behavior;
-            const point = { x: pointX, y: pointY, z: pointZ };
             const force = { x: x, y: y, z: z };
-            this.comRapier.applyForce(this.uid, force, point);
+            const point = { x: pointX, y: pointY, z: pointZ };
+            const command = {
+                type: this.CommandType.ApplyForce,
+                uid: this.uid,
+                force,
+                point,
+            };
+            this.PhysicsType.commands.push(command);
         }
 
         _ApplyTorque(x, y, z) {

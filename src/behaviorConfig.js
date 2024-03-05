@@ -41,6 +41,11 @@ module.exports = {
             type: "copy-to-output",
             fileType: "text/javascript",
         },
+        {
+            filename: "comlink.js",
+            type: "copy-to-output",
+            fileType: "text/javascript",
+        },
     ],
     info: {
         Set: {
@@ -203,7 +208,7 @@ module.exports = {
             autoScriptInterface: true,
             highlight: false,
             deprecated: false,
-            isAsync: false,
+            isAsync: true,
             // list of parameters
             params: [
                 {
@@ -454,7 +459,7 @@ module.exports = {
         // Create a new action to apply a vec3 umpulse to a body relative point
         ApplyImpulse: {
             category: "body",
-            forward: "_ApplyImpulse",
+            forward: "_ApplyImpulseAtPoint",
             autoScriptInterface: true,
             highlight: false,
             deprecated: false,

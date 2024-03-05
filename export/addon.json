@@ -23,6 +23,8 @@
     "addon.json",
     "icon.svg",
     "editor.js",
-    "c3runtime/rapierWorker.js"
+    "c3runtime/rapierWorker.js",
+    "c3runtime/rapier3d-compat.js",
+    "c3runtime/comlink.js"
   ]
 }

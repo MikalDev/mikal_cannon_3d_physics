@@ -1,6 +1,8 @@
-import * as Comlink from "https://cdn.skypack.dev/comlink";
+// import * as Comlink from "https://cdn.skypack.dev/comlink";
+import * as Comlink from "https://kindeyegames.com/forumfiles/comlink.js";
+
+// import * as Comlink from "./comlink.js";
 console.log("comlink-imported");
-const C3 = self.C3;
 
 //<-- BEHAVIOR_INFO -->
 
@@ -44,6 +46,9 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         this.rapierWorker = null;
         console.log("rapierBehavior created");
         this.initWorker(this.runtime);
+        this.commands = [];
+        this.cmdTickCount, (this.tickCount = 0);
+        this.worldReady = false;
     }
 
     Release() {
@@ -60,10 +65,11 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         console.log("after new Worker", this.rapierWorker);
         this.comRapier = Comlink.wrap(this.rapierWorker);
         console.log("after Comlink.wrap", this.comRapier);
-        this.comRapier.initWorld();
+        this.worldReady = await this.comRapier.initWorld();
     }
 
     updateBodies(bodies) {
+        if (!bodies) return;
         globalThis.Mikal_Rapier_Bodies = new Map();
         for (let i = 0; i < bodies.length; i += 8) {
             const uid = bodies[i];
@@ -81,14 +87,33 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         }
     }
 
+    async sendCommandsToWorker() {
+        // Run only once per tick
+        if (!this.worldReady || !this.commands || this.commands.length === 0)
+            return;
+
+        const tickCount = this.runtime.GetTickCount();
+        if (tickCount === this.cmdTickCount) return;
+        this.cmdTickCount = tickCount;
+        const result = this.comRapier.runCommands(this.commands);
+        this.commands = [];
+    }
+
     async Tick() {
+        // Run only once per tick
         const tickCount = this.runtime.GetTickCount();
         if (tickCount === this.tickCount) return;
         this.tickCount = tickCount;
         if (!this.comRapier) return;
+        if (!this.worldReady) {
+            console.log("rapier world not ready", this.worldReady);
+            this.worldReady = await this.comRapier.isWorldReady();
+            console.log("rapier world ready", this.worldReady);
+            return;
+        }
         const bodies = await this.comRapier.stepWorld();
+        if (!bodies) return;
         this.updateBodies(bodies);
-
         this.runtime.UpdateRender();
 
         // Debug render - must done in worker thread and sent back

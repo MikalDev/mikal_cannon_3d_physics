@@ -19,6 +19,16 @@ const BEHAVIOR_INFO = {
       "filename": "rapierWorker.js",
       "type": "copy-to-output",
       "fileType": "text/javascript"
+    },
+    {
+      "filename": "rapier3d-compat.js",
+      "type": "copy-to-output",
+      "fileType": "text/javascript"
+    },
+    {
+      "filename": "comlink.js",
+      "type": "copy-to-output",
+      "fileType": "text/javascript"
     }
   ]
 },

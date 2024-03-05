@@ -40,7 +40,7 @@
         "scriptName": "Raycast",
         "highlight": false,
         "deprecated": false,
-        "isAsync": false,
+        "isAsync": true,
         "params": [
           {
             "id": "tag",
