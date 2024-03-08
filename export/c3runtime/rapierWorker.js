@@ -13,11 +13,11 @@ console.log("rapierWorker.js com loaded comlink.js");
 // import RAPIER from "./rapier3d-compat.js";
 // import * as Comlink from "https://cdn.skypack.dev/comlink";
 // import * as Comlink from "./comlink.js";
-// console.log("rapierWorker.js com loaded");
 
 let rapierWorld = null;
 let uidHandle = new Map();
 let characterControllers = new Map();
+let defaultLinearDamping = 0.0;
 
 const CommandType = {
     AddBody: 0,
@@ -34,6 +34,12 @@ const CommandType = {
     SetDefaultLinearDamping: 11,
     CreateCharacterController: 12,
     TranslateCharacterController: 13,
+    Translate: 14,
+    Rotate: 15,
+    SetVelocity: 16,
+    UpdateBody: 17,
+    SetAngularDamping: 18,
+    SetCollisionGroups: 19,
 };
 
 const BodyType = {
@@ -43,14 +49,13 @@ const BodyType = {
     LinematicVelocity: 3,
 };
 
-const ShapeType = {
-    Cuboid: 0,
-    Ball: 1,
-    Capsule: 2,
-    Cylinder: 3,
-    Cone: 4,
-    TriMesh: 5,
-    HeightField: 6,
+const Shape = {
+    Box: 0,
+    Prism: 1,
+    Wedge: 2,
+    Pyramid: 3,
+    CornerOut: 4,
+    CornerIn: 5,
 };
 
 async function initWorld() {
@@ -61,11 +66,89 @@ async function initWorld() {
     return true;
 }
 
-function createCollider(config) {
-    const shapeType = config.shapeType;
-    let colliderDesc;
-    switch (shapeType) {
+// Scale Float32Array points in place by width, height, and depth
+function scalePoints(points, height, width, depth) {
+    for (let i = 0; i < points.length; i += 3) {
+        points[i] *= width;
+        points[i + 1] *= height;
+        points[i + 2] *= depth;
+    }
+    return points;
+}
 
+function debugRender() {
+    if (!rapierWorld) return;
+    return rapierWorld.debugRender();
+}
+
+function setDefaultLinearDamping(config) {
+    defaultLinearDamping = config.damping;
+}
+
+function enablePhysics(config) {
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setEnabled(config.enable);
+    }
+}
+
+function createCollider(config) {
+    const shape = config.shape;
+    let colliderDesc;
+    switch (shape) {
+        case Shape.Box:
+        case Shape.Prism:
+        case Shape.Pyramid:
+        case Shape.CornerIn:
+        case Shape.CornerOut:
+            colliderDesc = RAPIER.ColliderDesc.cuboid(
+                config.width / 2,
+                config.height / 2,
+                config.depth / 2
+            );
+            break;
+        case Shape.Wedge:
+            const points = [
+                0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5,
+                -0.5, -0.5, -0.5, -0.5, 0.5, -0.5,
+            ];
+            // Create Float32Array from points
+            const pointsArray = new Float32Array(points);
+            const pointsArrayScaled = scalePoints(
+                pointsArray,
+                config.height,
+                config.width,
+                config.depth
+            );
+
+            colliderDesc = RAPIER.ColliderDesc.convexHull(pointsArrayScaled);
+            break;
+        default:
+            colliderDesc = RAPIER.ColliderDesc.cuboid(
+                config.width / 2,
+                config.height / 2,
+                config.depth / 2
+            );
+            break;
+    }
+    return colliderDesc;
+}
+
+function updateBody(config) {
+    if (!rapierWorld) return;
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    let body = rapierWorld.bodies.get(handle);
+    // Remove the body if it exists
+    if (body) {
+        rapierWorld.removeRigidBody(body);
+    }
+    uidHandle.delete(uid);
+    addBody(config);
+    console.log("updateBody", config);
+}
 
 function addBody(config) {
     if (!rapierWorld) return;
@@ -75,7 +158,7 @@ function addBody(config) {
     let z = config.z || 0;
     // Also add quaternion support
     let q = config.q || { x: 0, y: 0, z: 0, w: 1 };
-    const bodyTypeConfig = config.immovable ? "fixed" : config.bodyType;
+    const bodyTypeConfig = config.immovable ? BodyType.Fixed : config.bodyType;
 
     switch (bodyTypeConfig) {
         case BodyType.Dynamic:
@@ -101,12 +184,9 @@ function addBody(config) {
     rigidBodyDesc.setRotation(q);
 
     const body = rapierWorld.createRigidBody(rigidBodyDesc);
-    
-    const colliderDesc = RAPIER.ColliderDesc.cuboid(
-        config.width / 2,
-        config.height / 2,
-        config.depth / 2
-    );
+
+    const colliderDesc = createCollider(config);
+
     const collider = rapierWorld.createCollider(colliderDesc, body);
     body.setEnabledRotations(
         config?.enableRot0 ? true : false,
@@ -115,8 +195,49 @@ function addBody(config) {
         true
     );
 
+    body.setLinearDamping(defaultLinearDamping);
+
     body.uid = config.uid;
     uidHandle.set(config.uid, body.handle);
+}
+
+function setCollisionGroups(config) {
+    const membership = config.membership;
+    const filter = config.filter;
+    // Create 32-bit number combining membership and filter which are strings representing 16-bit hex numbers using the form 0x0000)
+    const membershipNumber = parseInt(membership, 16);
+    const filterNumber = parseInt(filter, 16);
+    if (Number.isNaN(membershipNumber) || Number.isNaN(filterNumber)) {
+        console.warn("Invalid membership or filter number", membership, filter);
+        return;
+    }
+    const group = (membershipNumber << 16) | filterNumber;
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setCollisionGroups(group);
+    }
+}
+
+function translate(config) {
+    const uid = config.uid;
+    const translation = config.translation;
+    const handle = uidHandle.get(uid);
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setTranslation(translation);
+    }
+}
+
+function rotate(config) {
+    const uid = config.uid;
+    const rotation = config.rotation;
+    const handle = uidHandle.get(uid);
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setRotation(rotation);
+    }
 }
 
 function stepWorld() {
@@ -228,6 +349,16 @@ function setLinearDamping(config) {
     }
 }
 
+function setAngularDamping(config) {
+    const uid = config.uid;
+    const damping = config.damping;
+    const handle = uidHandle.get(uid);
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setAngularDamping(damping);
+    }
+}
+
 function createCharacterController(config) {
     const {
         uid,
@@ -282,7 +413,6 @@ function createCharacterController(config) {
         characterController.setApplyImpulsesToDynamicBodies(false);
     }
     characterControllers.set(tag, characterController);
-    console.log("Character controller created", tag);
 }
 
 function translateCharacterController(config) {
@@ -295,7 +425,7 @@ function translateCharacterController(config) {
         console.warn("Character controller not found", tag);
         return;
     }
-    characterController.computeColliderMovement(body.collider, translation);
+    characterController.computeColliderMovement(body.collider(), translation);
     // (optional) Check collisions
     for (let i = 0; i < characterController.numComputedCollisions(); i++) {
         // Do something with the collision
@@ -307,13 +437,21 @@ function translateCharacterController(config) {
     correctedMovement.x = correctedMovement.x + t.x;
     correctedMovement.y = correctedMovement.y + t.y;
     correctedMovement.z = correctedMovement.z + t.z;
-    this.body.setNextKinematicTranslation(correctedMovement);
-    console.log("Character controller translated", tag);
+    body.setNextKinematicTranslation(correctedMovement);
+}
+
+function setVelocity(config) {
+    const uid = config.uid;
+    const velocity = config.velocity;
+    const handle = uidHandle.get(uid);
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setLinvel(velocity);
+    }
 }
 
 function runCommands(commands) {
     if (!commands || commands.length === 0) return;
-    console.log("worker run batch commands:", commands.length);
     for (let i = 0; i < commands.length; i++) {
         const command = commands[i];
         switch (command.type) {
@@ -353,6 +491,30 @@ function runCommands(commands) {
             case CommandType.TranslateCharacterController:
                 translateCharacterController(command);
                 break;
+            case CommandType.Translate:
+                translate(command);
+                break;
+            case CommandType.Rotate:
+                rotate(command);
+                break;
+            case CommandType.UpdateBody:
+                updateBody(command);
+                break;
+            case CommandType.SetVelocity:
+                setVelocity(command);
+                break;
+            case CommandType.SetDefaultLinearDamping:
+                setDefaultLinearDamping(command);
+                break;
+            case CommandType.SetAngularDamping:
+                setAngularDamping(command);
+                break;
+            case CommandType.EnablePhysics:
+                enablePhysics(command);
+                break;
+            case CommandType.SetCollisionGroups:
+                setCollisionGroups(command);
+                break;
             default:
                 // log error and continue
                 console.error("Unknown command type", command.type);
@@ -378,4 +540,5 @@ Comlink.expose({
     runCommands,
     createCharacterController,
     translateCharacterController,
+    debugRender,
 });

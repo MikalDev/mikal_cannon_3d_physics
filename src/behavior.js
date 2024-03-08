@@ -49,6 +49,7 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         this.commands = [];
         this.cmdTickCount, (this.tickCount = 0);
         this.worldReady = false;
+        this.scale = 100;
     }
 
     Release() {
@@ -71,11 +72,12 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
     updateBodies(bodies) {
         if (!bodies) return;
         globalThis.Mikal_Rapier_Bodies = new Map();
+        const scale = this.scale;
         for (let i = 0; i < bodies.length; i += 8) {
             const uid = bodies[i];
-            const x = bodies[i + 1];
-            const y = bodies[i + 2];
-            const z = bodies[i + 3];
+            const x = bodies[i + 1] * scale;
+            const y = bodies[i + 2] * scale;
+            const z = bodies[i + 3] * scale;
             const rx = bodies[i + 4];
             const ry = bodies[i + 5];
             const rz = bodies[i + 6];
@@ -112,13 +114,15 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
             return;
         }
         const bodies = await this.comRapier.stepWorld();
+        if (this.debugRender) {
+            globalThis.Mikal_Rapier_debug_buffers =
+                await this.comRapier.debugRender();
+            globalThis.Mikal_Rapier_debug_buffers.width = 4;
+            globalThis.Mikal_Rapier_debug_buffers.scale = this.scale;
+        }
         if (!bodies) return;
         this.updateBodies(bodies);
         this.runtime.UpdateRender();
-
-        // Debug render - must done in worker thread and sent back
-        // globalThis.Mikal_Rapier_debug_buffers = world.debugRender();
-        // globalThis.Mikal_Rapier_debug_buffers.width = this.debugRenderWidth;
     }
 };
 const B_C = C3.Behaviors[BEHAVIOR_INFO.id];

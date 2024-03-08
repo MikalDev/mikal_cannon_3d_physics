@@ -67,6 +67,11 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
             },
+"SetCollisionGroups": {
+            "forward": (inst) => inst._SetCollisionGroups,
+            
+            "autoScriptInterface": true,
+            },
 "SetCollisionFilterMask": {
             "forward": (inst) => inst._SetCollisionFilterMask,
             
@@ -92,13 +97,23 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
             },
-"EnableCharacterController": {
-            "forward": (inst) => inst._EnableCharacterController,
+"UpdateBody": {
+            "forward": (inst) => inst._UpdateBody,
+            
+            "autoScriptInterface": true,
+            },
+"CreateCharacterController": {
+            "forward": (inst) => inst._CreateCharacterController,
             
             "autoScriptInterface": true,
             },
 "TranslateCharacterController": {
             "forward": (inst) => inst._TranslateCharacterController,
+            
+            "autoScriptInterface": true,
+            },
+"SetWorldScale": {
+            "forward": (inst) => inst._SetWorldScale,
             
             "autoScriptInterface": true,
             }
@@ -222,6 +237,7 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         this.commands = [];
         this.cmdTickCount, (this.tickCount = 0);
         this.worldReady = false;
+        this.scale = 100;
     }
 
     Release() {
@@ -244,11 +260,12 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
     updateBodies(bodies) {
         if (!bodies) return;
         globalThis.Mikal_Rapier_Bodies = new Map();
+        const scale = this.scale;
         for (let i = 0; i < bodies.length; i += 8) {
             const uid = bodies[i];
-            const x = bodies[i + 1];
-            const y = bodies[i + 2];
-            const z = bodies[i + 3];
+            const x = bodies[i + 1] * scale;
+            const y = bodies[i + 2] * scale;
+            const z = bodies[i + 3] * scale;
             const rx = bodies[i + 4];
             const ry = bodies[i + 5];
             const rz = bodies[i + 6];
@@ -285,13 +302,15 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
             return;
         }
         const bodies = await this.comRapier.stepWorld();
+        if (this.debugRender) {
+            globalThis.Mikal_Rapier_debug_buffers =
+                await this.comRapier.debugRender();
+            globalThis.Mikal_Rapier_debug_buffers.width = 4;
+            globalThis.Mikal_Rapier_debug_buffers.scale = this.scale;
+        }
         if (!bodies) return;
         this.updateBodies(bodies);
         this.runtime.UpdateRender();
-
-        // Debug render - must done in worker thread and sent back
-        // globalThis.Mikal_Rapier_debug_buffers = world.debugRender();
-        // globalThis.Mikal_Rapier_debug_buffers.width = this.debugRenderWidth;
     }
 };
 const B_C = C3.Behaviors[BEHAVIOR_INFO.id];
@@ -436,6 +455,12 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 SetDefaultLinearDamping: 11,
                 CreateCharacterController: 12,
                 TranslateCharacterController: 13,
+                Translate: 14,
+                Rotate: 15,
+                SetVelocity: 16,
+                UpdateBody: 17,
+                SetAngularDamping: 18,
+                SetCollisionGroups: 19,
             };
             this._StartTicking();
             this._StartTicking2();
@@ -459,8 +484,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
         }
 
         Tick() {
-            // console.log("tick");
-            this.PhysicsType.sendCommandsToWorker();
+            const PhysicsType = this.PhysicsType;
+            PhysicsType.sendCommandsToWorker();
+            PhysicsType.Tick();
         }
 
         Tick2() {
@@ -468,6 +494,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const shapeInst = this._inst.GetSdkInstance();
             let zHeight = shapeInst._zHeight || 0;
             const body = this.body;
+            const PhysicsType = this._behaviorType._behavior;
 
             if (
                 this.pluginType === "3DObjectPlugin" &&
@@ -486,43 +513,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
             if (!body) return;
             if (!this.enable) return;
-
-            const PhysicsType = this._behaviorType._behavior;
-
-            /*
-            const shapeInst = this._inst.GetSdkInstance();
-            let zHeight = shapeInst._zHeight;
-            if (!zHeight) zHeight = 0;
-
-            const wi = this._inst.GetWorldInfo();
-            if (this.lastZ !== wi.GetZElevation()) {
-                // body.position.z = wi.GetZElevation()+body.shapes[0].halfExtents.z
-                const position = body.translation();
-                body.setTranslation(
-                    {
-                        x: position.x,
-                        y: position.y,
-                        z: wi.GetZElevation() + zHeight / 2,
-                    },
-                    true
-                );
-            }
-
-            if (this.lastZAngle !== wi.GetAngle()) {
-                const angle = wi.GetAngle();
-                const angles = new globalThis.Mikal_Cannon.Vec3();
-                const quat = gloalThis.glMatrix.quat;
-                const rotate = quatFromEuler(quat.create(), 0, 0, angle);
-                body.setRotation(
-                    { x: rotate[0], y: rotate[1], z: rotate[2], w: rotate[3] },
-                    true
-                );
-                if (this.rotate3D)
-                    this.rotate3D._zAngle = (angle * 180) / Math.PI;
-            }
-			*/
-
-            PhysicsType.Tick();
 
             if (!globalThis.Mikal_Rapier_Bodies) return;
             const wBody = globalThis.Mikal_Rapier_Bodies.get(this.uid);
@@ -559,11 +549,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 const angle = angles[2];
                 wi.SetAngle(angle);
             }
-
-            this.lastX = wi.GetX();
-            this.lastY = wi.GetY();
-            this.lastZ = wi.GetZElevation();
-            this.lastZAngle = wi.GetAngle();
 
             wi.SetBboxChanged();
         }
@@ -606,11 +591,10 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
         }
 
         async DefineBody(pluginType, shapeType, bodyType) {
-            const cannon = globalThis.Mikal_Cannon;
             const PhysicsType = this._behaviorType._behavior;
             const shapeInst = this._inst.GetSdkInstance();
             const wi = this._inst.GetWorldInfo();
-            const world = globalThis.Mikal_Cannon_world;
+            const quat = globalThis.glMatrix.quat;
             let zHeight = shapeInst._zHeight;
             if (!zHeight) zHeight = 0;
             let shape = null;
@@ -622,41 +606,83 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     enableRot[1] = false;
                 }
 
+                const initialQuat = quat.create();
+                quat.fromEuler(
+                    initialQuat,
+                    0,
+                    0,
+                    (wi.GetAngle() * 180) / Math.PI
+                );
+                const shape = this._inst.GetSdkInstance()._shape;
+                const scale = PhysicsType.scale;
                 const command = {
                     type: this.CommandType.AddBody,
                     uid: this._inst.GetUID(),
-                    x: wi.GetX(),
-                    y: wi.GetY(),
-                    z: wi.GetZElevation(),
-                    qx: 0,
-                    qy: 0,
-                    qz: 0,
-                    qw: 0,
-                    width: wi.GetWidth(),
-                    height: wi.GetHeight(),
-                    depth: zHeight,
+                    x: wi.GetX() / scale,
+                    y: wi.GetY() / scale,
+                    z: (wi.GetZElevation() + zHeight / 2) / scale,
+                    q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
+                    width: wi.GetWidth() / scale,
+                    height: wi.GetHeight() / scale,
+                    depth: zHeight / scale,
                     immovable: this.immovable,
                     enableRot0: enableRot[0],
                     enableRot1: enableRot[1],
                     enableRot2: enableRot[2],
                     shapeType: shapeType,
                     bodyType,
+                    shape,
                 };
                 this.PhysicsType.commands.push(command);
             }
-            const x = wi.GetX();
-            const y = wi.GetY();
-            const z = wi.GetZElevation() + zHeight / 2;
-            let angleX = 0;
-            let angleY = 0;
-            let angleZ = wi.GetAngle();
+        }
 
-            this.lastX = x;
-            this.lastY = y;
-            this.lastZ = z;
-            this.lastZAngle = angleZ;
-            this.lastYAngle = angleY;
-            this.lastXAngle = angleX;
+        _UpdateBody() {
+            const PhysicsType = this._behaviorType._behavior;
+            const shapeInst = this._inst.GetSdkInstance();
+            const wi = this._inst.GetWorldInfo();
+            const quat = globalThis.glMatrix.quat;
+            let zHeight = shapeInst._zHeight;
+            if (!zHeight) zHeight = 0;
+            const enableRot = [true, true, true];
+            const pluginType = this._inst.GetPlugin();
+            if (pluginType instanceof C3?.Plugins?.Shape3D) {
+                // 3DShape can only rotate around z axis
+                if (!this.rotate3D) {
+                    enableRot[0] = false;
+                    enableRot[1] = false;
+                }
+
+                const initialQuat = quat.create();
+                quat.fromEuler(
+                    initialQuat,
+                    0,
+                    0,
+                    (wi.GetAngle() * 180) / Math.PI
+                );
+                const shape = this._inst.GetSdkInstance()._shape;
+                const scale = PhysicsType.scale;
+                const command = {
+                    type: this.CommandType.UpdateBody,
+                    uid: this._inst.GetUID(),
+                    x: wi.GetX() / scale,
+                    y: wi.GetY() / scale,
+                    z: (wi.GetZElevation() + zHeight / 2) / scale,
+                    q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
+                    width: wi.GetWidth() / scale,
+                    height: wi.GetHeight() / scale,
+                    depth: zHeight / scale,
+                    immovable: this.immovable,
+                    enableRot0: enableRot[0],
+                    enableRot1: enableRot[1],
+                    enableRot2: enableRot[2],
+                    shapeType: this.shapeProperty,
+                    bodyType: this.bodyType,
+                    shape,
+                };
+                console.log("update body", command);
+                this.PhysicsType.commands.push(command);
+            }
         }
 
         _quaternionToEuler(quat) {
@@ -1006,16 +1032,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             return rotate3D;
         }
 
-        /*
-    Trigger(method) {
-      super.Trigger(method);
-      const addonTrigger = addonTriggers.find((x) => x.method === method);
-      if (addonTrigger) {
-        this.GetScriptInterface().dispatchEvent(new C3.Event(addonTrigger.id));
-      }
-    }
-	*/
-
         _SetWorldGravity(x, y, z) {
             const gravity = { x, y, z };
             const command = {
@@ -1038,9 +1054,14 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             skipBackfaces,
             mode
         ) {
+            const scale = this.PhysicsType.scale;
             const vec3 = globalThis.glMatrix.vec3;
-            const origin = vec3.fromValues(fromX, fromY, fromZ);
-            const to = vec3.fromValues(x, y, z);
+            const origin = vec3.fromValues(
+                fromX / scale,
+                fromY / scale,
+                fromZ / scale
+            );
+            const to = vec3.fromValues(x / scale, y / scale, z / scale);
             let maxToI = vec3.distance(origin, to);
             vec3.sub(to, to, origin);
             // Normalize to, making dir vector
@@ -1069,20 +1090,21 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 hitFaceIndex: 0,
                 // origin + dir * toi
                 hitPointWorld: [
-                    hitPointWorld[0],
-                    hitPointWorld[1],
-                    hitPointWorld[2],
+                    hitPointWorld[0] * scale,
+                    hitPointWorld[1] * scale,
+                    hitPointWorld[2] * scale,
                 ],
                 hitNormalWorld: [
                     result.normal.x,
                     result.normal.y,
                     result.normal.z,
                 ],
-                distance: vec3.distance(origin, [
-                    hitPointWorld[0],
-                    hitPointWorld[1],
-                    hitPointWorld[2],
-                ]),
+                distance:
+                    vec3.distance(origin, [
+                        hitPointWorld[0],
+                        hitPointWorld[1],
+                        hitPointWorld[2],
+                    ]) * scale,
                 hitUID: result.hitUID,
                 tag,
             };
@@ -1129,7 +1151,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const command = {
                 uid: this.uid,
                 type: this.CommandType.SetLinearDamping,
-                defaultLinearDamping: damping,
+                damping,
             };
             this.PhysicsType.commands.push(command);
         }
@@ -1137,8 +1159,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
         _SetAngularDamping(damping) {
             const command = {
                 uid: this.uid,
-                type: this.CommandType.SetLinearDamping,
-                defaultLinearDamping: damping,
+                type: this.CommandType.SetAngularDamping,
+                damping,
             };
             this.PhysicsType.commands.push(command);
         }
@@ -1158,32 +1180,32 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             enableSnapToGround,
             snapToGroundMaxDistance
         ) {
+            const scale = this.PhysicsType.scale;
             const command = {
                 type: this.CommandType.CreateCharacterController,
                 uid: this.uid,
                 tag,
-                offset,
+                offset: offset / scale,
                 up: { x: upX, y: upY, z: upZ },
                 maxSlopeClimbAngle,
                 minSlopeSlideAngle,
                 applyImpulsesToDynamicBodies,
                 enableAutostep,
-                autostepMinWidth,
-                autostepMaxHeight,
+                autostepMinWidth: autostepMinWidth / scale,
+                autostepMaxHeight: autostepMaxHeight / scale,
                 enableSnapToGround,
-                snapToGroundMaxDistance,
+                snapToGroundMaxDistance: snapToGroundMaxDistance / scale,
             };
             this.PhysicsType.commands.push(command);
         }
 
         _TranslateCharacterController(tag, x, y, z) {
+            const scale = this.PhysicsType.scale;
             const command = {
                 type: this.CommandType.TranslateCharacterController,
                 uid: this.uid,
                 tag,
-                x,
-                y,
-                z,
+                translation: { x: x / scale, y: y / scale, z: z / scale },
             };
             this.PhysicsType.commands.push(command);
         }
@@ -1193,18 +1215,15 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
         }
 
         _WorldGravityX() {
-            const world = globalThis.Mikal_Cannon_world;
-            return world.gravity.x;
+            return 0;
         }
 
         _WorldGravityY() {
-            const world = globalThis.Mikal_Cannon_world;
-            return world.gravity.y;
+            return 0;
         }
 
         _WorldGravityZ() {
-            const world = globalThis.Mikal_Cannon_world;
-            return world.gravity.z;
+            return 0;
         }
 
         _IsEnabled() {
@@ -1216,8 +1235,13 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
         }
 
         _SetVelocity(x, y, z) {
-            if (!this.body) return;
-            this.body.velocity.set(x, y, z);
+            const scale = this.PhysicsType.scale;
+            const command = {
+                type: this.CommandType.SetVelocity,
+                uid: this.uid,
+                velocity: { x: x / scale, y: y / scale, z: z / scale },
+            };
+            this.PhysicsType.commands.push(command);
         }
 
         _SetImmovable(immovable) {
@@ -1281,17 +1305,35 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
         _SetMass(mass) {
             if (!this.body) return;
-            this.comRapier.setMass(this.uid, mass);
+            const command = {
+                type: this.CommandType.SetMass,
+                uid: this.uid,
+                mass,
+            };
+            this.PhysicsType.commands.push(command);
         }
 
         _SetCollisionFilterGroup(group) {
-            if (!this.body) return;
-            this.body.collisionFilterGroup = group;
+            console.warn(
+                "SetCollisionFilterGroup is deprecated, not implemented"
+            );
         }
 
         _SetCollisionFilterMask(mask) {
+            console.warn(
+                "SetCollisionFilterMask is deprecated, not implemented"
+            );
+        }
+
+        _SetCollisionGroups(membership, filter) {
             if (!this.body) return;
-            this.body.collisionFilterMask = mask;
+            const command = {
+                type: this.CommandType.SetCollisionGroups,
+                uid: this.uid,
+                membership,
+                filter,
+            };
+            this.PhysicsType.commands.push(command);
         }
 
         _ApplyForce(x, y, z, pointX, pointY, pointZ) {
@@ -1312,6 +1354,10 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             this.comRapier.applyTorque(this.uid, { x: x, y: y, z: z });
         }
 
+        _SetWorldScale(scale) {
+            this.PhysicsType.scale = scale;
+        }
+
         _AttachSpring(
             tag,
             otherUID,
@@ -1325,38 +1371,19 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             otherY,
             otherZ
         ) {
-            if (!this.body) return;
-            const cannon = globalThis.Mikal_Cannon;
-            const world = globalThis.Mikal_Cannon_world;
-            const otherBody = world.bodies.find(
-                (body) => body.uid === otherUID
-            );
-            if (!otherBody) return;
-            const localPivot = new cannon.Vec3(x, y, z);
-            const otherLocalPivot = new cannon.Vec3(otherX, otherY, otherZ);
-            const spring = new cannon.Spring(this.body, otherBody, {
-                localPivotA: localPivot,
-                localPivotB: otherLocalPivot,
-                restLength,
-                stiffness,
-                damping,
-            });
-            this.body.springs.set(tag, spring);
+            console.warn("AttachSpring is deprecated, not implemented");
         }
 
         _VelocityX() {
-            if (!this.body) return 0;
-            return this.body.velocity.x;
+            return 0;
         }
 
         _VelocityY() {
-            if (!this.body) return 0;
-            return this.body.velocity.y;
+            return 0;
         }
 
         _VelocityZ() {
-            if (!this.body) return 0;
-            return this.body.velocity.z;
+            return 0;
         }
 
         _UpdateHeightfield() {

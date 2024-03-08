@@ -3,7 +3,7 @@ const SDK = self.SDK;
 const BEHAVIOR_INFO = {
     ...{
   "id": "mikal_cannon_3d_physics",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "category": "movements",
   "author": "Mikal",
   "addonType": "behavior",
@@ -89,6 +89,18 @@ const BEHAVIOR_INFO = {
   "kinematic-position",
   "kinematic-velocity"
 ],
+            },
+          },
+{
+            type: "number",
+            id: "mass",
+            options: {
+              ...{
+  "initialValue": 1
+},
+              
+              
+              
             },
           }
     ],
