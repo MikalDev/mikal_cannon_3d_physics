@@ -467,6 +467,44 @@
               }
             }
           },
+          "Translate": {
+            "list-name": "Translate",
+            "display-text": "{my} translate to {0}, {1}, {2}",
+            "description": "Translate body to x,y,z.",
+            "params": {
+              "x": {
+                "name": "X",
+                "desc": "X."
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Y."
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Z."
+              }
+            }
+          },
+          "Rotate": {
+            "list-name": "Rotate",
+            "display-text": "{my} rotate to {0}, {1}, {2}",
+            "description": "Rotate body to x,y,z.",
+            "params": {
+              "x": {
+                "name": "X",
+                "desc": "X angle (degrees)."
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Y angle (degrees)."
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Z angle (degrees)."
+              }
+            }
+          },
           "TranslateCharacterController": {
             "list-name": "Translate character controller",
             "display-text": "{my} Translate character controller to {1}, {2}, {3}, tag {0}",

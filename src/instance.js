@@ -8,6 +8,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 this.immovable = properties[1];
                 this.shapeProperty = properties[2];
                 this.bodyType = properties[3];
+                this.mass = properties[4];
             }
             this.defaultMass = 1;
             this.body = null;
@@ -209,6 +210,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     shapeType: shapeType,
                     bodyType,
                     shape,
+                    mass: this.mass,
                 };
                 this.PhysicsType.commands.push(command);
             }
@@ -256,6 +258,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     shapeType: this.shapeProperty,
                     bodyType: this.bodyType,
                     shape,
+                    mass: this.mass,
                 };
                 console.log("update body", command);
                 this.PhysicsType.commands.push(command);
@@ -783,6 +786,34 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 uid: this.uid,
                 tag,
                 translation: { x: x / scale, y: y / scale, z: z / scale },
+            };
+            this.PhysicsType.commands.push(command);
+        }
+
+        _Translate(x, y, z) {
+            const scale = this.PhysicsType.scale;
+            const command = {
+                type: this.CommandType.Translate,
+                uid: this.uid,
+                translation: { x: x / scale, y: y / scale, z: z / scale },
+            };
+            this.PhysicsType.commands.push(command);
+        }
+
+        _Rotate(x, y, z) {
+            // x, y, z in degrees, convert to quaternion
+            const quat = globalThis.glMatrix.quat;
+            const rotation = quat.create();
+            quat.fromEuler(rotation, x, y, z);
+            const command = {
+                type: this.CommandType.Rotate,
+                uid: this.uid,
+                rotation: {
+                    x: rotation[0],
+                    y: rotation[1],
+                    z: rotation[2],
+                    w: rotation[3],
+                },
             };
             this.PhysicsType.commands.push(command);
         }

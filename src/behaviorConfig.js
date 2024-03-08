@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Cannon 3D Physics",
-    version: "2.2.0",
+    version: "2.3.0",
     category:
         // "attributes",
         "movements",
@@ -149,7 +149,7 @@ module.exports = {
             },
         },
         {
-            type: "number",
+            type: "float",
             id: "mass",
             name: "Mass",
             desc: "Mass",
@@ -989,6 +989,78 @@ module.exports = {
                 "{my} create character controller {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11} {12}",
             // The description of the action as it appears in the add action dialog
             description: "Create character controller.",
+        },
+
+        Translate: {
+            category: "body",
+            forward: "_Translate",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "x",
+                    name: "X",
+                    desc: "X.",
+                    type: "number",
+                    initialValue: "0",
+                },
+                {
+                    id: "y",
+                    name: "Y",
+                    desc: "Y.",
+                    type: "number",
+                    initialValue: "0",
+                },
+                {
+                    id: "z",
+                    name: "Z",
+                    desc: "Z.",
+                    type: "number",
+                    initialValue: "0",
+                },
+            ],
+            listName: "Translate",
+            displayText: "{my} translate to {0}, {1}, {2}",
+            // The description of the action as it appears in the add action dialog
+            description: "Translate body to x,y,z.",
+        },
+
+        Rotate: {
+            category: "body",
+            forward: "_Rotate",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "x",
+                    name: "X",
+                    desc: "X angle (degrees).",
+                    type: "number",
+                    initialValue: "0",
+                },
+                {
+                    id: "y",
+                    name: "Y",
+                    desc: "Y angle (degrees).",
+                    type: "number",
+                    initialValue: "0",
+                },
+                {
+                    id: "z",
+                    name: "Z",
+                    desc: "Z angle (degrees).",
+                    type: "number",
+                    initialValue: "0",
+                },
+            ],
+            listName: "Rotate",
+            displayText: "{my} rotate to {0}, {1}, {2}",
+            // The description of the action as it appears in the add action dialog
+            description: "Rotate body to x,y,z.",
         },
 
         TranslateCharacterController: {

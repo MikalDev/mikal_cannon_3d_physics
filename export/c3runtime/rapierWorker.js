@@ -188,6 +188,7 @@ function addBody(config) {
     const colliderDesc = createCollider(config);
 
     const collider = rapierWorld.createCollider(colliderDesc, body);
+    collider.setMass(config.mass);
     body.setEnabledRotations(
         config?.enableRot0 ? true : false,
         config?.enableRot1 ? true : false,
@@ -227,6 +228,7 @@ function translate(config) {
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.setTranslation(translation);
+        console.log("translate", translation, body.translation());
     }
 }
 
