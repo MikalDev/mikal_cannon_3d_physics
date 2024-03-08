@@ -133,6 +133,26 @@
               }
             }
           },
+          "SetTimestep": {
+            "list-name": "Set timestep",
+            "display-text": "Set {my} timestep {0}, {1}",
+            "description": "Set timestep mode [and value].",
+            "params": {
+              "mode": {
+                "name": "Mode",
+                "desc": "Timestep Mode.",
+                "items": {
+                  "default": "Default (1/60) per C3 tick",
+                  "fixed": "Fixed value per C3 tick",
+                  "adaptive": "Adaptive per C3 tick using C3 dt"
+                }
+              },
+              "value": {
+                "name": "Fixed value",
+                "desc": "Fixed Value (seconds)."
+              }
+            }
+          },
           "SetDefaultLinearDamping": {
             "list-name": "Set default linear damping",
             "display-text": "Set {my} default linear damping to {0}",

@@ -39,6 +39,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 UpdateBody: 17,
                 SetAngularDamping: 18,
                 SetCollisionGroups: 19,
+                SetTimestep: 20,
             };
             this._StartTicking();
             this._StartTicking2();
@@ -260,7 +261,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     shape,
                     mass: this.mass,
                 };
-                console.log("update body", command);
                 this.PhysicsType.commands.push(command);
             }
         }
@@ -832,6 +832,18 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
         _WorldGravityZ() {
             return 0;
+        }
+
+        _SetTimestep(mode, value) {
+            const PhysicsType = this._behaviorType._behavior;
+            PhysicsType.timestepMode = mode;
+            PhysicsType.timestepValue = value;
+            const command = {
+                type: this.CommandType.SetTimestep,
+                mode,
+                value,
+            };
+            this.PhysicsType.commands.push(command);
         }
 
         _IsEnabled() {

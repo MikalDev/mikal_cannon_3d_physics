@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Cannon 3D Physics",
-    version: "2.3.0",
+    version: "2.4.0",
     category:
         // "attributes",
         "movements",
@@ -332,6 +332,41 @@ module.exports = {
             displayText: "Set {my} immovable {0}",
             // The description of the action as it appears in the add action dialog
             description: "Set body immovable.",
+        },
+        SetTimestep: {
+            // The category of the action as it appears in the add action dialog
+            category: "world",
+            forward: "_SetTimestep",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            // list of parameters
+            params: [
+                {
+                    id: "mode",
+                    name: "Mode",
+                    desc: "Timestep Mode.",
+                    type: "combo",
+                    initialValue: "default",
+                    items: [
+                        { default: "Default (1/60) per C3 tick" },
+                        { fixed: "Fixed value per C3 tick" },
+                        { adaptive: "Adaptive per C3 tick using C3 dt" },
+                    ],
+                },
+                {
+                    id: "value",
+                    name: "Fixed value",
+                    desc: "Fixed Value (seconds).",
+                    type: "number",
+                    initialValue: "0.0166",
+                },
+            ],
+            listName: "Set timestep",
+            displayText: "Set {my} timestep {0}, {1}",
+            // The description of the action as it appears in the add action dialog
+            description: "Set timestep mode [and value].",
         },
         SetDefaultLinearDamping: {
             // The category of the action as it appears in the add action dialog

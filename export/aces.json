@@ -146,6 +146,30 @@
         ]
       },
       {
+        "id": "SetTimestep",
+        "scriptName": "SetTimestep",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "mode",
+            "type": "combo",
+            "initialValue": "default",
+            "items": [
+              "default",
+              "fixed",
+              "adaptive"
+            ]
+          },
+          {
+            "id": "value",
+            "type": "number",
+            "initialValue": "0.0166"
+          }
+        ]
+      },
+      {
         "id": "SetDefaultLinearDamping",
         "scriptName": "SetDefaultLinearDamping",
         "highlight": false,
