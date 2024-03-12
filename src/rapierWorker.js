@@ -459,6 +459,7 @@ const CommandType = {
     SetAngularDamping: 18,
     SetCollisionGroups: 19,
     SetTimestep: 20,
+    RemoveBody: 21,
 };
 
 const BodyType = {
@@ -767,10 +768,15 @@ function raycast(config) {
     const dir = config.dir;
     const ray = new RAPIER.Ray(origin, dir);
     const maxToI = config.maxToI;
-    const result = rapierWorld.castRayAndGetNormal(ray, maxToI);
+    let result = rapierWorld.castRayAndGetNormal(ray, maxToI);
     const parent = result?.collider?.parent();
     const hitUID = parent?.uid;
-    result.hitUID = hitUID;
+    if (result) {
+        result.hitUID = hitUID;
+        result.hasHit = true;
+    } else {
+        result = { hasHit: false, hitUID: -1 };
+    }
     return result;
 }
 
@@ -960,6 +966,9 @@ function runCommands(commands) {
             case CommandType.SetTimestep:
                 setTimestep(command);
                 break;
+            case CommandType.RemoveBody:
+                removeBody(command);
+                break;
             default:
                 // log error and continue
                 console.error("Unknown command type", command.type);
@@ -967,6 +976,15 @@ function runCommands(commands) {
         }
     }
     return true;
+}
+
+function removeBody(config) {
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        rapierWorld.removeRigidBody(body);
+    }
 }
 
 // Expose the worker's API using Comlink
@@ -986,4 +1004,5 @@ Comlink.expose({
     createCharacterController,
     translateCharacterController,
     debugRender,
+    removeBody,
 });

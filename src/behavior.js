@@ -484,7 +484,9 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         console.log("after new Worker", this.rapierWorker);
         this.comRapier = Comlink.wrap(this.rapierWorker);
         console.log("after Comlink.wrap", this.comRapier);
-        this.worldReady = await this.comRapier.initWorld();
+        const worldReady = await this.comRapier.initWorld();
+        console.log("rapier world ready", worldReady);
+        this.worldReady = worldReady;
     }
 
     updateBodies(bodies) {

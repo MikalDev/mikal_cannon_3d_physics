@@ -1,9 +1,9 @@
 {
   "is-c3-addon": true,
   "type": "behavior",
-  "name": "Cannon 3D Physics",
+  "name": "Rapier 3D Physics",
   "id": "mikal_cannon_3d_physics",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "author": "Mikal",
   "website": "https://www.construct.net",
   "documentation": "https://www.construct.net",

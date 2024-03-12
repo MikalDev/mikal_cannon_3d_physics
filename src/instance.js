@@ -40,6 +40,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 SetAngularDamping: 18,
                 SetCollisionGroups: 19,
                 SetTimestep: 20,
+                RemoveBody: 21,
             };
             this._StartTicking();
             this._StartTicking2();
@@ -48,7 +49,12 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
         Release() {
             super.Release();
             if (this.body) {
-                // world.removeBody(this.body);
+                const PhysicsType = this.PhysicsType;
+                const command = {
+                    type: this.CommandType.RemoveBody,
+                    uid: this.uid,
+                };
+                PhysicsType.commands.push(command);
             }
         }
 
@@ -634,6 +640,12 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             skipBackfaces,
             mode
         ) {
+            if (!this.PhysicsType.worldReady) {
+                this.raycastResult = {
+                    hasHit: false,
+                };
+                return;
+            }
             const scale = this.PhysicsType.scale;
             const vec3 = globalThis.glMatrix.vec3;
             const origin = vec3.fromValues(
@@ -650,44 +662,56 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             maxToI = maxToI / vec3.length(dir);
             const command = {
                 type: this.CommandType.Raycast,
-                origin: { x: fromX, y: fromY, z: fromZ },
+                origin: { x: origin[0], y: origin[1], z: origin[2] },
                 dir: { x: dir[0], y: dir[1], z: dir[2] },
                 maxToI,
             };
             const result = await this.comRapier.raycast(command);
-            const hitPointWorld = vec3.create();
-            vec3.add(
-                hitPointWorld,
-                origin,
-                vec3.mul(
-                    dir,
-                    dir,
-                    vec3.fromValues(result.toi, result.toi, result.toi)
-                )
-            );
-            this.raycastResult = {
-                hasHit: true,
-                hitFaceIndex: 0,
-                // origin + dir * toi
-                hitPointWorld: [
-                    hitPointWorld[0] * scale,
-                    hitPointWorld[1] * scale,
-                    hitPointWorld[2] * scale,
-                ],
-                hitNormalWorld: [
-                    result.normal.x,
-                    result.normal.y,
-                    result.normal.z,
-                ],
-                distance:
-                    vec3.distance(origin, [
-                        hitPointWorld[0],
-                        hitPointWorld[1],
-                        hitPointWorld[2],
-                    ]) * scale,
-                hitUID: result.hitUID,
-                tag,
-            };
+            if (result.hasHit) {
+                const hitPointWorld = vec3.create();
+                vec3.add(
+                    hitPointWorld,
+                    origin,
+                    vec3.mul(
+                        dir,
+                        dir,
+                        vec3.fromValues(result.toi, result.toi, result.toi)
+                    )
+                );
+                this.raycastResult = {
+                    hasHit: true,
+                    hitFaceIndex: 0,
+                    hitPointWorld: [
+                        hitPointWorld[0] * scale,
+                        hitPointWorld[1] * scale,
+                        hitPointWorld[2] * scale,
+                    ],
+                    hitNormalWorld: [
+                        result.normal.x,
+                        result.normal.y,
+                        result.normal.z,
+                    ],
+                    distance:
+                        vec3.distance(origin, [
+                            hitPointWorld[0],
+                            hitPointWorld[1],
+                            hitPointWorld[2],
+                        ]) * scale,
+                    hitUID: result.hitUID,
+                    tag,
+                };
+            } else {
+                this.raycastResult = {
+                    hasHit: false,
+                    hitFaceIndex: -1,
+                    hitPointWorld: [0, 0, 0],
+                    hitNormalWorld: [0, 0, 0],
+                    distance: 0,
+                    hitUID: -1,
+                    tag,
+                };
+            }
+
             this.Trigger(
                 C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyRaycastResult
             );

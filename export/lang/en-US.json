@@ -4,7 +4,7 @@
   "text": {
     "behaviors": {
       "mikal_cannon_3d_physics": {
-        "name": "Cannon 3D Physics",
+        "name": "Rapier 3D Physics",
         "description": "Description",
         "help-url": "https://www.construct.net",
         "aceCategories": {
