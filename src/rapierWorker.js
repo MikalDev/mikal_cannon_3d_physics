@@ -539,10 +539,6 @@ function createCollider(config) {
     let colliderDesc;
     switch (shape) {
         case Shape.Box:
-        case Shape.Prism:
-        case Shape.Pyramid:
-        case Shape.CornerIn:
-        case Shape.CornerOut:
             colliderDesc = RAPIER.ColliderDesc.cuboid(
                 config.width / 2,
                 config.height / 2,
@@ -565,7 +561,108 @@ function createCollider(config) {
 
             colliderDesc = RAPIER.ColliderDesc.convexHull(pointsArrayScaled);
             break;
+        case Shape.Pyramid:
+            const pyramidPoints = [
+                -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5,
+                -0.5, 0, 0, 0.5,
+            ];
+            const pyramidPointsArray = new Float32Array(pyramidPoints);
+            const pyramidPointsArrayScaled = scalePoints(
+                pyramidPointsArray,
+                config.height,
+                config.width,
+                config.depth
+            );
+            colliderDesc = RAPIER.ColliderDesc.convexHull(
+                pyramidPointsArrayScaled
+            );
+            break;
+        case Shape.Prism:
+            const prismPoints = [
+                // Bottom face vertices
+                -0.5,
+                -0.5,
+                -0.5, // Vertex 1
+                0.5,
+                -0.5,
+                -0.5, // Vertex 2
+                0.5,
+                0.5,
+                -0.5, // Vertex 3
+                -0.5,
+                0.5,
+                -0.5, // Vertex 4
+                // Top face vertices
+                -0.5,
+                0.0,
+                0.5, // Vertex 5
+                0.5,
+                0.0,
+                0.5, // Vertex 6
+            ];
+            const prismPointsScaled = scalePoints(
+                prismPoints,
+                config.height,
+                config.width,
+                config.depth
+            );
+            colliderDesc = RAPIER.ColliderDesc.convexHull(prismPointsScaled);
+            break;
+        case Shape.CornerIn:
+            const cornerInPoints = [
+                // Bottom face vertices
+                -0.5,
+                -0.5,
+                -0.5, // Vertex 1
+                0.5,
+                -0.5,
+                -0.5, // Vertex 2
+                0.5,
+                0.5,
+                -0.5, // Vertex 3
+                -0.5,
+                0.5,
+                -0.5, // Vertex 4
+                // Top face vertices
+                // Bottom face vertices
+                -0.5,
+                -0.5,
+                0.5, // Vertex 1
+                0.5,
+                -0.5,
+                0.5, // Vertex 2
+                0.5,
+                0.5,
+                0.5, // Vertex 3
+            ];
+            const cornerInPointsScaled = scalePoints(
+                cornerInPoints,
+                config.height,
+                config.width,
+                config.depth
+            );
+            colliderDesc = RAPIER.ColliderDesc.convexHull(cornerInPointsScaled);
+            break;
+        case Shape.CornerOut:
+            const cornerOutPoints = [
+                // Bottom face vertices
+                -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5,
+                -0.5,
+                // Top face vertices
+                0.5, -0.5, 0.5,
+            ];
+            const cornerOutPointsScaled = scalePoints(
+                cornerOutPoints,
+                config.height,
+                config.width,
+                config.depth
+            );
+            colliderDesc = RAPIER.ColliderDesc.convexHull(
+                cornerOutPointsScaled
+            );
+            break;
         default:
+            console.warn("Unknown shape", shape);
             colliderDesc = RAPIER.ColliderDesc.cuboid(
                 config.width / 2,
                 config.height / 2,
@@ -898,81 +995,41 @@ function setVelocity(config) {
     }
 }
 
+const commandFunctions = {
+    [CommandType.AddBody]: addBody,
+    [CommandType.StepWorld]: stepWorld,
+    [CommandType.ApplyImpulse]: applyImpulse,
+    [CommandType.ApplyImpulseAtPoint]: applyImpulseAtPoint,
+    [CommandType.ApplyForce]: applyForce,
+    // Can't batch raycast, need to return result
+    //[CommandType.Raycast]: (command) => raycast(command.config),
+    [CommandType.SetWorldGravity]: setWorldGravity,
+    [CommandType.SetLinearDamping]: setLinearDamping,
+    [CommandType.ApplyTorque]: applyTorque,
+    [CommandType.SetMass]: setMass,
+    [CommandType.CreateCharacterController]: createCharacterController,
+    [CommandType.TranslateCharacterController]: translateCharacterController,
+    [CommandType.Translate]: translate,
+    [CommandType.Rotate]: rotate,
+    [CommandType.UpdateBody]: updateBody,
+    [CommandType.SetVelocity]: setVelocity,
+    [CommandType.SetDefaultLinearDamping]: setDefaultLinearDamping,
+    [CommandType.SetAngularDamping]: setAngularDamping,
+    [CommandType.EnablePhysics]: enablePhysics,
+    [CommandType.SetCollisionGroups]: setCollisionGroups,
+    [CommandType.SetTimestep]: setTimestep,
+    [CommandType.RemoveBody]: removeBody,
+};
+
 function runCommands(commands) {
     if (!commands || commands.length === 0) return;
     for (let i = 0; i < commands.length; i++) {
         const command = commands[i];
-        switch (command.type) {
-            case CommandType.AddBody:
-                addBody(command);
-                break;
-            case CommandType.StepWorld:
-                return stepWorld();
-            case CommandType.ApplyImpulse:
-                applyImpulse(command);
-                break;
-            case CommandType.ApplyImpulseAtPoint:
-                applyImpulseAtPoint(command);
-                break;
-            case CommandType.ApplyForce:
-                applyForce(command);
-                break;
-            // Can't batch raycast, need to return result
-            //case CommandType.Raycast:
-            //return raycast(command.config);
-            //    );
-            case CommandType.SetWorldGravity:
-                setWorldGravity(command);
-                break;
-            case CommandType.SetLinearDamping:
-                setLinearDamping(command);
-                break;
-            case CommandType.ApplyTorque:
-                applyTorque(command);
-                break;
-            case CommandType.SetMass:
-                setMass(command);
-                break;
-            case CommandType.CreateCharacterController:
-                createCharacterController(command);
-                break;
-            case CommandType.TranslateCharacterController:
-                translateCharacterController(command);
-                break;
-            case CommandType.Translate:
-                translate(command);
-                break;
-            case CommandType.Rotate:
-                rotate(command);
-                break;
-            case CommandType.UpdateBody:
-                updateBody(command);
-                break;
-            case CommandType.SetVelocity:
-                setVelocity(command);
-                break;
-            case CommandType.SetDefaultLinearDamping:
-                setDefaultLinearDamping(command);
-                break;
-            case CommandType.SetAngularDamping:
-                setAngularDamping(command);
-                break;
-            case CommandType.EnablePhysics:
-                enablePhysics(command);
-                break;
-            case CommandType.SetCollisionGroups:
-                setCollisionGroups(command);
-                break;
-            case CommandType.SetTimestep:
-                setTimestep(command);
-                break;
-            case CommandType.RemoveBody:
-                removeBody(command);
-                break;
-            default:
-                // log error and continue
-                console.error("Unknown command type", command.type);
-                break;
+        const commandFunction = commandFunctions[command.type];
+        if (commandFunction) {
+            commandFunction(command);
+        } else {
+            console.error("Unknown command type", command.type);
         }
     }
     return true;
