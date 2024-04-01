@@ -436,6 +436,7 @@ let characterControllers = new Map();
 let defaultLinearDamping = 0.0;
 let timestepMode = 0;
 let timestepValue = 1 / 60;
+let collisionEvents = [];
 
 const CommandType = {
     AddBody: 0,
@@ -725,6 +726,7 @@ function addBody(config) {
 
     const collider = rapierWorld.createCollider(colliderDesc, body);
     collider.setMass(config.mass);
+    collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
     body.setEnabledRotations(
         config?.enableRot0 ? true : false,
         config?.enableRot1 ? true : false,
@@ -782,7 +784,12 @@ function stepWorld(dt) {
     if (timestepMode === TimestepMode.Adaptive) {
         rapierWorld.timestep = dt;
     }
-    rapierWorld.step();
+
+    collisionEvents = [];
+    let eventQueue = new RAPIER.EventQueue(true);
+    rapierWorld.step(eventQueue);
+    handleCollisionEvents(eventQueue);
+
     // Collect and return bodies' data...
     const bodies = rapierWorld.bodies;
     const numBodies = bodies.len();
@@ -800,7 +807,26 @@ function stepWorld(dt) {
         bodiesData[i++] = rotation.z;
         bodiesData[i++] = rotation.w;
     });
-    return Comlink.transfer(bodiesData, [bodiesData.buffer]);
+    const worldData = { bodiesData, collisionEvents };
+    return Comlink.transfer(worldData, [worldData.bodiesData.buffer]);
+}
+
+function handleCollisionEvents(eventQueue) {
+    eventQueue.drainCollisionEvents((handle1, handle2, started) => {
+        // Accessing collider information (assuming `world` is your Rapier world)
+        const collider1 = rapierWorld.getCollider(handle1);
+        const collider2 = rapierWorld.getCollider(handle2);
+        // Get bodies
+        const body1 = collider1.parent();
+        const body2 = collider2.parent();
+        // Create message to send to main thread
+        const msg = {
+            started,
+            body1UID: body1.uid,
+            body2UID: body2.uid,
+        };
+        collisionEvents.push(msg);
+    });
 }
 
 function applyTorque(config) {
@@ -975,6 +1001,7 @@ function translateCharacterController(config) {
     for (let i = 0; i < characterController.numComputedCollisions(); i++) {
         // Do something with the collision
         let collision = characterController.computedCollision(i);
+        // console.log("Collision", collision.collider.parent().uid);
     }
 
     const correctedMovement = characterController.computedMovement();

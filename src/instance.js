@@ -907,20 +907,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
         _CollisionData() {
             const collisionData = this.collisionData;
-            const target = collisionData?.target;
-            const contact = collisionData?.contact;
-            const result = {
-                target: {
-                    uid: target?.uid,
-                    id: target?.id,
-                },
-                contact: {
-                    ni: contact?.ni?.toArray(),
-                    ri: contact?.ri?.toArray(),
-                    rj: contact?.rj?.toArray(),
-                },
-            };
-            return JSON.stringify(result);
+            if (!collisionData) return "{}";
+            return JSON.stringify(collisionData);
         }
 
         _ApplyImpulse(x, y, z) {

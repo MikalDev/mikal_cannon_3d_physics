@@ -534,7 +534,13 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
             return;
         }
         const dt = this.runtime.GetDt();
-        const bodies = await this.comRapier.stepWorld(dt);
+        const worldData = await this.comRapier.stepWorld(dt);
+        const bodies = worldData.bodiesData;
+        const collisionEvents = worldData.collisionEvents;
+        if (collisionEvents?.length > 0) {
+            console.log("collisionEvents", collisionEvents);
+            this.handleCollisionEvents(collisionEvents);
+        }
         if (this.debugRender) {
             globalThis.Mikal_Rapier_debug_buffers =
                 await this.comRapier.debugRender();
@@ -545,7 +551,41 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         this.updateBodies(bodies);
         this.runtime.UpdateRender();
     }
+
+    handleCollisionEvents(collisionEvents) {
+        if (!collisionEvents) return;
+        for (const collisonEvent of collisionEvents) {
+            const { body1UID, body2UID, started } = collisonEvent;
+            const inst1 = this.runtime.GetInstanceByUID(body1UID);
+            const behInst1 = inst1.GetBehaviorSdkInstanceFromCtor(
+                C3.Behaviors.mikal_cannon_3d_physics
+            );
+            const inst2 = this.runtime.GetInstanceByUID(body2UID);
+            const behInst2 = inst2.GetBehaviorSdkInstanceFromCtor(
+                C3.Behaviors.mikal_cannon_3d_physics
+            );
+            if (behInst1) {
+                behInst1.collisionData = {
+                    target: { uid: body2UID },
+                    started,
+                };
+                behInst1.Trigger(
+                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
+                );
+            }
+            if (behInst2) {
+                behInst2.collisionData = {
+                    target: { uid: body1UID },
+                    started,
+                };
+                behInst2.Trigger(
+                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
+                );
+            }
+        }
+    }
 };
+
 const B_C = C3.Behaviors[BEHAVIOR_INFO.id];
 B_C.Type = class extends C3.SDKBehaviorTypeBase {
     constructor(objectClass) {
