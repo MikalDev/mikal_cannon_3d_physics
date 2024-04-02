@@ -461,6 +461,7 @@ const CommandType = {
     SetCollisionGroups: 19,
     SetTimestep: 20,
     RemoveBody: 21,
+    AddSphericalJoint: 22,
 };
 
 const BodyType = {
@@ -1022,6 +1023,23 @@ function setVelocity(config) {
     }
 }
 
+function addSphericalJoint(config) {
+    const { uid, targetUID, anchor, targetAnchor } = config;
+    const handle = uidHandle.get(uid);
+    const targetHandle = uidHandle.get(targetUID);
+    if (!handle || !targetHandle) return;
+    const body = rapierWorld.bodies.get(handle);
+    const targetBody = rapierWorld.bodies.get(targetHandle);
+    if (!body || !targetBody) return;
+    const params = RAPIER.JointData.spherical(anchor, targetAnchor);
+    const joint = rapierWorld.createImpulseJoint(
+        params,
+        body,
+        targetBody,
+        true
+    );
+}
+
 const commandFunctions = {
     [CommandType.AddBody]: addBody,
     [CommandType.StepWorld]: stepWorld,
@@ -1046,6 +1064,7 @@ const commandFunctions = {
     [CommandType.SetCollisionGroups]: setCollisionGroups,
     [CommandType.SetTimestep]: setTimestep,
     [CommandType.RemoveBody]: removeBody,
+    [CommandType.AddSphericalJoint]: addSphericalJoint,
 };
 
 function runCommands(commands) {

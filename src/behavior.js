@@ -538,7 +538,6 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         const bodies = worldData.bodiesData;
         const collisionEvents = worldData.collisionEvents;
         if (collisionEvents?.length > 0) {
-            console.log("collisionEvents", collisionEvents);
             this.handleCollisionEvents(collisionEvents);
         }
         if (this.debugRender) {

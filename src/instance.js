@@ -41,6 +41,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 SetCollisionGroups: 19,
                 SetTimestep: 20,
                 RemoveBody: 21,
+                AddSphericalJoint: 22,
             };
             this._StartTicking();
             this._StartTicking2();
@@ -1043,6 +1044,34 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const behavior = this._behaviorType._behavior;
             behavior.debugRender = enable;
             behavior.debugRenderWidth = width;
+        }
+
+        _AddSphericalJoint(
+            anchorX,
+            anchorY,
+            anchorZ,
+            targetAnchorX,
+            targetAnchorY,
+            targetAnchorZ,
+            targetUID
+        ) {
+            const scale = this.PhysicsType.scale;
+            const command = {
+                type: this.CommandType.AddSphericalJoint,
+                uid: this.uid,
+                anchor: {
+                    x: anchorX / scale,
+                    y: anchorY / scale,
+                    z: anchorZ / scale,
+                },
+                targetAnchor: {
+                    x: targetAnchorX / scale,
+                    y: targetAnchorY / scale,
+                    z: targetAnchorZ / scale,
+                },
+                targetUID,
+            };
+            this.PhysicsType.commands.push(command);
         }
 
         GetScriptInterfaceClass() {

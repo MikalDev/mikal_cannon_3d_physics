@@ -558,6 +558,41 @@
                 "desc": "Scale between render and physics world, typically 100"
               }
             }
+          },
+          "AddSphericalJoint": {
+            "list-name": "Add spherical joint",
+            "display-text": "Add {my} spherical joint to uid {6} at {0}, {1}, {2} to {3}, {4}, {5}",
+            "description": "Add spherical joint between self and target.",
+            "params": {
+              "anchorX": {
+                "name": "Anchor x",
+                "desc": "Anchor x."
+              },
+              "anchorY": {
+                "name": "Anchor y",
+                "desc": "Anchor y."
+              },
+              "anchorZ": {
+                "name": "Anchor z",
+                "desc": "Anchor z."
+              },
+              "targetAnchorX": {
+                "name": "Target anchor x",
+                "desc": "Target anchor x."
+              },
+              "targetAnchorY": {
+                "name": "Target anchor y",
+                "desc": "Target anchor y."
+              },
+              "targetAnchorZ": {
+                "name": "Target anchor z",
+                "desc": "Target anchor z."
+              },
+              "targetUID": {
+                "name": "Target UID",
+                "desc": "Target body UID"
+              }
+            }
           }
         },
         "conditions": {
