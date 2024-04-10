@@ -723,6 +723,10 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
         }
 
         _RaycastResultAsJSON() {
+            if (!this.raycastResult) {
+                const resut = { hasHit: false, hitUID: -1 };
+                return JSON.stringify(resut);
+            }
             return JSON.stringify(this.raycastResult);
         }
 

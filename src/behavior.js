@@ -479,6 +479,13 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         let path = await runtime
             .GetAssetManager()
             .GetProjectFileUrl("rapierWorker.js");
+        if (typeof Worker !== "undefined") {
+            //great, your browser supports web workers
+            console.info("web workers supported");
+        } else {
+            alert("No support for web workers");
+            console.info("No support for web workers");
+        }
         console.log("rapierWorker path, init", path);
         this.rapierWorker = new Worker(path, { type: "module" });
         console.log("after new Worker", this.rapierWorker);
@@ -528,9 +535,9 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         this.tickCount = tickCount;
         if (!this.comRapier) return;
         if (!this.worldReady) {
-            console.log("rapier world not ready", this.worldReady);
-            this.worldReady = await this.comRapier.isWorldReady();
-            console.log("rapier world ready", this.worldReady);
+            // console.log("rapier world not ready", this.worldReady);
+            // this.worldReady = await this.comRapier.isWorldReady();
+            // console.log("rapier world ready", this.worldReady);
             return;
         }
         const dt = this.runtime.GetDt();
