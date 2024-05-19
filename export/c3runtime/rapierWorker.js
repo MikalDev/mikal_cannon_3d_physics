@@ -8468,7 +8468,6 @@ function raycast(config) {
     const dir = config.dir;
     const ray = new RAPIER.Ray(origin, dir);
     const maxToI = config.maxToI;
-    const solid = config.solid;
     let result = rapierWorld.castRayAndGetNormal(ray, maxToI);
     const parent = result?.collider?.parent();
     const hitUID = parent?.uid;
