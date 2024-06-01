@@ -8013,6 +8013,7 @@ let defaultLinearDamping = 0.0;
 let timestepMode = 0;
 let timestepValue = 1 / 60;
 let collisionEvents = [];
+let postDefineCommands = new Map();
 
 const CommandType = {
     AddBody: 0,
@@ -8038,6 +8039,7 @@ const CommandType = {
     SetTimestep: 20,
     RemoveBody: 21,
     AddSphericalJoint: 22,
+    SetPositionOffset: 23,
 };
 
 const BodyType = {
@@ -8110,6 +8112,50 @@ function enablePhysics(config) {
     if (body) {
         body.setEnabled(config.enable);
     }
+}
+
+const ShapeType = {
+    Box: 1,
+    Sphere: 2,
+    Cylinder: 3,
+    Capsule: 4,
+};
+
+function createDefaultCollider(config) {
+    const shapeType = config.shapeType;
+    let colliderDesc;
+    switch (shapeType) {
+        case ShapeType.Box:
+            colliderDesc = RAPIER.ColliderDesc.cuboid(
+                config.width / 2,
+                config.height / 2,
+                config.depth / 2
+            );
+            break;
+        case ShapeType.Sphere:
+            colliderDesc = RAPIER.ColliderDesc.ball(
+                Math.max(config.width, config.height, config.depth) / 2
+            );
+            break;
+        case ShapeType.Cylinder:
+            colliderDesc = RAPIER.ColliderDesc.cylinder(
+                config.depth / 2,
+                config.width / 2
+            );
+            break;
+        case ShapeType.Capsule:
+            colliderDesc = RAPIER.ColliderDesc.capsule(
+                config.depth / 2,
+                config.height / 2
+            );
+            break;
+        default:
+            console.warn("Unrecognized default collider", shapeType);
+            colliderDesc = RAPIER.ColliderDesc.ball(
+                Math.max(config.width, config.height, config.depth) / 2
+            );
+    }
+    return colliderDesc;
 }
 
 function createCollider(config) {
@@ -8295,11 +8341,19 @@ function addBody(config) {
     rigidBodyDesc.setTranslation(x, y, z);
 
     // Set the rotation
+    console.log("addBody", q, config);
     rigidBodyDesc.setRotation(q);
 
     const body = rapierWorld.createRigidBody(rigidBodyDesc);
 
-    const colliderDesc = createCollider(config);
+    let colliderDesc;
+    if (config.shape !== null) {
+        // 3DShape
+        colliderDesc = createCollider(config);
+    } else {
+        // 3DObject w/ default shape: box, ball, cylinder
+        colliderDesc = createDefaultCollider(config);
+    }
 
     const collider = rapierWorld.createCollider(colliderDesc, body);
     collider.setMass(config.mass);
@@ -8313,8 +8367,17 @@ function addBody(config) {
 
     body.setLinearDamping(defaultLinearDamping);
 
-    body.uid = config.uid;
-    uidHandle.set(config.uid, body.handle);
+    const uid = config.uid;
+
+    body.uid = uid;
+    uidHandle.set(uid, body.handle);
+
+    // Check for and run any commands sent before body defined
+    const commands = postDefineCommands.get(uid);
+    if (commands) {
+        runCommands(commands);
+        postDefineCommands.delete(uid);
+    }
 }
 
 function setCollisionGroups(config) {
@@ -8353,6 +8416,29 @@ function rotate(config) {
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.setRotation(rotation);
+    }
+}
+
+function addPostDefineCommands(config) {
+    const uid = config.uid;
+    if (!postDefineCommands.has(uid)) {
+        postDefineCommands.set(uid, []);
+    }
+    const commands = postDefineCommands.get(uid);
+    commands.push(config);
+}
+
+function setPositionOffset(config) {
+    const uid = config.uid;
+    const positionOffset = config.positionOffset;
+    const handle = uidHandle.get(uid);
+    if (handle !== undefined) {
+        const body = rapierWorld.bodies.get(handle);
+        const collider = body.collider(0);
+        collider.setTranslationWrtParent(positionOffset);
+    } else {
+        const configCopy = JSON.parse(JSON.stringify(config));
+        addPostDefineCommands(configCopy);
     }
 }
 
@@ -8640,6 +8726,7 @@ const commandFunctions = {
     [CommandType.SetTimestep]: setTimestep,
     [CommandType.RemoveBody]: removeBody,
     [CommandType.AddSphericalJoint]: addSphericalJoint,
+    [CommandType.SetPositionOffset]: setPositionOffset,
 };
 
 function runCommands(commands) {

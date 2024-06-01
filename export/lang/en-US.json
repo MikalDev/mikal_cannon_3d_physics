@@ -23,12 +23,13 @@
           },
           "shape": {
             "name": "Shape",
-            "desc": "Immovable body.",
+            "desc": "Body shape.",
             "items": {
               "auto": "Auto",
               "box": "Box",
               "sphere": "Sphere",
-              "cylinder": "Cylinder"
+              "cylinder": "Cylinder",
+              "capsule": "Capsule"
             }
           },
           "bodyType": {
@@ -44,6 +45,22 @@
           "mass": {
             "name": "Mass",
             "desc": "Mass"
+          },
+          "size-override": {
+            "name": "Size override",
+            "desc": "Size override (not 3DShape"
+          },
+          "body-size-height": {
+            "name": "Height override",
+            "desc": "Body size height override (not for auto shape)"
+          },
+          "body-size-width": {
+            "name": "Width override",
+            "desc": "Body size width override (not for auto shape)"
+          },
+          "body-size-depth": {
+            "name": "Depth override",
+            "desc": "Body size depth override (not for auto shape)"
           }
         },
         "actions": {
@@ -172,6 +189,25 @@
               "linearDamping": {
                 "name": "Linear damping",
                 "desc": "Linear damping for body."
+              }
+            }
+          },
+          "SetPositionOffset": {
+            "list-name": "Set position offset",
+            "display-text": "Set {my} position offset to {0},{1},{2}",
+            "description": "Set position offset of object from body",
+            "params": {
+              "x offset": {
+                "name": "x offset",
+                "desc": "x offset for body."
+              },
+              "y offset": {
+                "name": "y offset",
+                "desc": "y offset for body."
+              },
+              "z offset": {
+                "name": "z offset",
+                "desc": "z offset for body."
               }
             }
           },

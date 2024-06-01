@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.8.3",
+    version: "2.10.0",
     category:
         // "attributes",
         "movements",
@@ -122,7 +122,7 @@ module.exports = {
             type: "combo",
             id: "shape",
             name: "Shape",
-            desc: "Immovable body.",
+            desc: "Body shape.",
             options: {
                 initialValue: "auto",
                 items: [
@@ -130,6 +130,7 @@ module.exports = {
                     { box: "Box" },
                     { sphere: "Sphere" },
                     { cylinder: "Cylinder" },
+                    { capsule: "Capsule" },
                 ],
             },
         },
@@ -155,6 +156,42 @@ module.exports = {
             desc: "Mass",
             options: {
                 initialValue: 1,
+            },
+        },
+        {
+            type: "check",
+            id: "size-override",
+            name: "Size override",
+            desc: "Size override (not 3DShape",
+            options: {
+                initialValue: false,
+            },
+        },
+        {
+            type: "float",
+            id: "body-size-height",
+            name: "Height override",
+            desc: "Body size height override (not for auto shape)",
+            options: {
+                initialValue: -1,
+            },
+        },
+        {
+            type: "float",
+            id: "body-size-width",
+            name: "Width override",
+            desc: "Body size width override (not for auto shape)",
+            options: {
+                initialValue: -1,
+            },
+        },
+        {
+            type: "float",
+            id: "body-size-depth",
+            name: "Depth override",
+            desc: "Body size depth override (not for auto shape)",
+            options: {
+                initialValue: -1,
             },
         },
     ],
@@ -413,6 +450,43 @@ module.exports = {
             displayText: "Set {my} linear damping to {0}",
             // The description of the action as it appears in the add action dialog
             description: "Set linear damping",
+        },
+        SetPositionOffset: {
+            // The category of the action as it appears in the add action dialog
+            category: "body",
+            forward: "_SetPositionOffset",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            // list of parameters
+            params: [
+                {
+                    id: "x offset",
+                    name: "x offset",
+                    desc: "x offset for body.",
+                    type: "number",
+                    initialValue: "0",
+                },
+                {
+                    id: "y offset",
+                    name: "y offset",
+                    desc: "y offset for body.",
+                    type: "number",
+                    initialValue: "0",
+                },
+                {
+                    id: "z offset",
+                    name: "z offset",
+                    desc: "z offset for body.",
+                    type: "number",
+                    initialValue: "0",
+                },
+            ],
+            listName: "Set position offset",
+            displayText: "Set {my} position offset to {0},{1},{2}",
+            // The description of the action as it appears in the add action dialog
+            description: "Set position offset of object from body",
         },
         SetAngularDamping: {
             // The category of the action as it appears in the add action dialog

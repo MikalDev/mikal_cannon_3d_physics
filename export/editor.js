@@ -3,7 +3,7 @@ const SDK = self.SDK;
 const BEHAVIOR_INFO = {
     ...{
   "id": "mikal_cannon_3d_physics",
-  "version": "2.8.3",
+  "version": "2.10.0",
   "category": "movements",
   "author": "Mikal",
   "addonType": "behavior",
@@ -70,7 +70,8 @@ const BEHAVIOR_INFO = {
   "auto",
   "box",
   "sphere",
-  "cylinder"
+  "cylinder",
+  "capsule"
 ],
             },
           },
@@ -97,6 +98,54 @@ const BEHAVIOR_INFO = {
             options: {
               ...{
   "initialValue": 1
+},
+              
+              
+              
+            },
+          },
+{
+            type: "check",
+            id: "size-override",
+            options: {
+              ...{
+  "initialValue": false
+},
+              
+              
+              
+            },
+          },
+{
+            type: "float",
+            id: "body-size-height",
+            options: {
+              ...{
+  "initialValue": -1
+},
+              
+              
+              
+            },
+          },
+{
+            type: "float",
+            id: "body-size-width",
+            options: {
+              ...{
+  "initialValue": -1
+},
+              
+              
+              
+            },
+          },
+{
+            type: "float",
+            id: "body-size-depth",
+            options: {
+              ...{
+  "initialValue": -1
 },
               
               

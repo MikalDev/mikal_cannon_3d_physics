@@ -322,6 +322,30 @@
         ]
       },
       {
+        "id": "SetPositionOffset",
+        "scriptName": "SetPositionOffset",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "x offset",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y offset",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z offset",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
         "id": "SetAngularDamping",
         "scriptName": "SetAngularDamping",
         "highlight": false,
