@@ -4,7 +4,7 @@
   "text": {
     "behaviors": {
       "mikal_cannon_3d_physics": {
-        "name": "Cannon 3D Physics",
+        "name": "Rapier 3D Physics",
         "description": "Description",
         "help-url": "https://www.construct.net",
         "aceCategories": {
@@ -23,13 +23,44 @@
           },
           "shape": {
             "name": "Shape",
-            "desc": "Immovable body.",
+            "desc": "Body shape.",
             "items": {
               "auto": "Auto",
               "box": "Box",
               "sphere": "Sphere",
-              "cylinder": "Cylinder"
+              "cylinder": "Cylinder",
+              "capsule": "Capsule"
             }
+          },
+          "bodyType": {
+            "name": "Body type",
+            "desc": "Body type.",
+            "items": {
+              "dynamic": "Dynamic",
+              "fixed": "Fixed",
+              "kinematic-position": "Kinematic position",
+              "kinematic-velocity": "Kinematic velocity"
+            }
+          },
+          "mass": {
+            "name": "Mass",
+            "desc": "Mass"
+          },
+          "size-override": {
+            "name": "Size override",
+            "desc": "Size override (not 3DShape"
+          },
+          "body-size-height": {
+            "name": "Height override",
+            "desc": "Body size height override (not for auto shape)"
+          },
+          "body-size-width": {
+            "name": "Width override",
+            "desc": "Body size width override (not for auto shape)"
+          },
+          "body-size-depth": {
+            "name": "Depth override",
+            "desc": "Body size depth override (not for auto shape)"
           }
         },
         "actions": {
@@ -119,6 +150,26 @@
               }
             }
           },
+          "SetTimestep": {
+            "list-name": "Set timestep",
+            "display-text": "Set {my} timestep {0}, {1}",
+            "description": "Set timestep mode [and value].",
+            "params": {
+              "mode": {
+                "name": "Mode",
+                "desc": "Timestep Mode.",
+                "items": {
+                  "default": "Default (1/60) per C3 tick",
+                  "fixed": "Fixed value per C3 tick",
+                  "adaptive": "Adaptive per C3 tick using C3 dt"
+                }
+              },
+              "value": {
+                "name": "Fixed value",
+                "desc": "Fixed Value (seconds)."
+              }
+            }
+          },
           "SetDefaultLinearDamping": {
             "list-name": "Set default linear damping",
             "display-text": "Set {my} default linear damping to {0}",
@@ -138,6 +189,25 @@
               "linearDamping": {
                 "name": "Linear damping",
                 "desc": "Linear damping for body."
+              }
+            }
+          },
+          "SetPositionOffset": {
+            "list-name": "Set position offset",
+            "display-text": "Set {my} position offset to {0},{1},{2}",
+            "description": "Set position offset of object from body",
+            "params": {
+              "x offset": {
+                "name": "x offset",
+                "desc": "x offset for body."
+              },
+              "y offset": {
+                "name": "y offset",
+                "desc": "y offset for body."
+              },
+              "z offset": {
+                "name": "z offset",
+                "desc": "z offset for body."
               }
             }
           },
@@ -236,13 +306,28 @@
             }
           },
           "SetCollisionFilterGroup": {
-            "list-name": "Set collision filter group",
-            "display-text": "Set {my} collision filter group {0}",
-            "description": "Set collision filter group of body, power of 2.",
+            "list-name": "Set collision groups",
+            "display-text": "Set {my} collision groups {0}",
+            "description": "Set collision groups of body, power of 2, each bit is a group.",
             "params": {
               "group": {
                 "name": "Group",
                 "desc": "Group."
+              }
+            }
+          },
+          "SetCollisionGroups": {
+            "list-name": "Set collision group membership and filter",
+            "display-text": "Set {my} collision groups membership:{0}, filter:{1}",
+            "description": "Set collision groups membership and filter with hex strings.",
+            "params": {
+              "membership": {
+                "name": "Membership",
+                "desc": "Indicates what groups the collider is part of (one bit per group, hex string)"
+              },
+              "filter": {
+                "name": "Filter",
+                "desc": "Indicates what groups the collider can interact with (one bit per group, hex string)."
               }
             }
           },
@@ -425,6 +510,193 @@
               "otherLocalAnchorZ": {
                 "name": "Other local anchor z",
                 "desc": "Other body local anchor z."
+              }
+            }
+          },
+          "EnableDebugRender": {
+            "list-name": "Enable debug render",
+            "display-text": "Enable {my} debug render {0} width {1}",
+            "description": "Enable debug render.",
+            "params": {
+              "enable": {
+                "name": "Enable",
+                "desc": "Enable debug render."
+              },
+              "width": {
+                "name": "Width",
+                "desc": "Width of debug render."
+              }
+            }
+          },
+          "UpdateBody": {
+            "list-name": "Update body",
+            "display-text": "Update {my} body from render",
+            "description": "Update body from render.",
+            "params": {}
+          },
+          "CreateCharacterController": {
+            "list-name": "Create character controller",
+            "display-text": "{my} create character controller {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11} {12}",
+            "description": "Create character controller.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag for character controller."
+              },
+              "offset": {
+                "name": "Offset",
+                "desc": "Offset."
+              },
+              "upX": {
+                "name": "Up x",
+                "desc": "Up vector x."
+              },
+              "upY": {
+                "name": "Up y",
+                "desc": "Up vector y."
+              },
+              "upZ": {
+                "name": "Up z",
+                "desc": "Up vector z."
+              },
+              "maxSlopeClimbAngle": {
+                "name": "Max slope climb angle",
+                "desc": "Max slope climb angle (degrees)"
+              },
+              "minSlopeSlideAngle": {
+                "name": "Min slope slide angle",
+                "desc": "Min slope slide angle (degrees)"
+              },
+              "applyImpulsesToDynamicBodies": {
+                "name": "Apply impulses to dynamic bodies",
+                "desc": "Apply impulses to dynamic bodies."
+              },
+              "enableAutostep": {
+                "name": "Enable autostep",
+                "desc": "Enable autostep."
+              },
+              "autostepMinWidth": {
+                "name": "Autostep min width",
+                "desc": "Autostep min width."
+              },
+              "autostepMaxHeight": {
+                "name": "Autostep max height",
+                "desc": "Autostep max height."
+              },
+              "enableSnapToGround": {
+                "name": "Enable snap to ground",
+                "desc": "Enable snap to ground."
+              },
+              "snapToGroundMaxDistance": {
+                "name": "Snap to ground max distance",
+                "desc": "Snap to ground max distance."
+              }
+            }
+          },
+          "Translate": {
+            "list-name": "Translate",
+            "display-text": "{my} translate to {0}, {1}, {2}",
+            "description": "Translate body to x,y,z.",
+            "params": {
+              "x": {
+                "name": "X",
+                "desc": "X."
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Y."
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Z."
+              }
+            }
+          },
+          "Rotate": {
+            "list-name": "Rotate",
+            "display-text": "{my} rotate to {0}, {1}, {2}",
+            "description": "Rotate body to x,y,z.",
+            "params": {
+              "x": {
+                "name": "X",
+                "desc": "X angle (degrees)."
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Y angle (degrees)."
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Z angle (degrees)."
+              }
+            }
+          },
+          "TranslateCharacterController": {
+            "list-name": "Translate character controller",
+            "display-text": "{my} Translate character controller to {1}, {2}, {3}, tag {0}",
+            "description": "Translate character controller.",
+            "params": {
+              "tag": {
+                "name": "tag",
+                "desc": "Tag for character controller."
+              },
+              "x": {
+                "name": "X",
+                "desc": "X."
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Y."
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Z."
+              }
+            }
+          },
+          "SetWorldScale": {
+            "list-name": "Set world scale",
+            "display-text": "Set {my} world scale to {0}",
+            "description": "Set world scale.",
+            "params": {
+              "scale": {
+                "name": "Scale",
+                "desc": "Scale between render and physics world, typically 100"
+              }
+            }
+          },
+          "AddSphericalJoint": {
+            "list-name": "Add spherical joint",
+            "display-text": "Add {my} spherical joint to uid {6} at {0}, {1}, {2} to {3}, {4}, {5}",
+            "description": "Add spherical joint between self and target.",
+            "params": {
+              "anchorX": {
+                "name": "Anchor x",
+                "desc": "Anchor x."
+              },
+              "anchorY": {
+                "name": "Anchor y",
+                "desc": "Anchor y."
+              },
+              "anchorZ": {
+                "name": "Anchor z",
+                "desc": "Anchor z."
+              },
+              "targetAnchorX": {
+                "name": "Target anchor x",
+                "desc": "Target anchor x."
+              },
+              "targetAnchorY": {
+                "name": "Target anchor y",
+                "desc": "Target anchor y."
+              },
+              "targetAnchorZ": {
+                "name": "Target anchor z",
+                "desc": "Target anchor z."
+              },
+              "targetUID": {
+                "name": "Target UID",
+                "desc": "Target body UID"
               }
             }
           }

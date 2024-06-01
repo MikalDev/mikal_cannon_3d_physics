@@ -29,7 +29,7 @@
           {
             "id": "tag",
             "type": "string",
-            "value": ""
+            "initialValue": ""
           }
         ]
       }
@@ -40,42 +40,42 @@
         "scriptName": "Raycast",
         "highlight": false,
         "deprecated": false,
-        "isAsync": false,
+        "isAsync": true,
         "params": [
           {
             "id": "tag",
             "type": "string",
-            "value": ""
+            "initialValue": ""
           },
           {
             "id": "fromX",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "fromY",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "fromZ",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "toX",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "toY",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "toZ",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "collisionFilterGroup",
@@ -131,17 +131,41 @@
           {
             "id": "gravityX",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "gravityY",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "gravityZ",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "SetTimestep",
+        "scriptName": "SetTimestep",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "mode",
+            "type": "combo",
+            "initialValue": "default",
+            "items": [
+              "default",
+              "fixed",
+              "adaptive"
+            ]
+          },
+          {
+            "id": "value",
+            "type": "number",
+            "initialValue": "0.0166"
           }
         ]
       },
@@ -155,7 +179,40 @@
           {
             "id": "defaultLinearDamping",
             "type": "number",
-            "value": "0.1"
+            "initialValue": "0.1"
+          }
+        ]
+      },
+      {
+        "id": "EnableDebugRender",
+        "scriptName": "EnableDebugRender",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "enable",
+            "type": "boolean",
+            "initialValue": "false"
+          },
+          {
+            "id": "width",
+            "type": "number",
+            "initialValue": "1"
+          }
+        ]
+      },
+      {
+        "id": "SetWorldScale",
+        "scriptName": "SetWorldScale",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "scale",
+            "type": "number",
+            "initialValue": "100"
           }
         ]
       }
@@ -246,7 +303,7 @@
           {
             "id": "immovable",
             "type": "boolean",
-            "value": "false"
+            "initialValue": "false"
           }
         ]
       },
@@ -260,7 +317,31 @@
           {
             "id": "linearDamping",
             "type": "number",
-            "value": "0.1"
+            "initialValue": "0.1"
+          }
+        ]
+      },
+      {
+        "id": "SetPositionOffset",
+        "scriptName": "SetPositionOffset",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "x offset",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y offset",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z offset",
+            "type": "number",
+            "initialValue": "0"
           }
         ]
       },
@@ -274,7 +355,7 @@
           {
             "id": "angularDamping",
             "type": "number",
-            "value": "0.1"
+            "initialValue": "0.1"
           }
         ]
       },
@@ -288,17 +369,17 @@
           {
             "id": "velocityX",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "velocityY",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "velocityZ",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           }
         ]
       },
@@ -312,7 +393,7 @@
           {
             "id": "enable",
             "type": "boolean",
-            "value": "false"
+            "initialValue": "false"
           }
         ]
       },
@@ -326,32 +407,32 @@
           {
             "id": "impulseX",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "impulseY",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "impulseZ",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "pointX",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "pointY",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "pointZ",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           }
         ]
       },
@@ -365,7 +446,7 @@
           {
             "id": "mass",
             "type": "number",
-            "value": "0"
+            "initialValue": "1"
           }
         ]
       },
@@ -373,7 +454,7 @@
         "id": "UpdateHeightfield",
         "scriptName": "UpdateHeightfield",
         "highlight": false,
-        "deprecated": false,
+        "deprecated": true,
         "isAsync": false,
         "params": [
           {
@@ -387,13 +468,32 @@
         "id": "SetCollisionFilterGroup",
         "scriptName": "SetCollisionFilterGroup",
         "highlight": false,
-        "deprecated": false,
+        "deprecated": true,
         "isAsync": false,
         "params": [
           {
             "id": "group",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "SetCollisionGroups",
+        "scriptName": "SetCollisionGroups",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "membership",
+            "type": "string",
+            "initialValue": "0xFFFF"
+          },
+          {
+            "id": "filter",
+            "type": "string",
+            "initialValue": "0xFFFF"
           }
         ]
       },
@@ -401,13 +501,13 @@
         "id": "SetCollisionFilterMask",
         "scriptName": "SetCollisionFilterMask",
         "highlight": false,
-        "deprecated": false,
+        "deprecated": true,
         "isAsync": false,
         "params": [
           {
             "id": "mask",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           }
         ]
       },
@@ -421,32 +521,32 @@
           {
             "id": "forceX",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "forceY",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "forceZ",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "pointX",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "pointY",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "pointZ",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           }
         ]
       },
@@ -548,17 +648,17 @@
           {
             "id": "torqueX",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "torqueY",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           },
           {
             "id": "torqueZ",
             "type": "number",
-            "value": "0"
+            "initialValue": "0"
           }
         ]
       },
@@ -566,7 +666,7 @@
         "id": "AttachSpring",
         "scriptName": "AttachSpring",
         "highlight": false,
-        "deprecated": false,
+        "deprecated": true,
         "isAsync": false,
         "params": [
           {
@@ -621,6 +721,208 @@
           },
           {
             "id": "otherLocalAnchorZ",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "UpdateBody",
+        "scriptName": "UpdateBody",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": []
+      },
+      {
+        "id": "CreateCharacterController",
+        "scriptName": "CreateCharacterController",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "offset",
+            "type": "number",
+            "initialValue": "0.01"
+          },
+          {
+            "id": "upX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "upY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "upZ",
+            "type": "number",
+            "initialValue": "1"
+          },
+          {
+            "id": "maxSlopeClimbAngle",
+            "type": "number",
+            "initialValue": "60"
+          },
+          {
+            "id": "minSlopeSlideAngle",
+            "type": "number",
+            "initialValue": "60"
+          },
+          {
+            "id": "applyImpulsesToDynamicBodies",
+            "type": "boolean",
+            "initialValue": "false"
+          },
+          {
+            "id": "enableAutostep",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "autostepMinWidth",
+            "type": "number",
+            "initialValue": "20"
+          },
+          {
+            "id": "autostepMaxHeight",
+            "type": "number",
+            "initialValue": "20"
+          },
+          {
+            "id": "enableSnapToGround",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "snapToGroundMaxDistance",
+            "type": "number",
+            "initialValue": "1"
+          }
+        ]
+      },
+      {
+        "id": "Translate",
+        "scriptName": "Translate",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "Rotate",
+        "scriptName": "Rotate",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "TranslateCharacterController",
+        "scriptName": "TranslateCharacterController",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "AddSphericalJoint",
+        "scriptName": "AddSphericalJoint",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "anchorX",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "anchorY",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "anchorZ",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "targetAnchorX",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "targetAnchorY",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "targetAnchorZ",
+            "type": "number"
+          },
+          {
+            "id": "targetUID",
             "type": "number",
             "initialValue": "0"
           }

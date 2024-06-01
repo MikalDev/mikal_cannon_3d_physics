@@ -3,7 +3,7 @@ const SDK = self.SDK;
 const BEHAVIOR_INFO = {
     ...{
   "id": "mikal_cannon_3d_physics",
-  "version": "1.19.1",
+  "version": "2.10.0",
   "category": "movements",
   "author": "Mikal",
   "addonType": "behavior",
@@ -16,8 +16,19 @@ const BEHAVIOR_INFO = {
   },
   "fileDependencies": [
     {
-      "filename": "cannon-es.js",
-      "type": "inline-script"
+      "filename": "rapierWorker.js",
+      "type": "copy-to-output",
+      "fileType": "text/javascript"
+    },
+    {
+      "filename": "rapier3d-compat.js",
+      "type": "copy-to-output",
+      "fileType": "text/javascript"
+    },
+    {
+      "filename": "comlink.js",
+      "type": "copy-to-output",
+      "fileType": "text/javascript"
     }
   ]
 },
@@ -59,8 +70,86 @@ const BEHAVIOR_INFO = {
   "auto",
   "box",
   "sphere",
-  "cylinder"
+  "cylinder",
+  "capsule"
 ],
+            },
+          },
+{
+            type: "combo",
+            id: "bodyType",
+            options: {
+              ...{
+  "initialValue": "dynamic"
+},
+              
+              
+              items: [
+  "dynamic",
+  "fixed",
+  "kinematic-position",
+  "kinematic-velocity"
+],
+            },
+          },
+{
+            type: "float",
+            id: "mass",
+            options: {
+              ...{
+  "initialValue": 1
+},
+              
+              
+              
+            },
+          },
+{
+            type: "check",
+            id: "size-override",
+            options: {
+              ...{
+  "initialValue": false
+},
+              
+              
+              
+            },
+          },
+{
+            type: "float",
+            id: "body-size-height",
+            options: {
+              ...{
+  "initialValue": -1
+},
+              
+              
+              
+            },
+          },
+{
+            type: "float",
+            id: "body-size-width",
+            options: {
+              ...{
+  "initialValue": -1
+},
+              
+              
+              
+            },
+          },
+{
+            type: "float",
+            id: "body-size-depth",
+            options: {
+              ...{
+  "initialValue": -1
+},
+              
+              
+              
             },
           }
     ],

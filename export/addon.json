@@ -1,9 +1,9 @@
 {
   "is-c3-addon": true,
   "type": "behavior",
-  "name": "Cannon 3D Physics",
+  "name": "Rapier 3D Physics",
   "id": "mikal_cannon_3d_physics",
-  "version": "1.19.1",
+  "version": "2.10.0",
   "author": "Mikal",
   "website": "https://www.construct.net",
   "documentation": "https://www.construct.net",
@@ -23,6 +23,8 @@
     "addon.json",
     "icon.svg",
     "editor.js",
-    "c3runtime/cannon-es.js"
+    "c3runtime/rapierWorker.js",
+    "c3runtime/rapier3d-compat.js",
+    "c3runtime/comlink.js"
   ]
 }
