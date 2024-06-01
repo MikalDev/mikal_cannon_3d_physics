@@ -507,6 +507,16 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
             },
+"ApplyForceTowardsPosition": {
+            "forward": (inst) => inst._ApplyForceTowardsPosition,
+            
+            "autoScriptInterface": true,
+            },
+"ApplyImpulseTowardsPosition": {
+            "forward": (inst) => inst._ApplyImpulseTowardsPosition,
+            
+            "autoScriptInterface": true,
+            },
 "ApplyTorque": {
             "forward": (inst) => inst._ApplyTorque,
             

@@ -551,6 +551,94 @@
         ]
       },
       {
+        "id": "ApplyForceTowardsPosition",
+        "scriptName": "ApplyForceTowardsPosition",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "force",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "x",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointX",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointY",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointZ",
+            "type": "number",
+            "value": "0"
+          }
+        ]
+      },
+      {
+        "id": "ApplyImpulseTowardsPosition",
+        "scriptName": "ApplyImpulseTowardsPosition",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "impulse",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "x",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointX",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointY",
+            "type": "number",
+            "value": "0"
+          },
+          {
+            "id": "pointZ",
+            "type": "number",
+            "value": "0"
+          }
+        ]
+      },
+      {
         "id": "ApplyTorque",
         "scriptName": "ApplyTorque",
         "highlight": false,
