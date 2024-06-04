@@ -467,6 +467,9 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         this.scale = 100;
         this.timestepMode = 0;
         this.timestepValue = 1 / 60;
+        this.currentPhysicsFrameResponse = 0;
+        this.currentPhysicsFrameRequest = 0;
+        this.totalDt = 0;
     }
 
     Release() {
@@ -541,7 +544,27 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
             return;
         }
         const dt = this.runtime.GetDt();
-        const worldData = await this.comRapier.stepWorld(dt);
+        this.totalDt += dt;
+        if (
+            this.currentPhysicsFrameResponse < this.currentPhysicsFrameRequest
+        ) {
+            console.log(
+                "p",
+                this.totalDt,
+                this.currentPhysicsFrameResponse,
+                this.currentPhysicsFrameRequest
+            );
+            return;
+        }
+        this.currentPhysicsFrameRequest++;
+        const stepDt = this.totalDt;
+        this.totalDt = 0;
+        console.log("req", stepDt);
+        const worldData = await this.comRapier.stepWorld(
+            stepDt,
+            this.currentPhysicsFrameRequest
+        );
+        this.currentPhysicsFrameResponse = worldData.frame;
         const bodies = worldData.bodiesData;
         const collisionEvents = worldData.collisionEvents;
         if (collisionEvents?.length > 0) {

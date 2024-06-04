@@ -15,14 +15,17 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 this.bodySizeDepth = properties[8];
             }
             this.defaultMass = 1;
-            this.body = null
+            this.body = null;
             this.shapePositionOffset = null;
             this.shapeAngleOffset = null;
             this.uid = this._inst.GetUID();
             this.PhysicsType = this._behaviorType._behavior;
             this.comRapier = this.PhysicsType.comRapier;
-            this.bodyDefined = false
-            this.cannonBody = {position:{x:0,y:0,z:0}, quaternion:{x:0,y:0,z:0, w:0}}
+            this.bodyDefined = false;
+            this.setBody = {
+                position: { x: 0, y: 0, z: 0 },
+                quaternion: { x: 0, y: 0, z: 0, w: 0 },
+            };
             this.CommandType = {
                 AddBody: 0,
                 StepWorld: 1,
@@ -55,7 +58,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
         Release() {
             super.Release();
-            if (this.body) {
+            if (this.bodyDefined) {
                 const PhysicsType = this.PhysicsType;
                 const command = {
                     type: this.CommandType.RemoveBody,
@@ -85,7 +88,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const wi = this._inst.GetWorldInfo();
             const shapeInst = this._inst.GetSdkInstance();
             let zHeight = shapeInst._zHeight || 0;
-            const bodyDefined = this.bodyDefined
+            const bodyDefined = this.bodyDefined;
             const PhysicsType = this._behaviorType._behavior;
 
             if (
@@ -101,9 +104,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     wi
                 );
                 // Not ready
-                if (!result) return
-                this.bodyDefined = true
-                this._inst.GetSdkInstance()._setCannonBody(this.cannonBody, true);
+                if (!result) return;
+                this.bodyDefined = true;
+                this._inst.GetSdkInstance()._setCannonBody(this.setBody, true);
             }
 
             if (!bodyDefined) return;
@@ -116,8 +119,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const quatRot = wBody.rotation;
 
             if (this.pluginType == "3DObjectPlugin") {
-                this.cannonBody.position = position
-                this.cannonBody.quaternion = quatRot
+                this.setBody.position = position;
+                this.setBody.quaternion = quatRot;
                 wi.SetZElevation(position.z);
             } else {
                 const zElevation = position.z - zHeight / 2;
@@ -160,23 +163,15 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 this.pluginType = "Shape3DPlugin";
                 if (!this.bodyDefined) {
                     const shape = this._inst.GetSdkInstance()._shape;
-                    this.DefineBody(
-                        this.pluginType,
-                        shape,
-                        this.bodyType
-                    );
-                    this.bodyDefined = true
+                    this.DefineBody(this.pluginType, shape, this.bodyType);
+                    this.bodyDefined = true;
                 }
             } else if (
                 C3?.Plugins?.Sprite &&
                 pluginType instanceof C3?.Plugins?.Sprite
             ) {
                 this.pluginType = "SpritePlugin";
-                this.DefineBody(
-                    this.pluginType,
-                    null,
-                    this.bodyType
-                );
+                this.DefineBody(this.pluginType, null, this.bodyType);
             } else if (
                 C3?.Plugins?.Mikal_3DObject &&
                 pluginType instanceof C3?.Plugins?.Mikal_3DObject
@@ -198,23 +193,18 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             if (!zHeight) zHeight = 0;
             let shape = null;
             const enableRot = [true, true, true];
+            const scale = PhysicsType.scale;
+            const initialQuat = quat.create();
+            quat.fromEuler(initialQuat, 0, 0, (wi.GetAngle() * 180) / Math.PI);
+            let command = null;
             if (pluginType === "Shape3DPlugin") {
                 // 3DShape can only rotate around z axis
                 if (!this.rotate3D) {
                     enableRot[0] = false;
                     enableRot[1] = false;
                 }
-
-                const initialQuat = quat.create();
-                quat.fromEuler(
-                    initialQuat,
-                    0,
-                    0,
-                    (wi.GetAngle() * 180) / Math.PI
-                );
                 const shape = this._inst.GetSdkInstance()._shape;
-                const scale = PhysicsType.scale;
-                const command = {
+                command = {
                     type: this.CommandType.AddBody,
                     uid: this._inst.GetUID(),
                     x: wi.GetX() / scale,
@@ -233,8 +223,30 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     shape,
                     mass: this.mass,
                 };
-                this.PhysicsType.commands.push(command);
+            } else if (this.pluginType == "SpritePlugin") {
+                const meshPoints = this._getMeshPoints(wi);
+                command = {
+                    type: this.CommandType.AddBody,
+                    uid: this._inst.GetUID(),
+                    x: (wi.GetX() - wi.GetWidth() / 2) / scale,
+                    y: (wi.GetY() - wi.GetHeight() / 2) / scale,
+                    z: (wi.GetZElevation() + zHeight / 2) / scale,
+                    q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
+                    width: wi.GetWidth() / scale,
+                    height: wi.GetHeight() / scale,
+                    depth: zHeight / scale,
+                    immovable: this.immovable,
+                    enableRot0: enableRot[0],
+                    enableRot1: enableRot[1],
+                    enableRot2: enableRot[2],
+                    shapeType: shapeType,
+                    bodyType,
+                    shape: null,
+                    mass: this.mass,
+                    meshPoints: meshPoints,
+                };
             }
+            this.PhysicsType.commands.push(command);
         }
 
         _UpdateBody() {
@@ -245,24 +257,18 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             let zHeight = shapeInst._zHeight;
             if (!zHeight) zHeight = 0;
             const enableRot = [true, true, true];
+            const initialQuat = quat.create();
+            quat.fromEuler(initialQuat, 0, 0, (wi.GetAngle() * 180) / Math.PI);
+            const scale = PhysicsType.scale;
+            let command = null;
             const pluginType = this._inst.GetPlugin();
-            if (pluginType instanceof C3?.Plugins?.Shape3D) {
+            if (this.pluginType == "Shape3DPlugin") {
                 // 3DShape can only rotate around z axis
                 if (!this.rotate3D) {
                     enableRot[0] = false;
                     enableRot[1] = false;
                 }
-
-                const initialQuat = quat.create();
-                quat.fromEuler(
-                    initialQuat,
-                    0,
-                    0,
-                    (wi.GetAngle() * 180) / Math.PI
-                );
-                const shape = this._inst.GetSdkInstance()._shape;
-                const scale = PhysicsType.scale;
-                const command = {
+                command = {
                     type: this.CommandType.UpdateBody,
                     uid: this._inst.GetUID(),
                     x: wi.GetX() / scale,
@@ -281,8 +287,34 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     shape,
                     mass: this.mass,
                 };
-                this.PhysicsType.commands.push(command);
+            } else if (this.pluginType == "SpritePlugin") {
+                const scale = PhysicsType.scale;
+                const meshPoints = this._getMeshPoints(wi);
+                command = {
+                    type: this.CommandType.UpdateBody,
+                    uid: this._inst.GetUID(),
+                    x: (wi.GetX() - wi.GetWidth() / 2) / scale,
+                    y: (wi.GetY() - wi.GetHeight() / 2) / scale,
+                    z: wi.GetZElevation() / scale,
+                    q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
+                    width: wi.GetWidth() / scale,
+                    height: wi.GetHeight() / scale,
+                    depth: zHeight / scale,
+                    immovable: this.immovable,
+                    enableRot0: enableRot[0],
+                    enableRot1: enableRot[1],
+                    enableRot2: enableRot[2],
+                    shapeType: this.shapeProperty,
+                    bodyType: this.bodyType,
+                    shape: null,
+                    mass: this.mass,
+                    meshPoints: meshPoints,
+                };
+            } else {
+                console.error("invalid pluginType", pluginType);
+                return;
             }
+            this.PhysicsType.commands.push(command);
         }
 
         _quaternionToEuler(quat) {
@@ -317,13 +349,23 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const xMinBB = inst.xMinBB;
             const xMaxBB = inst.xMaxBB;
             // Check if rendered (larger than 0,0,0)
-            if (xMinBB[0]-xMaxBB[0] === 0 && xMinBB[0]-xMaxBB[0] === 0 & xMinBB[0]-xMaxBB[0] === 0) return false
-            const h = !this.sizeOverride ? xMaxBB[0] - xMinBB[0] : this.bodySizeWidth;
-            const w = !this.sizeOverride ? xMaxBB[1] - xMinBB[1] : this.bodySizeHeight;
-            const d = !this.sizeOverride ? xMaxBB[2] - xMinBB[2] : this.bodySizeDepth;
+            if (
+                xMinBB[0] - xMaxBB[0] === 0 &&
+                (xMinBB[0] - xMaxBB[0] === 0) & (xMinBB[0] - xMaxBB[0] === 0)
+            )
+                return false;
+            const h = !this.sizeOverride
+                ? xMaxBB[0] - xMinBB[0]
+                : this.bodySizeWidth;
+            const w = !this.sizeOverride
+                ? xMaxBB[1] - xMinBB[1]
+                : this.bodySizeHeight;
+            const d = !this.sizeOverride
+                ? xMaxBB[2] - xMinBB[2]
+                : this.bodySizeDepth;
             const PhysicsType = this._behaviorType._behavior;
-            const scale = PhysicsType.scale
-            const wi = worldInfo
+            const scale = PhysicsType.scale;
+            const wi = worldInfo;
 
             const xAngle = inst.xAngle;
             const yAngle = inst.yAngle;
@@ -335,10 +377,15 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const command = {
                 type: this.CommandType.AddBody,
                 uid: this._inst.GetUID(),
-                x:  wi.GetX() / scale,
+                x: wi.GetX() / scale,
                 y: wi.GetY() / scale,
                 z: wi.GetZElevation() / scale,
-                q: { x: rotQuat[0], y: rotQuat[1], z: rotQuat[2], w: rotQuat[3] },
+                q: {
+                    x: rotQuat[0],
+                    y: rotQuat[1],
+                    z: rotQuat[2],
+                    w: rotQuat[3],
+                },
                 width: h / scale,
                 height: w / scale,
                 depth: d / scale,
@@ -352,109 +399,27 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 mass: this.mass,
             };
             this.PhysicsType.commands.push(command);
-            return true
+            return true;
         }
 
-        _createMeshPointsForSprite(worldInfo) {
-            const wi = worldInfo;
-            // create 2x2 grid of points for sprite
-            // 2d array of points
-            // use worldinfo width and height and zElevation
-            // All should have same zElevation
-            // 0,0,0 is top left of sprite mesh
-            const width = wi.GetWidth();
-            const height = wi.GetHeight();
-            const zElevation = wi.GetZElevation();
-            const xMin = 0;
-            const xMax = width;
-            const yMin = 0;
-            const yMax = height;
-            const xStep = width;
-            const yStep = height;
-            const meshPoints = [];
-            for (let y = yMin; y <= yMax; y += yStep) {
-                const row = [];
-                for (let x = xMin; x <= xMax; x += xStep) {
-                    const point = new globalThis.Mikal_Cannon.Vec3(x, y, 0);
-                    row.push(point);
-                }
-                meshPoints.push(row);
-            }
-            return meshPoints;
-        }
-
-        // create cannon-es mesh shape
-        _createMeshShape(worldInfo) {
-            const cannon = globalThis.Mikal_Cannon;
-            // Get instance
-            const shapeInst = this._inst.GetSdkInstance();
-            // Get world info
-            const wi = worldInfo;
-            // Get mesh points
-            const meshPoints = this._getMeshPoints(wi);
-            this._createMeshPointsForSprite(wi);
-            const vertices = [];
-            // Create vertices list [x,y,z,x,y,z,...]
-            for (const row of meshPoints) {
-                for (const point of row) {
-                    vertices.push(point);
-                }
-            }
-
-            const gridWidth = meshPoints[0].length;
-            const gridHeight = meshPoints.length;
-
-            // Check if square grid, if not console.warn and return null
-            if (gridWidth !== gridHeight) {
-                console.warn("Mesh must be a square grid");
-                return null;
-            }
-
-            // Get delta X and Y from first two vertices
-            const deltaX = Math.abs(vertices[1].x - vertices[0].x);
-            const deltaY = Math.abs(vertices[1].y - vertices[0].y);
-
-            // Create two dimensional heightfield array using only z values from vertices
-            const heightfield = new Array(meshPoints.length)
-                .fill(0)
-                .map(() => new Array(meshPoints[0].length).fill(0));
-            let index = meshPoints.length - 1;
-            for (const row of meshPoints) {
-                let index2 = 0;
-                for (const point of row) {
-                    heightfield[index][index2] = point.z;
-                    index2++;
-                }
-                index--;
-            }
-
-            // Create heightfield shape
-            const shape = new cannon.Heightfield(heightfield, {
-                elementSize: deltaX,
-            });
-
-            return shape;
-        }
-
+        // Get mesh points from object
         _getMeshPoints(worldInfo) {
-            const cannon = globalThis.Mikal_Cannon;
+            const scale = this.PhysicsType.scale;
             const wi = worldInfo;
             const points = wi?._meshInfo?.sourceMesh?._pts;
-            if (!points) return this._createMeshPointsForSprite(wi);
             const width = wi.GetWidth();
             const height = wi.GetHeight();
             const meshPoints = [];
             for (const rows of points) {
                 const meshRow = [];
                 for (const point of rows) {
-                    const x = point._x * width;
-                    const y = point._y * height;
-                    const z = point._zElevation;
-                    meshRow.push(new cannon.Vec3(x, y, z));
+                    const x = (point._x * width) / scale;
+                    const y = (point._y * height) / scale;
+                    const z = point._zElevation / scale;
+                    meshRow.push({ x, y, z });
                 }
                 meshPoints.push(meshRow);
             }
-
             return meshPoints;
         }
 
@@ -919,12 +884,12 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             this.PhysicsType.commands.push(command);
         }
 
-        _SetPositionOffset(x,y,z) {
+        _SetPositionOffset(x, y, z) {
             const scale = this.PhysicsType.scale;
             const command = {
                 type: this.CommandType.SetPositionOffset,
                 uid: this.uid,
-                positionOffset: {x: x / scale, y: y / scale, z: z / scale}
+                positionOffset: { x: x / scale, y: y / scale, z: z / scale },
             };
             this.PhysicsType.commands.push(command);
         }

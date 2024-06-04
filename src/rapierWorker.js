@@ -8340,14 +8340,14 @@ function addBody(config) {
 
     rigidBodyDesc.setTranslation(x, y, z);
 
-    // Set the rotation
-    console.log("addBody", q, config);
     rigidBodyDesc.setRotation(q);
 
     const body = rapierWorld.createRigidBody(rigidBodyDesc);
 
     let colliderDesc;
-    if (config.shape !== null) {
+    if (config.meshPoints && config.meshPoints.length > 0) {
+        colliderDesc = createTrimeshCollider(config.meshPoints);
+    } else if (config.shape !== null) {
         // 3DShape
         colliderDesc = createCollider(config);
     } else {
@@ -8442,7 +8442,8 @@ function setPositionOffset(config) {
     }
 }
 
-function stepWorld(dt) {
+function stepWorld(dt, frame) {
+    console.log(dt, frame);
     if (!rapierWorld) return;
     if (timestepMode === TimestepMode.Adaptive) {
         rapierWorld.timestep = dt;
@@ -8452,6 +8453,7 @@ function stepWorld(dt) {
     let eventQueue = new RAPIER.EventQueue(true);
     rapierWorld.step(eventQueue);
     handleCollisionEvents(eventQueue);
+    eventQueue.free();
 
     // Collect and return bodies' data...
     const bodies = rapierWorld.bodies;
@@ -8470,7 +8472,7 @@ function stepWorld(dt) {
         bodiesData[i++] = rotation.z;
         bodiesData[i++] = rotation.w;
     });
-    const worldData = { bodiesData, collisionEvents };
+    const worldData = { bodiesData, collisionEvents, frame };
     return Comlink.transfer(worldData, [worldData.bodiesData.buffer]);
 }
 
@@ -8569,7 +8571,7 @@ function raycast(config) {
 // Function to set the gravity
 function setWorldGravity(config) {
     const gravity = config.gravity;
-    rapierWorld.setGravity(gravity);
+    rapierWorld.gravity = gravity;
 }
 
 // Set body linear damping
@@ -8699,6 +8701,40 @@ function addSphericalJoint(config) {
         targetBody,
         true
     );
+}
+
+function createTrimeshCollider(meshPoints) {
+    const vertices = [];
+    const indices = [];
+
+    // Flatten meshPoints array and fill vertices
+    for (let i = 0; i < meshPoints.length; i++) {
+        for (let j = 0; j < meshPoints[i].length; j++) {
+            vertices.push(
+                meshPoints[i][j].x,
+                meshPoints[i][j].y,
+                meshPoints[i][j].z
+            );
+        }
+    }
+
+    // Generate indices
+    for (let i = 0; i < meshPoints.length - 1; i++) {
+        for (let j = 0; j < meshPoints[i].length - 1; j++) {
+            indices.push(i * meshPoints[i].length + j);
+            indices.push(i * meshPoints[i].length + j + 1);
+            indices.push((i + 1) * meshPoints[i].length + j + 1);
+
+            indices.push(i * meshPoints[i].length + j);
+            indices.push((i + 1) * meshPoints[i].length + j + 1);
+            indices.push((i + 1) * meshPoints[i].length + j);
+        }
+    }
+
+    // Create trimesh collider description
+    const colliderDesc = RAPIER.ColliderDesc.trimesh(vertices, indices);
+
+    return colliderDesc;
 }
 
 const commandFunctions = {
