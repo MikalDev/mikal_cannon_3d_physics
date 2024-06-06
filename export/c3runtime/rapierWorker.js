@@ -8395,7 +8395,14 @@ function setCollisionGroups(config) {
     const handle = uidHandle.get(uid);
     const body = rapierWorld.bodies.get(handle);
     if (body) {
-        body.setCollisionGroups(group);
+        const collider = body.collider(0);
+        if (collider) {
+            collider.setCollisionGroups(group);
+        } else {
+            console.warn("No collider found for body with UID:", uid);
+        }
+    } else {
+        console.warn("setCollisonGroup: body not found", uid);
     }
 }
 
@@ -8443,7 +8450,6 @@ function setPositionOffset(config) {
 }
 
 function stepWorld(dt, frame) {
-    console.log(dt, frame);
     if (!rapierWorld) return;
     if (timestepMode === TimestepMode.Adaptive) {
         rapierWorld.timestep = dt;

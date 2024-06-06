@@ -454,7 +454,7 @@
         "id": "UpdateHeightfield",
         "scriptName": "UpdateHeightfield",
         "highlight": false,
-        "deprecated": true,
+        "isDeprecated": true,
         "isAsync": false,
         "params": [
           {
@@ -468,7 +468,7 @@
         "id": "SetCollisionFilterGroup",
         "scriptName": "SetCollisionFilterGroup",
         "highlight": false,
-        "deprecated": true,
+        "isDeprecated": true,
         "isAsync": false,
         "params": [
           {
@@ -488,12 +488,12 @@
           {
             "id": "membership",
             "type": "string",
-            "initialValue": "0xFFFF"
+            "initialValue": "\"0xFFFF\""
           },
           {
             "id": "filter",
             "type": "string",
-            "initialValue": "0xFFFF"
+            "initialValue": "\"0xFFFF\""
           }
         ]
       },
@@ -501,7 +501,7 @@
         "id": "SetCollisionFilterMask",
         "scriptName": "SetCollisionFilterMask",
         "highlight": false,
-        "deprecated": true,
+        "isDeprecated": true,
         "isAsync": false,
         "params": [
           {

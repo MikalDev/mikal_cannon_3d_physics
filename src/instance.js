@@ -268,6 +268,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     enableRot[0] = false;
                     enableRot[1] = false;
                 }
+                const shape = this._inst.GetSdkInstance()._shape;
                 command = {
                     type: this.CommandType.UpdateBody,
                     uid: this._inst.GetUID(),

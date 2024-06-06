@@ -548,18 +548,11 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         if (
             this.currentPhysicsFrameResponse < this.currentPhysicsFrameRequest
         ) {
-            console.log(
-                "p",
-                this.totalDt,
-                this.currentPhysicsFrameResponse,
-                this.currentPhysicsFrameRequest
-            );
             return;
         }
         this.currentPhysicsFrameRequest++;
         const stepDt = this.totalDt;
         this.totalDt = 0;
-        console.log("req", stepDt);
         const worldData = await this.comRapier.stepWorld(
             stepDt,
             this.currentPhysicsFrameRequest

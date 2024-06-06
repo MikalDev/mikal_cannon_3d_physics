@@ -761,18 +761,11 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         if (
             this.currentPhysicsFrameResponse < this.currentPhysicsFrameRequest
         ) {
-            console.log(
-                "p",
-                this.totalDt,
-                this.currentPhysicsFrameResponse,
-                this.currentPhysicsFrameRequest
-            );
             return;
         }
         this.currentPhysicsFrameRequest++;
         const stepDt = this.totalDt;
         this.totalDt = 0;
-        console.log("req", stepDt);
         const worldData = await this.comRapier.stepWorld(
             stepDt,
             this.currentPhysicsFrameRequest
@@ -996,7 +989,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
         Release() {
             super.Release();
-            if (this.body) {
+            if (this.bodyDefined) {
                 const PhysicsType = this.PhysicsType;
                 const command = {
                     type: this.CommandType.RemoveBody,
@@ -1206,6 +1199,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     enableRot[0] = false;
                     enableRot[1] = false;
                 }
+                const shape = this._inst.GetSdkInstance()._shape;
                 command = {
                     type: this.CommandType.UpdateBody,
                     uid: this._inst.GetUID(),

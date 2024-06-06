@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.11.0",
+    version: "2.12.0",
     category:
         // "attributes",
         "movements",
@@ -664,7 +664,7 @@ module.exports = {
             forward: "_UpdateHeightfield",
             autoScriptInterface: true,
             highlight: false,
-            deprecated: true,
+            isDeprecated: true,
             isAsync: false,
             // list of parameters
             params: [
@@ -687,7 +687,7 @@ module.exports = {
             forward: "_SetCollisionFilterGroup",
             autoScriptInterface: true,
             highlight: false,
-            deprecated: true,
+            isDeprecated: true,
             isAsync: false,
             // list of parameters
             params: [
@@ -720,14 +720,14 @@ module.exports = {
                     name: "Membership",
                     desc: "Indicates what groups the collider is part of (one bit per group, hex string)",
                     type: "string",
-                    initialValue: "0xFFFF",
+                    initialValue: '"0xFFFF"',
                 },
                 {
                     id: "filter",
                     name: "Filter",
                     desc: "Indicates what groups the collider can interact with (one bit per group, hex string).",
                     type: "string",
-                    initialValue: "0xFFFF",
+                    initialValue: '"0xFFFF"',
                 },
             ],
             listName: "Set collision group membership and filter",
@@ -742,7 +742,7 @@ module.exports = {
             forward: "_SetCollisionFilterMask",
             autoScriptInterface: true,
             highlight: false,
-            deprecated: true,
+            isDeprecated: true,
             isAsync: false,
             // list of parameters
             params: [
