@@ -79,13 +79,13 @@
           },
           {
             "id": "collisionFilterGroup",
-            "type": "number",
-            "initialValue": "-1"
+            "type": "string",
+            "initialValue": "\"0xFFFF\""
           },
           {
             "id": "collisionFilterMask",
-            "type": "number",
-            "initialValue": "-1"
+            "type": "string",
+            "initialValue": "\"\""
           },
           {
             "id": "skipBackfaces",

@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.12.0",
+    version: "2.12.1",
     category:
         // "attributes",
         "movements",
@@ -308,17 +308,17 @@ module.exports = {
                 },
                 {
                     id: "collisionFilterGroup",
-                    name: "Collision filter group",
+                    name: "Collision filter groups",
                     desc: "Collision filter group (groups are 0,1,2,4,8...)",
-                    type: "number",
-                    initialValue: "-1",
+                    type: "string",
+                    initialValue: '"0xFFFF"',
                 },
                 {
                     id: "collisionFilterMask",
-                    name: "Collision filter mask",
-                    desc: "Collision filter mask (groups are 0,1,2,4,8...)",
-                    type: "number",
-                    initialValue: "-1",
+                    name: "Unused",
+                    desc: "Unused",
+                    type: "string",
+                    initialValue: '""',
                 },
                 {
                     id: "skipBackfaces",

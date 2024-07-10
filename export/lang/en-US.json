@@ -117,12 +117,12 @@
                 "desc": "To z."
               },
               "collisionFilterGroup": {
-                "name": "Collision filter group",
+                "name": "Collision filter groups",
                 "desc": "Collision filter group (groups are 0,1,2,4,8...)"
               },
               "collisionFilterMask": {
-                "name": "Collision filter mask",
-                "desc": "Collision filter mask (groups are 0,1,2,4,8...)"
+                "name": "Unused",
+                "desc": "Unused"
               },
               "skipBackfaces": {
                 "name": "Skip backfaces",

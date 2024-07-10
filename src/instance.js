@@ -450,7 +450,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             x,
             y,
             z,
-            group,
+            filterGroups,
             mask,
             skipBackfaces,
             mode
@@ -480,6 +480,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 origin: { x: origin[0], y: origin[1], z: origin[2] },
                 dir: { x: dir[0], y: dir[1], z: dir[2] },
                 maxToI,
+                filterGroups,
             };
             const result = await this.comRapier.raycast(command);
             if (result.hasHit) {
