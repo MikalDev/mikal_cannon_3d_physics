@@ -8040,13 +8040,14 @@ const CommandType = {
     RemoveBody: 21,
     AddSphericalJoint: 22,
     SetPositionOffset: 23,
+    AddRevoluteJoint: 24,
 };
 
 const BodyType = {
     Dynamic: 0,
     Fixed: 1,
     KinematicPosition: 2,
-    LinematicVelocity: 3,
+    KinematicVelocity: 3,
 };
 
 const Shape = {
@@ -8719,6 +8720,23 @@ function addSphericalJoint(config) {
     );
 }
 
+function addRevoluteJoint(config) {
+    const { uid, targetUID, anchor, targetAnchor, axis } = config;
+    const handle = uidHandle.get(uid);
+    const targetHandle = uidHandle.get(targetUID);
+    if (!handle || !targetHandle) return;
+    const body = rapierWorld.bodies.get(handle);
+    const targetBody = rapierWorld.bodies.get(targetHandle);
+    if (!body || !targetBody) return;
+    const params = RAPIER.JointData.revolute(anchor, targetAnchor, axis);
+    const joint = rapierWorld.createImpulseJoint(
+        params,
+        body,
+        targetBody,
+        true
+    );
+}
+
 function createTrimeshCollider(meshPoints) {
     const vertices = [];
     const indices = [];
@@ -8779,6 +8797,7 @@ const commandFunctions = {
     [CommandType.RemoveBody]: removeBody,
     [CommandType.AddSphericalJoint]: addSphericalJoint,
     [CommandType.SetPositionOffset]: setPositionOffset,
+    [CommandType.AddRevoluteJoint]: addRevoluteJoint,
 };
 
 function runCommands(commands) {

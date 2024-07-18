@@ -629,6 +629,53 @@
                 "desc": "Target body UID"
               }
             }
+          },
+          "AddRevoluteJoint": {
+            "list-name": "Add revolute joint",
+            "display-text": "Add {my} revolute joint to uid {6} at {0}, {1}, {2} to {3}, {4}, {5} with axis {7}, {8}, {9}",
+            "description": "Add revolute joint between self and target.",
+            "params": {
+              "anchorX": {
+                "name": "Anchor x",
+                "desc": "Anchor x."
+              },
+              "anchorY": {
+                "name": "Anchor y",
+                "desc": "Anchor y."
+              },
+              "anchorZ": {
+                "name": "Anchor z",
+                "desc": "Anchor z."
+              },
+              "targetAnchorX": {
+                "name": "Target anchor x",
+                "desc": "Target anchor x."
+              },
+              "targetAnchorY": {
+                "name": "Target anchor y",
+                "desc": "Target anchor y."
+              },
+              "targetAnchorZ": {
+                "name": "Target anchor z",
+                "desc": "Target anchor z."
+              },
+              "axisX": {
+                "name": "Axis x",
+                "desc": "Axis x."
+              },
+              "axisY": {
+                "name": "Axis y",
+                "desc": "Axis y."
+              },
+              "axisZ": {
+                "name": "Axis z",
+                "desc": "Axis z."
+              },
+              "targetUID": {
+                "name": "Target UID",
+                "desc": "Target body UID"
+              }
+            }
           }
         },
         "conditions": {

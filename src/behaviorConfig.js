@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.12.1",
+    version: "2.13.0",
     category:
         // "attributes",
         "movements",
@@ -1299,6 +1299,91 @@ module.exports = {
                 "Add {my} spherical joint to uid {6} at {0}, {1}, {2} to {3}, {4}, {5}",
             // The description of the action as it appears in the add action dialog
             description: "Add spherical joint between self and target.",
+        },
+
+        AddRevoluteJoint: {
+            category: "body",
+            forward: "_AddRevoluteJoint",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "anchorX",
+                    name: "Anchor x",
+                    desc: "Anchor x.",
+                    type: "number",
+                    initialValue: 0,
+                },
+                {
+                    id: "anchorY",
+                    name: "Anchor y",
+                    desc: "Anchor y.",
+                    type: "number",
+                    initialValue: 0,
+                },
+                {
+                    id: "anchorZ",
+                    name: "Anchor z",
+                    desc: "Anchor z.",
+                    type: "number",
+                    initialValue: 0,
+                },
+                {
+                    id: "targetAnchorX",
+                    name: "Target anchor x",
+                    desc: "Target anchor x.",
+                    type: "number",
+                    initialValue: 0,
+                },
+                {
+                    id: "targetAnchorY",
+                    name: "Target anchor y",
+                    desc: "Target anchor y.",
+                    type: "number",
+                    initialValue: 0,
+                },
+                {
+                    id: "targetAnchorZ",
+                    name: "Target anchor z",
+                    desc: "Target anchor z.",
+                    type: "number",
+                    initialValue: 0,
+                },
+                {
+                    id: "axisX",
+                    name: "Axis x",
+                    desc: "Axis x.",
+                    type: "number",
+                    initialValue: 1,
+                },
+                {
+                    id: "axisY",
+                    name: "Axis y",
+                    desc: "Axis y.",
+                    type: "number",
+                    initialValue: 0,
+                },
+                {
+                    id: "axisZ",
+                    name: "Axis z",
+                    desc: "Axis z.",
+                    type: "number",
+                    initialValue: 0,
+                },
+                {
+                    id: "targetUID",
+                    name: "Target UID",
+                    desc: "Target body UID",
+                    type: "number",
+                    initialValue: "0",
+                },
+            ],
+            listName: "Add revolute joint",
+            displayText:
+                "Add {my} revolute joint to uid {6} at {0}, {1}, {2} to {3}, {4}, {5} with axis {7}, {8}, {9}",
+            description: "Add revolute joint between self and target.",
         },
 
         /*

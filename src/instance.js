@@ -51,6 +51,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 RemoveBody: 21,
                 AddSphericalJoint: 22,
                 SetPositionOffset: 23,
+                AddRevoluteJoint: 24,
             };
             this._StartTicking();
             this._StartTicking2();
@@ -882,6 +883,38 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     z: targetAnchorZ / scale,
                 },
                 targetUID,
+            };
+            this.PhysicsType.commands.push(command);
+        }
+
+        _AddRevoluteJoint(
+            anchorX,
+            anchorY,
+            anchorZ,
+            targetAnchorX,
+            targetAnchorY,
+            targetAnchorZ,
+            axisX,
+            axisY,
+            axisZ,
+            targetUID
+        ) {
+            const scale = this.PhysicsType.scale;
+            const command = {
+                type: this.CommandType.AddRevoluteJoint,
+                uid: this.uid,
+                anchor: {
+                    x: anchorX / scale,
+                    y: anchorY / scale,
+                    z: anchorZ / scale,
+                },
+                targetAnchor: {
+                    x: targetAnchorX / scale,
+                    y: targetAnchorY / scale,
+                    z: targetAnchorZ / scale,
+                },
+                targetUID,
+                axis: { x: axisX, y: axisY, z: axisZ },
             };
             this.PhysicsType.commands.push(command);
         }

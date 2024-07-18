@@ -839,6 +839,65 @@
             "initialValue": "0"
           }
         ]
+      },
+      {
+        "id": "AddRevoluteJoint",
+        "scriptName": "AddRevoluteJoint",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "anchorX",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "anchorY",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "anchorZ",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "targetAnchorX",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "targetAnchorY",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "targetAnchorZ",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "axisX",
+            "type": "number",
+            "initialValue": 1
+          },
+          {
+            "id": "axisY",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "axisZ",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "targetUID",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
       }
     ],
     "expressions": [
