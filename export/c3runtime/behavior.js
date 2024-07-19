@@ -1418,6 +1418,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 dir: { x: dir[0], y: dir[1], z: dir[2] },
                 maxToI,
                 filterGroups,
+                skipBackfaces,
             };
             const result = await this.comRapier.raycast(command);
             if (result.hasHit) {

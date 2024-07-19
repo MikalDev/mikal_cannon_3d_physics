@@ -8563,10 +8563,9 @@ function raycast(config) {
     const dir = config.dir;
     const ray = new RAPIER.Ray(origin, dir);
     const maxToI = config.maxToI;
-    const solid = true;
+    const solid = !config.skipBackFaces;
     let filterGroups = parseInt(config.filterGroups, 16);
     filterGroups = 0xffff0000 | filterGroups;
-    console.log(config.filterGroups, filterGroups);
     let result = rapierWorld.castRayAndGetNormal(
         ray,
         maxToI,
