@@ -577,7 +577,13 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
     handleCollisionEvents(collisionEvents) {
         if (!collisionEvents) return;
         for (const collisonEvent of collisionEvents) {
-            const { body1UID, body2UID, started } = collisonEvent;
+            const {
+                body1UID,
+                body2UID,
+                started,
+                contactCollider1,
+                contactCollider2,
+            } = collisonEvent;
             const inst1 = this.runtime.GetInstanceByUID(body1UID);
             const behInst1 = inst1.GetBehaviorSdkInstanceFromCtor(
                 C3.Behaviors.mikal_cannon_3d_physics
@@ -590,6 +596,7 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
                 behInst1.collisionData = {
                     target: { uid: body2UID },
                     started,
+                    contactCollider: contactCollider1,
                 };
                 behInst1.Trigger(
                     C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
@@ -599,6 +606,7 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
                 behInst2.collisionData = {
                     target: { uid: body1UID },
                     started,
+                    contactCollider: contactCollider2,
                 };
                 behInst2.Trigger(
                     C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision

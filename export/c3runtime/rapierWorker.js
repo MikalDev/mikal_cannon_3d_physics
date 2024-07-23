@@ -8488,6 +8488,11 @@ function handleCollisionEvents(eventQueue) {
         // Accessing collider information (assuming `world` is your Rapier world)
         const collider1 = rapierWorld.getCollider(handle1);
         const collider2 = rapierWorld.getCollider(handle2);
+        let contactCollider1,
+            contactCollider2 = null;
+        const prediction = 0;
+        contactCollider1 = collider1.contactCollider(collider2, prediction);
+        contactCollider2 = collider2.contactCollider(collider1, prediction);
         // Get bodies
         const body1 = collider1.parent();
         const body2 = collider2.parent();
@@ -8496,6 +8501,8 @@ function handleCollisionEvents(eventQueue) {
             started,
             body1UID: body1.uid,
             body2UID: body2.uid,
+            contactCollider1,
+            contactCollider2,
         };
         collisionEvents.push(msg);
     });
