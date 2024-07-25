@@ -1022,7 +1022,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     vec3.mul(
                         direction,
                         direction,
-                        vec3.fromValues(result.toi, result.toi, result.toi)
+                        vec3.fromValues(result.time_of_impact, result.time_of_impact, result.time_of_impact)
                     )
                 );
                 this.castShapeResult = {
