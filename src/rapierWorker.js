@@ -8439,7 +8439,7 @@ const Mikal_Rapier_Comlink = (function () {
 const Comlink = Mikal_Rapier_Comlink;
 
 const RAPIER = Og;
-console.info("rapierWorker.js rapier loaded 3d-compat, version 0.12:");
+console.info("rapierWorker.js rapier loaded 3d-compat, version 0.14:");
 
 let rapierWorld = null;
 let uidHandle = new Map();
