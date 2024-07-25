@@ -346,7 +346,43 @@ module.exports = {
             // The description of the action as it appears in the add action dialog
             description: "Raycast from x0,y0,z0 to x1,y1,z1.",
         },
-
+        CastShape: {
+            category: "general",
+            forward: "_CastShape",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: true,
+            params: [
+                { id: "tag", name: "Tag", desc: "Tag for request.", type: "string", initialValue: "" },
+                { id: "shapeType", name: "Shape Type", desc: "Type of the shape.", type: "combo", initialValue: "box", items: [
+                    { box: "Box" },
+                    { sphere: "Sphere" },
+                    { capsule: "Capsule" },
+                    // Add any additional shape types here
+                ] },
+                { id: "height", name: "Height", desc: "Height of the shape.", type: "number", initialValue: "1" },
+                { id: "width", name: "Width", desc: "Width of the shape.", type: "number", initialValue: "1" },
+                { id: "depth", name: "Depth", desc: "Depth of the shape.", type: "number", initialValue: "1" },
+                { id: "rotX", name: "Rotation X", desc: "Rotation around X axis (degrees).", type: "number", initialValue: "0" },
+                { id: "rotY", name: "Rotation Y", desc: "Rotation around Y axis (degrees).", type: "number", initialValue: "0" },
+                { id: "rotZ", name: "Rotation Z", desc: "Rotation around Z axis (degrees).", type: "number", initialValue: "0" },
+                { id: "fromX", name: "From X", desc: "From X.", type: "number", initialValue: "0" },
+                { id: "fromY", name: "From Y", desc: "From Y.", type: "number", initialValue: "0" },
+                { id: "fromZ", name: "From Z", desc: "From Z.", type: "number", initialValue: "0" },
+                { id: "toX", name: "To X", desc: "To X.", type: "number", initialValue: "0" },
+                { id: "toY", name: "To Y", desc: "To Y.", type: "number", initialValue: "0" },
+                { id: "toZ", name: "To Z", desc: "To Z.", type: "number", initialValue: "0" },
+                { id: "maxToI", name: "Max Time Of Impact", desc: "Max Time of Impact.", type: "number", initialValue: "1" },
+                { id: "targetDistance", name: "Hit Margin", desc: "Hit margin threshold.", type: "number", initialValue: "1" },
+                { id: "filterGroups", name: "Filter Groups", desc: "Collision filter groups (groups are 0,1,2,4,8...)", type: "string", initialValue: '"0xFFFF"' },
+                { id: "excludeUID", name: "Exclude Body UID", desc: "Exclude body UID such as the source.", type: "number", initialValue: "-1" },
+                { id: "skipBackfaces", name: "Skip Backfaces", desc: "Skip backfaces.", type: "boolean", initialValue: "true" }
+            ],
+            listName: "Cast Shape",
+            displayText: "{my}: Cast shape, tag {0}, shape {1} (H:{2}, W:{3}, D:{4}) from [i]{5},{6},{7}[/i] to [i]{8},{9},{10}[/i], rotation [i]{11}°X, {12}°Y, {13}°Z[/i], max ToI {14}, hit margin {15}, filter groups {16}, exclude UID {17}, skip backfaces {18}",
+            description: "Cast a shape from a point in a given direction."
+        },
         SetImmovable: {
             // The category of the action as it appears in the add action dialog
             category: "body",
@@ -1581,6 +1617,32 @@ module.exports = {
             displayText: "{my}: On raycast result {0}",
             description: "On raycast result.",
         },
+        OnAnyCastShapeResult: {
+            category: "general",
+            forward: "_OnAnyCastShapeResult",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isTrigger: true,
+            params: [],
+            listName: "On any cast shape result",
+            displayText: "{my}: On any cast shape result",
+            description: "Triggered on any cast shape result."
+        },
+        OnCastShapeResult: {
+            category: "general",
+            forward: "_OnCastShapeResult",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isTrigger: true,
+            params: [
+                { id: "tag", name: "Tag", desc: "Tag for cast shape.", type: "string", initialValue: "" }
+            ],
+            listName: "On cast shape result",
+            displayText: "{my}: On cast shape result {0}",
+            description: "Triggered on cast shape result with the specified tag."
+        },
         /*
     SampleCondition: {
       // The category of the action as it appears in the add condition dialog
@@ -1691,6 +1753,18 @@ module.exports = {
             isVariadicParameters: false,
             params: [],
             description: "Raycast result as JSON string.",
+        },
+        CastShapeResultAsJSON: {
+            category: "general",
+            forward: "_CastShapeResultAsJSON",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            returnType: "string",
+            // Set to true if the expression is variadic. False by default if not specified.
+            isVariadicParameters: false,
+            params: [],
+            description: "Cast shape result as JSON string."
         },
         Enable: {
             // The category of the action as it appears in the expression picker
