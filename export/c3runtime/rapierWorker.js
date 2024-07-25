@@ -8041,6 +8041,7 @@ const CommandType = {
     AddSphericalJoint: 22,
     SetPositionOffset: 23,
     AddRevoluteJoint: 24,
+    CastShape: 25 // Add this line for CastShape
 };
 
 const BodyType = {
@@ -8591,6 +8592,110 @@ function raycast(config) {
     return result;
 }
 
+// Function to create a rotation quaternion from Euler angles (degrees)
+function createQuaternionFromEuler(roll, pitch, yaw) {
+    const cy = Math.cos(yaw * 0.5);
+    const sy = Math.sin(yaw * 0.5);
+    const cr = Math.cos(roll * 0.5);
+    const sr = Math.sin(roll * 0.5);
+    const cp = Math.cos(pitch * 0.5);
+    const sp = Math.sin(pitch * 0.5);
+
+    const w = cy * cr * cp + sy * sr * sp;
+    const x = cy * sr * cp - sy * cr * sp;
+    const y = cy * cr * sp + sy * sr * cp;
+    const z = sy * cr * cp - cy * sr * sp;
+
+    return new RAPIER.Quaternion(w, x, y, z);
+}
+
+// Add function to do a shape cast
+function castShape(config) {
+    try {      
+        const shape2Pos = new RAPIER.Vector3(config.origin.x, config.origin.y, config.origin.z);
+        const shape2Rot = createQuaternionFromEuler( // Create rotation object from the input rotation angles
+            (config.rotation.x * Math.PI) / 180,
+            (config.rotation.y * Math.PI) / 180,
+            (config.rotation.z * Math.PI) / 180
+        );
+        const shape2Vel = new RAPIER.Vector3(config.dir.x, config.dir.y, config.dir.z);
+        let shape2 = getShapeFromConfig(config.shape); // A function to get the shape based on config
+        const maxToI = config.maxToI;
+        const targetDistance = config.targetDistance || 1; // Use the targetDistance from the config, default to 1 if not provided
+        const stopAtPenetration = !config.skipBackfaces;
+        let filterGroups = parseInt(config.filterGroups, 16);
+        filterGroups = 0xffff0000 | filterGroups;
+
+        // Find the body with the given UID
+        let excludeRigidBody = null;
+        if (config.excludeUID !== -1) {
+            const handle = uidHandle.get(config.excludeUID);
+            if (handle) {
+                excludeRigidBody = rapierWorld.bodies.get(handle);
+            }
+        }
+
+
+        console.log("Info sent")
+        
+        console.log("Casting shape with the following parameters:");
+        console.log("Position:", shape2Pos);
+        console.log("Rotation:", shape2Rot);
+        console.log("Velocity:", shape2Vel);
+        console.log("Shape:", shape2);
+        console.log("Target Distance:", targetDistance);
+        console.log("Max ToI:", maxToI);
+        console.log("Stop At Penetration:", stopAtPenetration);
+        console.log("Filter Groups:", filterGroups);
+        console.log("Exclude RigidBody:", excludeRigidBody);
+
+        let result = rapierWorld.castShape(
+            shape2Pos, // RAPIER.Vector3: Position of the shape being cast
+            shape2Rot, // RAPIER.Quaternion: Use the new rotation object
+            shape2Vel, // RAPIER.Vector3: Velocity of the shape being cast
+            shape2, // RAPIER.Ball etc.
+            targetDistance, // Number
+            maxToI, // Number
+            stopAtPenetration, //Boolean, Stop at Penetration
+            null, // filterFlags
+            filterGroups, // filterGroups
+            null, // filterExcludeCollider: Collider
+            excludeRigidBody, // filterExcludeRigidBody: RigidBody
+            null // filterPredicate
+        );
+
+        const parent = result?.collider?.parent();
+        const hitUID = parent?.uid;
+        if (result) {
+            result.hitUID = hitUID;
+            result.hasHit = true;
+        } else {
+            result = { hasHit: false, hitUID: -1 };
+        }
+        return result;
+    } catch (error) {
+        console.error("Error in castShape:", error);
+        throw error;
+    }
+}
+
+// Helper function to create shape from config
+function getShapeFromConfig(shapeConfig) {
+    const { height, width, depth } = shapeConfig;
+
+    switch (shapeConfig.type) {
+        case "sphere":
+            return new RAPIER.Ball(height / 2); // Assuming height is diameter for sphere
+        case "box":
+            return new RAPIER.Cuboid(width / 2, height / 2, depth / 2); // Dividing by 2 for half extents
+        case "capsule":
+            return new RAPIER.Capsule(height / 2, width / 2); // Assuming height is the total height, width is the radius
+        // Add more shapes as needed
+        default:
+            throw new Error("Unknown shape type: " + shapeConfig.type);
+    }
+}
+
 // Function to set the gravity
 function setWorldGravity(config) {
     const gravity = config.gravity;
@@ -8838,6 +8943,7 @@ Comlink.expose({
     applyImpulseAtPoint,
     applyForce,
     raycast,
+    castShape,  // Add castShape to the exposed functions
     setWorldGravity,
     setLinearDamping,
     applyTorque,

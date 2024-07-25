@@ -32,6 +32,28 @@
             "initialValue": ""
           }
         ]
+      },
+      {
+        "id": "OnAnyCastShapeResult",
+        "scriptName": "OnAnyCastShapeResult",
+        "highlight": false,
+        "deprecated": false,
+        "isTrigger": true,
+        "params": []
+      },
+      {
+        "id": "OnCastShapeResult",
+        "scriptName": "OnCastShapeResult",
+        "highlight": false,
+        "deprecated": false,
+        "isTrigger": true,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
       }
     ],
     "actions": [
@@ -103,6 +125,115 @@
             ]
           }
         ]
+      },
+      {
+        "id": "CastShape",
+        "scriptName": "CastShape",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": true,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "shapeType",
+            "type": "combo",
+            "initialValue": "box",
+            "items": [
+              "box",
+              "sphere",
+              "capsule"
+            ]
+          },
+          {
+            "id": "height",
+            "type": "number",
+            "initialValue": "1"
+          },
+          {
+            "id": "width",
+            "type": "number",
+            "initialValue": "1"
+          },
+          {
+            "id": "depth",
+            "type": "number",
+            "initialValue": "1"
+          },
+          {
+            "id": "rotX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "rotY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "rotZ",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "fromX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "fromY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "fromZ",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "toX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "toY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "toZ",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "maxToI",
+            "type": "number",
+            "initialValue": "1"
+          },
+          {
+            "id": "targetDistance",
+            "type": "number",
+            "initialValue": "1"
+          },
+          {
+            "id": "filterGroups",
+            "type": "string",
+            "initialValue": "\"0xFFFF\""
+          },
+          {
+            "id": "excludeUID",
+            "type": "number",
+            "initialValue": "-1"
+          },
+          {
+            "id": "skipBackfaces",
+            "type": "boolean",
+            "initialValue": "true"
+          }
+        ]
       }
     ],
     "expressions": [
@@ -110,6 +241,16 @@
         "id": "RaycastResultAsJSON",
         "scriptName": "RaycastResultAsJSON",
         "expressionName": "RaycastResultAsJSON",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "string",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CastShapeResultAsJSON",
+        "scriptName": "CastShapeResultAsJSON",
+        "expressionName": "CastShapeResultAsJSON",
         "highlight": false,
         "deprecated": false,
         "returnType": "string",

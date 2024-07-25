@@ -432,6 +432,11 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
             },
+"CastShape": {
+            "forward": (inst) => inst._CastShape,
+            
+            "autoScriptInterface": true,
+            },
 "SetImmovable": {
             "forward": (inst) => inst._SetImmovable,
             
@@ -588,11 +593,26 @@ const BEHAVIOR_INFO = {
             "forward": (inst) => inst._OnRaycastResult,
             
             "autoScriptInterface": true,
+          },
+"OnAnyCastShapeResult": {
+            "forward": (inst) => inst._OnAnyCastShapeResult,
+            
+            "autoScriptInterface": true,
+          },
+"OnCastShapeResult": {
+            "forward": (inst) => inst._OnCastShapeResult,
+            
+            "autoScriptInterface": true,
           }
     },
     Exps: {
       "RaycastResultAsJSON": {
             "forward": (inst) => inst._RaycastResultAsJSON,
+            
+            "autoScriptInterface": true,
+          },
+"CastShapeResultAsJSON": {
+            "forward": (inst) => inst._CastShapeResultAsJSON,
             
             "autoScriptInterface": true,
           },
@@ -996,6 +1016,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 AddSphericalJoint: 22,
                 SetPositionOffset: 23,
                 AddRevoluteJoint: 24,
+                CastShape: 25 // Added command type for castShape
             };
             this._StartTicking();
             this._StartTicking2();
@@ -1872,6 +1893,180 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 positionOffset: { x: x / scale, y: y / scale, z: z / scale },
             };
             this.PhysicsType.commands.push(command);
+        }
+
+        async _CastShape(
+            tag,
+            shapeType,
+            height,
+            width,
+            depth,
+            rotX,
+            rotY,
+            rotZ,
+            fromX,
+            fromY,
+            fromZ,
+            toX,
+            toY,
+            toZ,
+            maxToI,
+            targetDistance,
+            filterGroups,
+            excludeUID,
+            skipBackfaces
+        ) {
+            if (!this.PhysicsType.worldReady) {
+                this.castShapeResult = {
+                    hasHit: false,
+                };
+                return;
+            }
+            const scale = this.PhysicsType.scale;
+            const vec3 = globalThis.glMatrix.vec3;
+
+            const origin = vec3.fromValues(fromX / scale, fromY / scale, fromZ / scale);
+            const to = vec3.fromValues(toX / scale, toY / scale, toZ / scale);
+
+            console.log(to)
+
+            // Calculate direction
+            let direction = vec3.create();
+            vec3.sub(direction, to, origin);
+            // vec3.normalize(direction, direction); // Normalize the direction vector (Foozle: I don't believe it should be normalized.)
+
+            // Calculate maxToI based on the distance
+            let directionLength = vec3.length(direction);
+            maxToI = directionLength;
+        
+            // Map shapeType to string if necessary
+            const shapeTypeMap = {
+                0: "box",
+                1: "sphere",
+                2: "capsule"
+                // Add more mappings if there are more shape types
+            };
+        
+            const shapeTypeString = typeof shapeType === "string" ? shapeType : shapeTypeMap[shapeType];
+        
+            if (!shapeTypeString) {
+                throw new Error("Unknown shape type: " + shapeTypeString);
+            }
+
+            
+        
+            const command = {
+                type: this.CommandType.CastShape,
+                shape: {
+                    type: shapeTypeString, // e.g., "box", "sphere", "capsule"
+                    width: width / scale,    // Width of the shape for "box"
+                    height: height / scale,  // Height of the shape for "box" or "capsule"
+                    depth: depth / scale     // Depth of the shape for "box"
+                    // Add radius if needed for "sphere" or "capsule"
+                },
+                origin: { x: origin[0], y: origin[1], z: origin[2] },
+                dir: { x: direction[0], y: direction[1], z: direction[2] },
+                rotation: {
+                    x: rotX,
+                    y: rotY,
+                    z: rotZ
+                },
+                maxToI: maxToI,
+                targetDistance: targetDistance / scale, // Include targetDistance in the command
+                filterGroups,
+                excludeUID,
+                skipBackfaces,
+            };
+        
+            console.log('Command Object:', command); // Log the command object
+        
+            const result = await this.comRapier.castShape(command);
+            if (result.hasHit) {
+                // console.log(result.toi)
+                const hitPointWorld = vec3.create();
+                vec3.add(
+                    hitPointWorld,
+                    origin,
+                    vec3.mul(
+                        direction,
+                        direction,
+                        vec3.fromValues(result.toi, result.toi, result.toi)
+                    )
+                );
+                this.castShapeResult = {
+                    hasHit: true,
+                    hitFaceIndex: 0,
+                    hitPointWorld: [
+                        hitPointWorld[0] * scale,
+                        hitPointWorld[1] * scale,
+                        hitPointWorld[2] * scale,
+                    ],
+                    witness1: [
+                        result.witness1.x,
+                        result.witness1.y,
+                        result.witness1.z,
+                    ],
+                    witness2: [
+                        result.witness2.x,
+                        result.witness2.y,
+                        result.witness2.z,
+                    ],
+                    normal1: [
+                        result.normal1.x,
+                        result.normal1.y,
+                        result.normal1.z,
+                    ],
+                    normal2: [
+                        result.normal2.x,
+                        result.normal2.y,
+                        result.normal2.z,
+                    ],
+                    distance:
+                        vec3.distance(origin, [
+                            hitPointWorld[0],
+                            hitPointWorld[1],
+                            hitPointWorld[2],
+                        ]) * scale,
+                    hitUID: result.hitUID,
+                    tag,
+                };
+            } else {
+                this.castShapeResult = {
+                    hasHit: false,
+                    hitPointWorld: [0, 0, 0],
+                    witness1: [0, 0, 0],
+                    witness2: [0, 0, 0],
+                    normal1: [0, 0, 0],
+                    normal2: [0, 0, 0],
+                    distance: 0,
+                    hitUID: -1,
+                    tag,
+                };
+            }
+        
+            this.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyCastShapeResult
+            );
+            this.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCastShapeResult
+            );
+            return true;
+        }
+        
+        _CastShapeResultAsJSON() {
+            if (!this.castShapeResult) {
+                const result = { hasHit: false, hitUID: -1 };
+                return JSON.stringify(result);
+            }
+            return JSON.stringify(this.castShapeResult);
+        }
+        
+        _OnAnyCastShapeResult() {
+            return true;
+        }
+        
+        _OnCastShapeResult(tag) {
+            return this.castShapeResult.tag === tag;
         }
 
         GetScriptInterfaceClass() {

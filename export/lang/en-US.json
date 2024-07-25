@@ -139,6 +139,94 @@
               }
             }
           },
+          "CastShape": {
+            "list-name": "Cast Shape",
+            "display-text": "{my}: Cast shape, tag {0}, shape {1} (H:{2}, W:{3}, D:{4}) from [i]{5},{6},{7}[/i] to [i]{8},{9},{10}[/i], rotation [i]{11}°X, {12}°Y, {13}°Z[/i], max ToI {14}, hit margin {15}, filter groups {16}, exclude UID {17}, skip backfaces {18}",
+            "description": "Cast a shape from a point in a given direction.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag for request."
+              },
+              "shapeType": {
+                "name": "Shape Type",
+                "desc": "Type of the shape.",
+                "items": {
+                  "box": "Box",
+                  "sphere": "Sphere",
+                  "capsule": "Capsule"
+                }
+              },
+              "height": {
+                "name": "Height",
+                "desc": "Height of the shape."
+              },
+              "width": {
+                "name": "Width",
+                "desc": "Width of the shape."
+              },
+              "depth": {
+                "name": "Depth",
+                "desc": "Depth of the shape."
+              },
+              "rotX": {
+                "name": "Rotation X",
+                "desc": "Rotation around X axis (degrees)."
+              },
+              "rotY": {
+                "name": "Rotation Y",
+                "desc": "Rotation around Y axis (degrees)."
+              },
+              "rotZ": {
+                "name": "Rotation Z",
+                "desc": "Rotation around Z axis (degrees)."
+              },
+              "fromX": {
+                "name": "From X",
+                "desc": "From X."
+              },
+              "fromY": {
+                "name": "From Y",
+                "desc": "From Y."
+              },
+              "fromZ": {
+                "name": "From Z",
+                "desc": "From Z."
+              },
+              "toX": {
+                "name": "To X",
+                "desc": "To X."
+              },
+              "toY": {
+                "name": "To Y",
+                "desc": "To Y."
+              },
+              "toZ": {
+                "name": "To Z",
+                "desc": "To Z."
+              },
+              "maxToI": {
+                "name": "Max Time Of Impact",
+                "desc": "Max Time of Impact."
+              },
+              "targetDistance": {
+                "name": "Hit Margin",
+                "desc": "Hit margin threshold."
+              },
+              "filterGroups": {
+                "name": "Filter Groups",
+                "desc": "Collision filter groups (groups are 0,1,2,4,8...)"
+              },
+              "excludeUID": {
+                "name": "Exclude Body UID",
+                "desc": "Exclude body UID such as the source."
+              },
+              "skipBackfaces": {
+                "name": "Skip Backfaces",
+                "desc": "Skip backfaces."
+              }
+            }
+          },
           "SetImmovable": {
             "list-name": "Set immovable",
             "display-text": "Set {my} immovable {0}",
@@ -713,12 +801,34 @@
                 "desc": "Tag for raycast."
               }
             }
+          },
+          "OnAnyCastShapeResult": {
+            "list-name": "On any cast shape result",
+            "display-text": "{my}: On any cast shape result",
+            "description": "Triggered on any cast shape result.",
+            "params": {}
+          },
+          "OnCastShapeResult": {
+            "list-name": "On cast shape result",
+            "display-text": "{my}: On cast shape result {0}",
+            "description": "Triggered on cast shape result with the specified tag.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag for cast shape."
+              }
+            }
           }
         },
         "expressions": {
           "RaycastResultAsJSON": {
             "translated-name": "RaycastResultAsJSON",
             "description": "Raycast result as JSON string.",
+            "params": {}
+          },
+          "CastShapeResultAsJSON": {
+            "translated-name": "CastShapeResultAsJSON",
+            "description": "Cast shape result as JSON string.",
             "params": {}
           },
           "Enable": {
