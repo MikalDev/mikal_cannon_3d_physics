@@ -494,7 +494,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     vec3.mul(
                         dir,
                         dir,
-                        vec3.fromValues(result.toi, result.toi, result.toi)
+                        vec3.fromValues(result.timeOfImpact, result.timeOfImpact, result.timeOfImpact)
                     )
                 );
                 this.raycastResult = {
@@ -1014,7 +1014,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
         
             const result = await this.comRapier.castShape(command);
             if (result.hasHit) {
-                // console.log(result.toi)
+                console.log(result.time_of_impact)
                 const hitPointWorld = vec3.create();
                 vec3.add(
                     hitPointWorld,
@@ -1027,7 +1027,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 );
                 this.castShapeResult = {
                     hasHit: true,
-                    hitFaceIndex: 0,
                     hitPointWorld: [
                         hitPointWorld[0] * scale,
                         hitPointWorld[1] * scale,
