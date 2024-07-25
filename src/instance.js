@@ -970,10 +970,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             let direction = vec3.create();
             vec3.sub(direction, to, origin);
             // vec3.normalize(direction, direction); // Normalize the direction vector (Foozle: I don't believe it should be normalized.)
-
-            // Calculate maxToI based on the distance
-            let directionLength = vec3.length(direction);
-            maxToI = directionLength;
         
             // Map shapeType to string if necessary
             const shapeTypeMap = {
@@ -1007,7 +1003,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     y: rotY,
                     z: rotZ
                 },
-                maxToI: maxToI,
+                maxToI,
                 targetDistance: targetDistance / scale, // Include targetDistance in the command
                 filterGroups,
                 excludeUID,
