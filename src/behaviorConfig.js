@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.15.1",
+    version: "2.15.2",
     category:
         // "attributes",
         "movements",
@@ -340,11 +340,11 @@ module.exports = {
                     ],
                 },
             ],
-            listName: "Raycast from to",
+            listName: "Cast ray from to",
             displayText:
-                "{my}: Raycast , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i] {7}, {8}, {9} {10}",
+                "{my}: Cast ray , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i] {7}, {8}, {9} {10}",
             // The description of the action as it appears in the add action dialog
-            description: "Raycast from x0,y0,z0 to x1,y1,z1.",
+            description: "Cast ray from x0,y0,z0 to x1,y1,z1.",
         },
         CastShape: {
             category: "general",
@@ -460,8 +460,8 @@ module.exports = {
                 },
                 {
                     id: "maxToI",
-                    name: "Max Time Of Impact",
-                    desc: "Max Time of Impact.",
+                    name: "Cast distance multiplier",
+                    desc: "Modify the distance cast from the origin by multiplying it by this value.",
                     type: "number",
                     initialValue: "1",
                 },

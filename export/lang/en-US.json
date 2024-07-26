@@ -84,9 +84,9 @@
             }
           },
           "Raycast": {
-            "list-name": "Raycast from to",
-            "display-text": "{my}: Raycast , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i] {7}, {8}, {9} {10}",
-            "description": "Raycast from x0,y0,z0 to x1,y1,z1.",
+            "list-name": "Cast ray from to",
+            "display-text": "{my}: Cast ray , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i] {7}, {8}, {9} {10}",
+            "description": "Cast ray from x0,y0,z0 to x1,y1,z1.",
             "params": {
               "tag": {
                 "name": "Tag",
@@ -206,8 +206,8 @@
                 "desc": "To Z."
               },
               "maxToI": {
-                "name": "Max Time Of Impact",
-                "desc": "Max Time of Impact."
+                "name": "Cast distance multiplier",
+                "desc": "Modify the distance cast from the origin by multiplying it by this value."
               },
               "targetDistance": {
                 "name": "Hit Margin",

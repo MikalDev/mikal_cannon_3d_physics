@@ -972,8 +972,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             );
             const to = vec3.fromValues(toX / scale, toY / scale, toZ / scale);
 
-            console.log(to);
-
             // Calculate direction
             let direction = vec3.create();
             vec3.sub(direction, to, origin);
@@ -1019,11 +1017,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 skipBackfaces,
             };
 
-            console.log("Command Object:", command); // Log the command object
-
             const result = await this.comRapier.castShape(command);
             if (result.hasHit) {
-                console.log(result.time_of_impact);
                 const hitPointWorld = vec3.create();
                 vec3.add(
                     hitPointWorld,

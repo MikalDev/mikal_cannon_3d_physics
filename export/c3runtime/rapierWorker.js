@@ -9081,19 +9081,6 @@ function castShape(config) {
             }
         }
 
-        console.log("Info sent");
-
-        console.log("Casting shape with the following parameters:");
-        console.log("Position:", shape2Pos);
-        console.log("Rotation:", shape2Rot);
-        console.log("Velocity:", shape2Vel);
-        console.log("Shape:", shape2);
-        console.log("Target Distance:", targetDistance);
-        console.log("Max ToI:", maxToI);
-        console.log("Stop At Penetration:", stopAtPenetration);
-        console.log("Filter Groups:", filterGroups);
-        console.log("Exclude RigidBody:", excludeRigidBody);
-
         let result = rapierWorld.castShape(
             shape2Pos, // RAPIER.Vector3: Position of the shape being cast
             shape2Rot, // RAPIER.Quaternion: Use the new rotation object
