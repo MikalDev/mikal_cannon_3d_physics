@@ -697,7 +697,6 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         this.debugRenderWidth = 1;
         this.debugRender = false;
         this.rapierWorker = null;
-        console.log("rapierBehavior created");
         this.initWorker(this.runtime);
         this.commands = [];
         this.cmdTickCount, (this.tickCount = 0);
@@ -727,11 +726,8 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
             alert("No support for web workers");
             console.info("No support for web workers");
         }
-        console.log("rapierWorker path, init", path);
         this.rapierWorker = new Worker(path, { type: "module" });
-        console.log("after new Worker", this.rapierWorker);
         this.comRapier = Comlink.wrap(this.rapierWorker);
-        console.log("after Comlink.wrap", this.comRapier);
         const worldReady = await this.comRapier.initWorld();
         console.log("rapier world ready", worldReady);
         this.worldReady = worldReady;
@@ -776,9 +772,6 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         this.tickCount = tickCount;
         if (!this.comRapier) return;
         if (!this.worldReady) {
-            // console.log("rapier world not ready", this.worldReady);
-            // this.worldReady = await this.comRapier.isWorldReady();
-            // console.log("rapier world ready", this.worldReady);
             return;
         }
         const dt = this.runtime.GetDt();
@@ -1936,8 +1929,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             );
             const to = vec3.fromValues(toX / scale, toY / scale, toZ / scale);
 
-            console.log(to);
-
             // Calculate direction
             let direction = vec3.create();
             vec3.sub(direction, to, origin);
@@ -1983,11 +1974,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 skipBackfaces,
             };
 
-            console.log("Command Object:", command); // Log the command object
-
             const result = await this.comRapier.castShape(command);
             if (result.hasHit) {
-                console.log(result.time_of_impact);
                 const hitPointWorld = vec3.create();
                 vec3.add(
                     hitPointWorld,
