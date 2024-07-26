@@ -1016,7 +1016,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 AddSphericalJoint: 22,
                 SetPositionOffset: 23,
                 AddRevoluteJoint: 24,
-                CastShape: 25 // Added command type for castShape
+                CastShape: 25, // Added command type for castShape
             };
             this._StartTicking();
             this._StartTicking2();
@@ -1458,7 +1458,11 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     vec3.mul(
                         dir,
                         dir,
-                        vec3.fromValues(result.toi, result.toi, result.toi)
+                        vec3.fromValues(
+                            result.timeOfImpact,
+                            result.timeOfImpact,
+                            result.timeOfImpact
+                        )
                     )
                 );
                 this.raycastResult = {
@@ -1925,39 +1929,44 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const scale = this.PhysicsType.scale;
             const vec3 = globalThis.glMatrix.vec3;
 
-            const origin = vec3.fromValues(fromX / scale, fromY / scale, fromZ / scale);
+            const origin = vec3.fromValues(
+                fromX / scale,
+                fromY / scale,
+                fromZ / scale
+            );
             const to = vec3.fromValues(toX / scale, toY / scale, toZ / scale);
 
-            console.log(to)
+            console.log(to);
 
             // Calculate direction
             let direction = vec3.create();
             vec3.sub(direction, to, origin);
             // vec3.normalize(direction, direction); // Normalize the direction vector (Foozle: I don't believe it should be normalized.)
-        
+
             // Map shapeType to string if necessary
             const shapeTypeMap = {
                 0: "box",
                 1: "sphere",
-                2: "capsule"
+                2: "capsule",
                 // Add more mappings if there are more shape types
             };
-        
-            const shapeTypeString = typeof shapeType === "string" ? shapeType : shapeTypeMap[shapeType];
-        
+
+            const shapeTypeString =
+                typeof shapeType === "string"
+                    ? shapeType
+                    : shapeTypeMap[shapeType];
+
             if (!shapeTypeString) {
                 throw new Error("Unknown shape type: " + shapeTypeString);
             }
 
-            
-        
             const command = {
                 type: this.CommandType.CastShape,
                 shape: {
                     type: shapeTypeString, // e.g., "box", "sphere", "capsule"
-                    width: width / scale,    // Width of the shape for "box"
-                    height: height / scale,  // Height of the shape for "box" or "capsule"
-                    depth: depth / scale     // Depth of the shape for "box"
+                    width: width / scale, // Width of the shape for "box"
+                    height: height / scale, // Height of the shape for "box" or "capsule"
+                    depth: depth / scale, // Depth of the shape for "box"
                     // Add radius if needed for "sphere" or "capsule"
                 },
                 origin: { x: origin[0], y: origin[1], z: origin[2] },
@@ -1965,7 +1974,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 rotation: {
                     x: rotX,
                     y: rotY,
-                    z: rotZ
+                    z: rotZ,
                 },
                 maxToI,
                 targetDistance: targetDistance / scale, // Include targetDistance in the command
@@ -1973,12 +1982,12 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 excludeUID,
                 skipBackfaces,
             };
-        
-            console.log('Command Object:', command); // Log the command object
-        
+
+            console.log("Command Object:", command); // Log the command object
+
             const result = await this.comRapier.castShape(command);
             if (result.hasHit) {
-                // console.log(result.toi)
+                console.log(result.time_of_impact);
                 const hitPointWorld = vec3.create();
                 vec3.add(
                     hitPointWorld,
@@ -1986,12 +1995,15 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     vec3.mul(
                         direction,
                         direction,
-                        vec3.fromValues(result.time_of_impact, result.time_of_impact, result.time_of_impact)
+                        vec3.fromValues(
+                            result.time_of_impact,
+                            result.time_of_impact,
+                            result.time_of_impact
+                        )
                     )
                 );
                 this.castShapeResult = {
                     hasHit: true,
-                    hitFaceIndex: 0,
                     hitPointWorld: [
                         hitPointWorld[0] * scale,
                         hitPointWorld[1] * scale,
@@ -2039,7 +2051,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     tag,
                 };
             }
-        
+
             this.Trigger(
                 C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyCastShapeResult
             );
@@ -2048,7 +2060,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             );
             return true;
         }
-        
+
         _CastShapeResultAsJSON() {
             if (!this.castShapeResult) {
                 const result = { hasHit: false, hitUID: -1 };
@@ -2056,11 +2068,11 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             }
             return JSON.stringify(this.castShapeResult);
         }
-        
+
         _OnAnyCastShapeResult() {
             return true;
         }
-        
+
         _OnCastShapeResult(tag) {
             return this.castShapeResult.tag === tag;
         }
