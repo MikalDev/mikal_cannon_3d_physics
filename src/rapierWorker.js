@@ -8960,7 +8960,9 @@ function setMass(config) {
     const handle = uidHandle.get(uid);
     const body = rapierWorld.bodies.get(handle);
     if (body) {
-        body.setMass(mass);
+        // Get collider
+        const collider = body.collider(0);
+        if (collider) collider.setMass(mass);
     }
 }
 
