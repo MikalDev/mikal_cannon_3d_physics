@@ -603,6 +603,11 @@ const BEHAVIOR_INFO = {
             "forward": (inst) => inst._OnCastShapeResult,
             
             "autoScriptInterface": true,
+          },
+"OnPhysicsReady": {
+            "forward": (inst) => inst._OnPhysicsReady,
+            
+            "autoScriptInterface": true,
           }
     },
     Exps: {
@@ -1065,6 +1070,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 // Not ready
                 if (!result) return;
                 this.bodyDefined = true;
+                this.Trigger(
+                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
+                );
                 this._inst.GetSdkInstance()._setCannonBody(this.setBody, true);
             }
 
@@ -1124,6 +1132,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     const shape = this._inst.GetSdkInstance()._shape;
                     this.DefineBody(this.pluginType, shape, this.bodyType);
                     this.bodyDefined = true;
+                    this.Trigger(
+                        C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
+                    );
                 }
             } else if (
                 C3?.Plugins?.Sprite &&
@@ -1131,6 +1142,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             ) {
                 this.pluginType = "SpritePlugin";
                 this.DefineBody(this.pluginType, null, this.bodyType);
+                this.Trigger(
+                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
+                );
             } else if (
                 C3?.Plugins?.Mikal_3DObject &&
                 pluginType instanceof C3?.Plugins?.Mikal_3DObject
@@ -2063,6 +2077,10 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
         _OnCastShapeResult(tag) {
             return this.castShapeResult.tag === tag;
+        }
+
+        _OnPhysicsReady() {
+            return true;
         }
 
         GetScriptInterfaceClass() {

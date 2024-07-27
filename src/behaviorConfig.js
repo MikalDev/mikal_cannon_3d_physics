@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.15.2",
+    version: "2.16.0",
     category:
         // "attributes",
         "movements",
@@ -1765,6 +1765,19 @@ module.exports = {
             displayText: "{my}: On cast shape result {0}",
             description:
                 "Triggered on cast shape result with the specified tag.",
+        },
+        // On physics ready
+        OnPhysicsReady: {
+            category: "general",
+            forward: "_OnPhysicsReady",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isTrigger: true,
+            params: [],
+            listName: "On physics ready",
+            displayText: "{my}: On physics ready",
+            description: "Triggered when physics is ready for this body.",
         },
         /*
     SampleCondition: {

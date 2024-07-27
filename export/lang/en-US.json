@@ -818,6 +818,12 @@
                 "desc": "Tag for cast shape."
               }
             }
+          },
+          "OnPhysicsReady": {
+            "list-name": "On physics ready",
+            "display-text": "{my}: On physics ready",
+            "description": "Triggered when physics is ready for this body.",
+            "params": {}
           }
         },
         "expressions": {

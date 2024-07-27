@@ -54,6 +54,14 @@
             "initialValue": ""
           }
         ]
+      },
+      {
+        "id": "OnPhysicsReady",
+        "scriptName": "OnPhysicsReady",
+        "highlight": false,
+        "deprecated": false,
+        "isTrigger": true,
+        "params": []
       }
     ],
     "actions": [
