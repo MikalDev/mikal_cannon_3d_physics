@@ -45,7 +45,7 @@ module.exports = {
             filename: "comlink.js",
             type: "copy-to-output",
             fileType: "text/javascript",
-        },
+        }
     ],
     info: {
         Set: {
@@ -127,6 +127,7 @@ module.exports = {
                 initialValue: "auto",
                 items: [
                     { auto: "Auto" },
+                    { modelMesh: "Model Mesh"},
                     { box: "Box" },
                     { sphere: "Sphere" },
                     { cylinder: "Cylinder" },

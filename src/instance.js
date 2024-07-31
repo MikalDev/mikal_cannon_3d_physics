@@ -93,6 +93,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const bodyDefined = this.bodyDefined;
             const PhysicsType = this._behaviorType._behavior;
 
+
             if (
                 this.pluginType === "3DObjectPlugin" &&
                 !bodyDefined &&
@@ -100,6 +101,11 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             ) {
                 const loaded = this._inst.GetSdkInstance().loaded;
                 if (!loaded) return;
+                const gltf = this._inst.GetSdkInstance().gltf;
+                console.log(gltf)
+                const drawMesh = this._inst.drawMesh;
+                // console.log(this._inst.GetSdkInstance());
+                // console.log(this.shapeProperty);
                 const result = this._create3DObjectShape(
                     this.shapeProperty,
                     this.bodyType,
@@ -355,7 +361,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             return [pitch, yaw, roll]; // Returns Euler angles in radians
         }
 
-        _create3DObjectShape(shapeProperty, bodyType, worldInfo) {
+        _create3DObjectShape(shape, bodyType, worldInfo) {
             // Get bbox of 3DObject
             const inst = this._inst.GetSdkInstance();
             const xMinBB = inst.xMinBB;
@@ -385,7 +391,40 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
             const rotQuat = globalThis.glMatrix.quat.create();
             globalThis.glMatrix.quat.fromEuler(rotQuat, xAngle, yAngle, zAngle);
+            
+            const shapeTypeMap = {
+                0: "auto",
+                1: "modelMesh",
+                2: "box",
+                3: "sphere",
+                4: "cylinder",
+                5: "capsule"
+            };
 
+            const shapeProperty = shapeTypeMap[shape]; // Map the numerical value to a shape type string
+            // console.log(shapeProperty);
+            // Model Mesh data
+            let modelMesh = null;
+
+            if (shapeProperty === "modelMesh") {
+                const drawVerts = inst.gltf.drawMeshes.flatMap(mesh => Array.from(mesh.drawVerts[0]));
+                const modelRotate = inst.gltf.modelRotate;
+            
+                if (!modelRotate || modelRotate.length !== 16) {
+                    console.error("Invalid modelRotate matrix:", modelRotate);
+                    throw new Error("modelRotate must be a 4x4 matrix.");
+                }
+            
+                // Transform the vertices
+                const transformedVertices = transformDrawVerts(drawVerts, modelRotate);
+                // console.log(transformedVertices);
+            
+                modelMesh = {
+                    vertices: transformedVertices.flat() // Flatten the array here
+                };
+            }
+
+            // console.log(modelMesh);
             const command = {
                 type: this.CommandType.AddBody,
                 uid: this._inst.GetUID(),
@@ -409,10 +448,12 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 bodyType: bodyType,
                 shape: null,
                 mass: this.mass,
+                modelMesh // Pass only the transformed vertices
             };
             this.PhysicsType.commands.push(command);
             return true;
         }
+        
 
         // Get mesh points from object
         _getMeshPoints(worldInfo) {
@@ -1125,4 +1166,25 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             return scriptInterface;
         }
     };
+}
+
+function transformDrawVerts(drawVerts, modelScaleRotate) {
+    const vec3 = globalThis.glMatrix.vec3;
+    const xformVerts = [];
+    const vOut = vec3.create();
+
+    if (!modelScaleRotate || modelScaleRotate.length !== 16) {
+        console.error("Invalid modelScaleRotate matrix:", modelScaleRotate);
+        throw new Error("modelScaleRotate must be a 4x4 matrix.");
+    }
+
+    for (let i = 0; i < drawVerts.length; i += 3) {
+        const x = drawVerts[i];
+        const y = drawVerts[i + 1];
+        const z = drawVerts[i + 2];
+        vec3.set(vOut, x, y, z);
+        vec3.transformMat4(vOut, vOut, modelScaleRotate);
+        xformVerts.push(vOut[0], vOut[1], vOut[2]);
+    }
+    return xformVerts;
 }

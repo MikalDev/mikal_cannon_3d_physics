@@ -26,6 +26,7 @@
             "desc": "Body shape.",
             "items": {
               "auto": "Auto",
+              "modelMesh": "Model Mesh",
               "box": "Box",
               "sphere": "Sphere",
               "cylinder": "Cylinder",
