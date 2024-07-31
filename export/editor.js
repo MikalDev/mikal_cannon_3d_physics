@@ -68,6 +68,7 @@ const BEHAVIOR_INFO = {
               
               items: [
   "auto",
+  "modelMesh",
   "box",
   "sphere",
   "cylinder",

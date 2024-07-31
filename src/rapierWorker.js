@@ -8781,8 +8781,20 @@ function addBody(config) {
 
     const body = rapierWorld.createRigidBody(rigidBodyDesc);
 
+    
     let colliderDesc;
-    if (config.meshPoints && config.meshPoints.length > 0) {
+    // console.log("I AM HERE");
+    // console.log(config.shapeType);
+    console.log(config.modelMesh);
+
+    if (config.shapeType === "modelMesh") {
+        if(config.modelMesh){
+            console.log("creating trimesh")
+            const vertices = config.modelMesh;
+            const indices = createTrimeshIndices(vertices.length / 3);
+            colliderDesc = RAPIER.ColliderDesc.trimesh(vertices, indices);
+        }
+    } else if (config.meshPoints && config.meshPoints.length > 0) {
         colliderDesc = createTrimeshCollider(config.meshPoints);
     } else if (config.shape !== null) {
         // 3DShape
@@ -8815,7 +8827,18 @@ function addBody(config) {
         runCommands(commands);
         postDefineCommands.delete(uid);
     }
+    console.log(body)
 }
+
+function createTrimeshIndices(vertexCount) {
+    const indices = [];
+    for (let i = 0; i < vertexCount - 2; i += 3) {
+        indices.push(i, i + 1, i + 2);
+    }
+    return indices;
+}
+
+
 
 function setCollisionGroups(config) {
     const membership = config.membership;
