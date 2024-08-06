@@ -1063,11 +1063,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             ) {
                 const loaded = this._inst.GetSdkInstance().loaded;
                 if (!loaded) return;
-                const gltf = this._inst.GetSdkInstance().gltf;
-                console.log(gltf)
-                const drawMesh = this._inst.drawMesh;
-                // console.log(this._inst.GetSdkInstance());
-                // console.log(this.shapeProperty);
                 const result = this._create3DObjectShape(
                     this.shapeProperty,
                     this.bodyType,
@@ -1364,29 +1359,38 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             };
 
             const shapeProperty = shapeTypeMap[shape]; // Map the numerical value to a shape type string
-            // console.log(shapeProperty);
             // Model Mesh data
             let modelMesh = null;
 
             if (shapeProperty === "modelMesh") {
-                const drawVerts = inst.gltf.drawMeshes.flatMap(mesh => Array.from(mesh.drawVerts[0]));
+                const drawMeshes = inst.gltf.drawMeshes;
                 const modelRotate = inst.gltf.modelRotate;
-            
-                if (!modelRotate || modelRotate.length !== 16) {
-                    console.error("Invalid modelRotate matrix:", modelRotate);
-                    throw new Error("modelRotate must be a 4x4 matrix.");
+                
+                // Ensure modelRotate is a valid 4x4 matrix
+                if (!Array.isArray(modelRotate) || modelRotate.length !== 16) {
+                    console.error("Invalid modelScaleRotate matrix:", modelRotate);
+                    throw new Error("modelScaleRotate must be a 4x4 matrix.");
                 }
+
+                const meshes = drawMeshes.map(mesh => {
+                    const drawVerts = Array.from(mesh.drawVerts[0]);
+                    
+                    const transformedVertices = transformDrawVerts(0, 0, 0, 0,0,0, inst.xScale, inst.yScale, inst.zScale, drawVerts, modelRotate, scale);
+                    
+                    const indices = Array.from(mesh.drawIndices[0]);
             
-                // Transform the vertices
-                const transformedVertices = transformDrawVerts(drawVerts, modelRotate);
-                // console.log(transformedVertices);
+                    return {
+                        vertices: transformedVertices,
+                        indices: indices
+                    };
+                });
             
                 modelMesh = {
-                    vertices: transformedVertices.flat() // Flatten the array here
+                    meshes: meshes
                 };
+                
             }
 
-            // console.log(modelMesh);
             const command = {
                 type: this.CommandType.AddBody,
                 uid: this._inst.GetUID(),
@@ -1410,7 +1414,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 bodyType: bodyType,
                 shape: null,
                 mass: this.mass,
-                modelMesh // Pass only the transformed vertices
+                modelMesh
             };
             this.PhysicsType.commands.push(command);
             return true;
@@ -2130,26 +2134,35 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
     };
 }
 
-function transformDrawVerts(drawVerts, modelScaleRotate) {
+function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zScale, drawVerts, modelRotate, scale) {
     const vec3 = globalThis.glMatrix.vec3;
+    const mat4 = globalThis.glMatrix.mat4;
+    const quat = globalThis.glMatrix.quat;
+
     const xformVerts = [];
     const vOut = vec3.create();
 
-    if (!modelScaleRotate || modelScaleRotate.length !== 16) {
-        console.error("Invalid modelScaleRotate matrix:", modelScaleRotate);
-        throw new Error("modelScaleRotate must be a 4x4 matrix.");
-    }
+    const modelScaleRotate = mat4.create();
+    const rotate = globalThis.glMatrix.quat.create();
 
+    // Create rotation quaternion from Euler angles
+    quat.fromEuler(rotate, xAngle, yAngle, zAngle);
+
+    // Create transformation matrix from rotation, translation, and scale
+    mat4.fromRotationTranslationScale(modelScaleRotate, rotate, [x, y, z], [modelRotate[0], modelRotate[5], modelRotate[10]]);
+
+    // Transform each vertex and log intermediate results
     for (let i = 0; i < drawVerts.length; i += 3) {
-        const x = drawVerts[i];
-        const y = drawVerts[i + 1];
-        const z = drawVerts[i + 2];
-        vec3.set(vOut, x, y, z);
+        vec3.set(vOut, drawVerts[i] / scale, drawVerts[i + 1] / scale, drawVerts[i + 2] / scale);
+
         vec3.transformMat4(vOut, vOut, modelScaleRotate);
+
         xformVerts.push(vOut[0], vOut[1], vOut[2]);
     }
     return xformVerts;
 }
+
+
 
 B_C.Instance = getInstanceJs(
     C3.SDKBehaviorInstanceBase,
