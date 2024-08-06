@@ -8776,37 +8776,42 @@ function addBody(config) {
     }
 
     rigidBodyDesc.setTranslation(x, y, z);
-
     rigidBodyDesc.setRotation(q);
 
     const body = rapierWorld.createRigidBody(rigidBodyDesc);
 
-    
-    let colliderDesc;
-    // console.log("I AM HERE");
-    // console.log(config.shapeType);
-    console.log(config.modelMesh);
+    if (config.shapeType === "modelMesh" && config.modelMesh) {
+        // Model Mesh
+        config.modelMesh.meshes.forEach(mesh => {
+            const colliderDesc = RAPIER.ColliderDesc.trimesh(mesh.vertices, mesh.indices);
+            const collider = rapierWorld.createCollider(colliderDesc, body);
 
-    if (config.shapeType === "modelMesh") {
-        if(config.modelMesh){
-            console.log("creating trimesh")
-            const vertices = config.modelMesh;
-            const indices = createTrimeshIndices(vertices.length / 3);
-            colliderDesc = RAPIER.ColliderDesc.trimesh(vertices, indices);
-        }
+            collider.setMass(config.mass);
+            collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
+        });
     } else if (config.meshPoints && config.meshPoints.length > 0) {
-        colliderDesc = createTrimeshCollider(config.meshPoints);
+        // Mesh Points
+        const colliderDesc = createTrimeshCollider(config.meshPoints);
+        const collider = rapierWorld.createCollider(colliderDesc, body);
+
+        collider.setMass(config.mass);
+        collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
     } else if (config.shape !== null) {
         // 3DShape
-        colliderDesc = createCollider(config);
+        const colliderDesc = createCollider(config);
+        const collider = rapierWorld.createCollider(colliderDesc, body);
+
+        collider.setMass(config.mass);
+        collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
     } else {
         // 3DObject w/ default shape: box, ball, cylinder
-        colliderDesc = createDefaultCollider(config);
+        const colliderDesc = createDefaultCollider(config);
+
+        const collider = rapierWorld.createCollider(colliderDesc, body);
+        collider.setMass(config.mass);
+        collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
     }
 
-    const collider = rapierWorld.createCollider(colliderDesc, body);
-    collider.setMass(config.mass);
-    collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
     body.setEnabledRotations(
         config?.enableRot0 ? true : false,
         config?.enableRot1 ? true : false,
@@ -8817,7 +8822,6 @@ function addBody(config) {
     body.setLinearDamping(defaultLinearDamping);
 
     const uid = config.uid;
-
     body.uid = uid;
     uidHandle.set(uid, body.handle);
 
@@ -8827,7 +8831,6 @@ function addBody(config) {
         runCommands(commands);
         postDefineCommands.delete(uid);
     }
-    console.log(body)
 }
 
 function createTrimeshIndices(vertexCount) {
@@ -8837,8 +8840,6 @@ function createTrimeshIndices(vertexCount) {
     }
     return indices;
 }
-
-
 
 function setCollisionGroups(config) {
     const membership = config.membership;
