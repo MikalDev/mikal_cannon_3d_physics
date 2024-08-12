@@ -1131,7 +1131,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 this.pluginType = "Shape3DPlugin";
                 if (!this.bodyDefined) {
                     const shape = this._inst.GetSdkInstance()._shape;
-                    this.DefineBody(this.pluginType, shape, this.bodyType);
+                    this.DefineBody(this.pluginType, shape, this.shapeProperty, this.bodyType);
                     this.bodyDefined = true;
                     this.Trigger(
                         C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
@@ -1142,7 +1142,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 pluginType instanceof C3?.Plugins?.Sprite
             ) {
                 this.pluginType = "SpritePlugin";
-                this.DefineBody(this.pluginType, null, this.bodyType);
+                this.DefineBody(this.pluginType, null, null, this.bodyType);
                 this.Trigger(
                     C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
                 );
@@ -1158,14 +1158,14 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             }
         }
 
-        async DefineBody(pluginType, shapeType, bodyType) {
+        async DefineBody(pluginType, shape, shapeType, bodyType) {
             const PhysicsType = this._behaviorType._behavior;
             const shapeInst = this._inst.GetSdkInstance();
             const wi = this._inst.GetWorldInfo();
             const quat = globalThis.glMatrix.quat;
             let zHeight = shapeInst._zHeight;
             if (!zHeight) zHeight = 0;
-            let shape = null;
+            // let shape = null;
             const enableRot = [true, true, true];
             const scale = PhysicsType.scale;
             const initialQuat = quat.create();
@@ -1177,7 +1177,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     enableRot[0] = false;
                     enableRot[1] = false;
                 }
-                const shape = this._inst.GetSdkInstance()._shape;
+                // const shape = this._inst.GetSdkInstance()._shape;
                 command = {
                     type: this.CommandType.AddBody,
                     uid: this._inst.GetUID(),
@@ -1318,7 +1318,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             return [pitch, yaw, roll]; // Returns Euler angles in radians
         }
 
-        _create3DObjectShape(shape, bodyType, worldInfo) {
+        _create3DObjectShape(shapeProperty, bodyType, worldInfo) {
             // Get bbox of 3DObject
             const inst = this._inst.GetSdkInstance();
             const xMinBB = inst.xMinBB;
@@ -1349,16 +1349,16 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const rotQuat = globalThis.glMatrix.quat.create();
             globalThis.glMatrix.quat.fromEuler(rotQuat, xAngle, yAngle, zAngle);
             
-            const shapeTypeMap = {
-                0: "auto",
-                1: "modelMesh",
-                2: "box",
-                3: "sphere",
-                4: "cylinder",
-                5: "capsule"
-            };
+            // const shapeTypeMap = {
+            //     0: "auto",
+            //     1: "modelMesh",
+            //     2: "box",
+            //     3: "sphere",
+            //     4: "cylinder",
+            //     5: "capsule"
+            // };
 
-            const shapeProperty = shapeTypeMap[shape]; // Map the numerical value to a shape type string
+            // const shapeProperty = shapeTypeMap[shape]; // Map the numerical value to a shape type string
             // Model Mesh data
             let modelMesh = null;
 
