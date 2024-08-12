@@ -8552,12 +8552,15 @@ function enablePhysics(config) {
 }
 
 const ShapeType = {
-    Box: 1,
-    Sphere: 2,
-    Cylinder: 3,
-    Capsule: 4,
+    Auto: 0,
+    ModelMesh: 1,
+    Box: 2,
+    Sphere: 3,
+    Cylinder: 4,
+    Capsule: 5,
 };
 
+// THE BELOW IS USED FOR 3DOBJECT EXCLUDING MODEL MESH
 function createDefaultCollider(config) {
     const shapeType = config.shapeType;
     let colliderDesc;
@@ -8595,6 +8598,7 @@ function createDefaultCollider(config) {
     return colliderDesc;
 }
 
+//THE BELOW IS USED FOR 3D SHAPE
 function createCollider(config) {
     const shape = config.shape;
     let colliderDesc;
@@ -8757,6 +8761,7 @@ function addBody(config) {
     let q = config.q || { x: 0, y: 0, z: 0, w: 1 };
     const bodyTypeConfig = config.immovable ? BodyType.Fixed : config.bodyType;
 
+    console.log(bodyTypeConfig)
     switch (bodyTypeConfig) {
         case BodyType.Dynamic:
             rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic();
