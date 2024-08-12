@@ -8786,7 +8786,7 @@ function addBody(config) {
 
     const body = rapierWorld.createRigidBody(rigidBodyDesc);
 
-    if (config.shapeType === "modelMesh" && config.modelMesh) {
+    if (config.shapeType === ShapeType.ModelMesh && config.modelMesh) {
         // Model Mesh
         config.modelMesh.meshes.forEach(mesh => {
             const colliderDesc = RAPIER.ColliderDesc.trimesh(mesh.vertices, mesh.indices);

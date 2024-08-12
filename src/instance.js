@@ -397,11 +397,11 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             //     5: "capsule"
             // };
 
-            // const shapeProperty = shapeTypeMap[shape]; // Map the numerical value to a shape type string
+            // const shapePropertyMap = shapeTypeMap[shapeTypeMap]; // Map the numerical value to a shape type string
             // Model Mesh data
             let modelMesh = null;
 
-            if (shapeProperty === "modelMesh") {
+            if (shapeProperty === 1) {
                 const drawMeshes = inst.gltf.drawMeshes;
                 const modelRotate = inst.gltf.modelRotate;
                 
