@@ -8545,6 +8545,7 @@ function setDefaultLinearDamping(config) {
 function enablePhysics(config) {
     const uid = config.uid;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.setEnabled(config.enable);
@@ -8742,6 +8743,7 @@ function updateBody(config) {
     if (!rapierWorld) return;
     const uid = config.uid;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     let body = rapierWorld.bodies.get(handle);
     // Remove the body if it exists
     if (body) {
@@ -8761,7 +8763,6 @@ function addBody(config) {
     let q = config.q || { x: 0, y: 0, z: 0, w: 1 };
     const bodyTypeConfig = config.immovable ? BodyType.Fixed : config.bodyType;
 
-    console.log(bodyTypeConfig)
     switch (bodyTypeConfig) {
         case BodyType.Dynamic:
             rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic();
@@ -8859,6 +8860,7 @@ function setCollisionGroups(config) {
     const group = (membershipNumber << 16) | filterNumber;
     const uid = config.uid;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         const collider = body.collider(0);
@@ -8876,6 +8878,7 @@ function translate(config) {
     const uid = config.uid;
     const translation = config.translation;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.setTranslation(translation);
@@ -8886,6 +8889,8 @@ function rotate(config) {
     const uid = config.uid;
     const rotation = config.rotation;
     const handle = uidHandle.get(uid);
+
+    if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.setRotation(rotation);
@@ -8905,14 +8910,10 @@ function setPositionOffset(config) {
     const uid = config.uid;
     const positionOffset = config.positionOffset;
     const handle = uidHandle.get(uid);
-    if (handle !== undefined) {
-        const body = rapierWorld.bodies.get(handle);
-        const collider = body.collider(0);
-        collider.setTranslationWrtParent(positionOffset);
-    } else {
-        const configCopy = JSON.parse(JSON.stringify(config));
-        addPostDefineCommands(configCopy);
-    }
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    const collider = body.collider(0);
+    collider.setTranslationWrtParent(positionOffset);
 }
 
 function stepWorld(dt, frame) {
@@ -8977,6 +8978,7 @@ function applyTorque(config) {
     const uid = config.uid;
     const torque = config.torque;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.applyTorque(torque);
@@ -8987,6 +8989,7 @@ function setMass(config) {
     const uid = config.uid;
     const mass = config.mass;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         // Get collider
@@ -9000,6 +9003,7 @@ function applyImpulse(config) {
     const uid = config.uid;
     const impulse = config.impulse;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         const iV = new RAPIER.Vector3(impulse.x, impulse.y, impulse.z);
@@ -9010,7 +9014,7 @@ function applyImpulse(config) {
 function applyImpulseAtPoint(config) {
     const uid = config.uid;
     const handle = uidHandle.get(uid);
-    if (!handle) return;
+    if (bufferIfNoHandle(handle, config)) return;
     const impulse = config.impulse;
     const point = config.point;
     const body = rapierWorld.bodies.get(handle);
@@ -9025,6 +9029,7 @@ function applyForce(config) {
     const force = config.force;
     const point = config.point;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.addForce(force, point, true);
@@ -9168,6 +9173,7 @@ function setLinearDamping(config) {
     const uid = config.uid;
     const damping = config.damping;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.setLinearDamping(damping);
@@ -9178,6 +9184,7 @@ function setAngularDamping(config) {
     const uid = config.uid;
     const damping = config.damping;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.setAngularDamping(damping);
@@ -9243,7 +9250,7 @@ function createCharacterController(config) {
 function translateCharacterController(config) {
     const { uid, tag, translation } = config;
     const handle = uidHandle.get(uid);
-    if (!handle) return;
+    if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     const characterController = characterControllers.get(tag);
     if (!characterController) {
@@ -9269,6 +9276,7 @@ function setVelocity(config) {
     const uid = config.uid;
     const velocity = config.velocity;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.setLinvel(velocity);
@@ -9278,6 +9286,7 @@ function setVelocity(config) {
 function addSphericalJoint(config) {
     const { uid, targetUID, anchor, targetAnchor } = config;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     const targetHandle = uidHandle.get(targetUID);
     if (!handle || !targetHandle) return;
     const body = rapierWorld.bodies.get(handle);
@@ -9295,6 +9304,7 @@ function addSphericalJoint(config) {
 function addRevoluteJoint(config) {
     const { uid, targetUID, anchor, targetAnchor, axis } = config;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     const targetHandle = uidHandle.get(targetUID);
     if (!handle || !targetHandle) return;
     const body = rapierWorld.bodies.get(handle);
@@ -9389,10 +9399,20 @@ function runCommands(commands) {
 function removeBody(config) {
     const uid = config.uid;
     const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         rapierWorld.removeRigidBody(body);
     }
+}
+
+function bufferIfNoHandle(handle, config){
+    if (handle === undefined) {
+        const configCopy = JSON.parse(JSON.stringify(config));
+        addPostDefineCommands(configCopy);
+        return true
+    }
+    return false
 }
 
 // Expose the worker's API using Comlink

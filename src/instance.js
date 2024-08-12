@@ -209,6 +209,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const initialQuat = quat.create();
             quat.fromEuler(initialQuat, 0, 0, (wi.GetAngle() * 180) / Math.PI);
             let command = null;
+
             if (pluginType === "Shape3DPlugin") {
                 // 3DShape can only rotate around z axis
                 if (!this.rotate3D) {
