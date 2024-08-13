@@ -1366,19 +1366,12 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             let modelMesh = null;
 
             if (shapeProperty === 1) {
-                const drawMeshes = inst.gltf.drawMeshes;
-                const modelRotate = inst.gltf.modelRotate;
-                
-                // Ensure modelRotate is a valid 4x4 matrix
-                if (!Array.isArray(modelRotate) || modelRotate.length !== 16) {
-                    console.error("Invalid modelScaleRotate matrix:", modelRotate);
-                    throw new Error("modelScaleRotate must be a 4x4 matrix.");
-                }
+                const drawMeshes = inst.gltf.drawMeshes;          
 
                 const meshes = drawMeshes.map(mesh => {
                     const drawVerts = Array.from(mesh.drawVerts[0]);
                     
-                    const transformedVertices = transformDrawVerts(0, 0, 0, 0,0,0, inst.xScale, inst.yScale, inst.zScale, drawVerts, modelRotate, scale, scale3DObject);
+                    const transformedVertices = transformDrawVerts(0, 0, 0, 0,0,0, inst.xScale, inst.yScale, inst.zScale, drawVerts, scale, scale3DObject);
                     
                     const indices = Array.from(mesh.drawIndices[0]);
             
@@ -2137,7 +2130,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
     };
 }
 
-function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zScale, drawVerts, modelRotate, scale, scale3DObject) {
+function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zScale, drawVerts, scale, scale3DObject) {
     const vec3 = globalThis.glMatrix.vec3;
     const mat4 = globalThis.glMatrix.mat4;
     const quat = globalThis.glMatrix.quat;
@@ -2152,7 +2145,7 @@ function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zSc
     quat.fromEuler(rotate, xAngle, yAngle, zAngle);
 
     // Create transformation matrix from rotation, translation, and scale
-    mat4.fromRotationTranslationScale(modelScaleRotate, rotate, [x, y, z], [scale3DObject, -scale3DObject, scale3DObject]);
+    mat4.fromRotationTranslationScale(modelScaleRotate, rotate, [x, y, z], [scale3DObject/xScale, -scale3DObject/yScale, scale3DObject/zScale]);
 
     // Transform each vertex and log intermediate results
     for (let i = 0; i < drawVerts.length; i += 3) {
