@@ -2150,7 +2150,8 @@ function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zSc
     quat.fromEuler(rotate, xAngle, yAngle, zAngle);
 
     // Create transformation matrix from rotation, translation, and scale
-    mat4.fromRotationTranslationScale(modelScaleRotate, rotate, [x, y, z], [modelRotate[0], modelRotate[5], modelRotate[10]]);
+
+    mat4.fromRotationTranslationScale(modelScaleRotate, rotate, [x, y, z], [modelRotate[0], -modelRotate[0], modelRotate[0]]);
 
     // Transform each vertex and log intermediate results
     for (let i = 0; i < drawVerts.length; i += 3) {
