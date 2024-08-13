@@ -1343,6 +1343,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const scale = PhysicsType.scale;
             const wi = worldInfo;
 
+            const scale3DObject = inst.scale;
+            
             const xAngle = inst.xAngle;
             const yAngle = inst.yAngle;
             const zAngle = inst.zAngle;
@@ -1376,7 +1378,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 const meshes = drawMeshes.map(mesh => {
                     const drawVerts = Array.from(mesh.drawVerts[0]);
                     
-                    const transformedVertices = transformDrawVerts(0, 0, 0, 0,0,0, inst.xScale, inst.yScale, inst.zScale, drawVerts, modelRotate, scale);
+                    const transformedVertices = transformDrawVerts(0, 0, 0, 0,0,0, inst.xScale, inst.yScale, inst.zScale, drawVerts, modelRotate, scale, scale3DObject);
                     
                     const indices = Array.from(mesh.drawIndices[0]);
             
@@ -2135,7 +2137,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
     };
 }
 
-function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zScale, drawVerts, modelRotate, scale) {
+function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zScale, drawVerts, modelRotate, scale, scale3DObject) {
     const vec3 = globalThis.glMatrix.vec3;
     const mat4 = globalThis.glMatrix.mat4;
     const quat = globalThis.glMatrix.quat;
@@ -2150,8 +2152,7 @@ function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zSc
     quat.fromEuler(rotate, xAngle, yAngle, zAngle);
 
     // Create transformation matrix from rotation, translation, and scale
-
-    mat4.fromRotationTranslationScale(modelScaleRotate, rotate, [x, y, z], [modelRotate[0], -modelRotate[0], modelRotate[0]]);
+    mat4.fromRotationTranslationScale(modelScaleRotate, rotate, [x, y, z], [scale3DObject, -scale3DObject, scale3DObject]);
 
     // Transform each vertex and log intermediate results
     for (let i = 0; i < drawVerts.length; i += 3) {
