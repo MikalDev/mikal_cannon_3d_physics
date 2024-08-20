@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.16.0",
+    version: "2.17.0",
     category:
         // "attributes",
         "movements",
@@ -45,7 +45,7 @@ module.exports = {
             filename: "comlink.js",
             type: "copy-to-output",
             fileType: "text/javascript",
-        }
+        },
     ],
     info: {
         Set: {
@@ -127,7 +127,7 @@ module.exports = {
                 initialValue: "auto",
                 items: [
                     { auto: "Auto" },
-                    { modelMesh: "Model Mesh"},
+                    { modelMesh: "Model Mesh" },
                     { box: "Box" },
                     { sphere: "Sphere" },
                     { cylinder: "Cylinder" },
