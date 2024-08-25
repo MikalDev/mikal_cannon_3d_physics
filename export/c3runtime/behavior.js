@@ -3,7 +3,6 @@
 // import * as Comlink from "https://kindeyegames.com/forumfiles/comlink.js";
 
 // import * as Comlink from "./comlink.js";
-console.log("comlink-imported");
 
 const Mikal_Rapier_Comlink = (function () {
     /**
@@ -584,6 +583,11 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
           },
+"OnCharacterControllerCollision": {
+            "forward": (inst) => inst._OnCharacterControllerCollision,
+            
+            "autoScriptInterface": true,
+          },
 "OnAnyRaycastResult": {
             "forward": (inst) => inst._OnAnyRaycastResult,
             
@@ -643,6 +647,11 @@ const BEHAVIOR_INFO = {
           },
 "CollisionData": {
             "forward": (inst) => inst._CollisionData,
+            
+            "autoScriptInterface": true,
+          },
+"CharacterCollisionData": {
+            "forward": (inst) => inst._CharacterCollisionData,
             
             "autoScriptInterface": true,
           },
@@ -734,7 +743,7 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         this.rapierWorker = new Worker(path, { type: "module" });
         this.comRapier = Comlink.wrap(this.rapierWorker);
         const worldReady = await this.comRapier.initWorld();
-        console.log("rapier world ready", worldReady);
+        console.info("[rapier] world ready", worldReady);
         this.worldReady = worldReady;
     }
 
@@ -810,43 +819,86 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         this.runtime.UpdateRender();
     }
 
+    handleCharacterControllerCollisionEvent(collisionEvent) {
+        const { body1UID, body2UID } = collisionEvent;
+        const inst1 = this.runtime.GetInstanceByUID(body1UID);
+        if (!inst1) return;
+        const behInst1 = inst1.GetBehaviorSdkInstanceFromCtor(
+            C3.Behaviors.mikal_cannon_3d_physics
+        );
+        if (!behInst1) return;
+        behInst1.characterCollisionData = {
+            target: { uid: body2UID },
+            event: collisionEvent,
+        };
+        behInst1.Trigger(
+            C3.Behaviors.mikal_cannon_3d_physics.Cnds
+                .OnCharacterControllerCollision
+        );
+    }
+
+    handleBodyCollisionEvent(collisionEvent) {
+        const {
+            body1UID,
+            body2UID,
+            started,
+            contactCollider1,
+            contactCollider2,
+        } = collisionEvent;
+        const inst1 = this.runtime.GetInstanceByUID(body1UID);
+        if (!inst1) return;
+        const behInst1 = inst1.GetBehaviorSdkInstanceFromCtor(
+            C3.Behaviors.mikal_cannon_3d_physics
+        );
+        const inst2 = this.runtime.GetInstanceByUID(body2UID);
+        if (!inst2) return;
+        const behInst2 = inst2.GetBehaviorSdkInstanceFromCtor(
+            C3.Behaviors.mikal_cannon_3d_physics
+        );
+        if (behInst1) {
+            behInst1.collisionData = {
+                target: { uid: body2UID },
+                started,
+                contactCollider: contactCollider1,
+            };
+            behInst1.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
+            );
+        }
+        if (behInst2) {
+            behInst2.collisionData = {
+                target: { uid: body1UID },
+                started,
+                contactCollider: contactCollider2,
+            };
+            behInst2.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
+            );
+        }
+    }
+
+    CollisionMsgType = {
+        BODY: "body",
+        CHARACTER_CONTROLLER: "characterController",
+    };
+
     handleCollisionEvents(collisionEvents) {
         if (!collisionEvents) return;
-        for (const collisonEvent of collisionEvents) {
-            const {
-                body1UID,
-                body2UID,
-                started,
-                contactCollider1,
-                contactCollider2,
-            } = collisonEvent;
-            const inst1 = this.runtime.GetInstanceByUID(body1UID);
-            const behInst1 = inst1.GetBehaviorSdkInstanceFromCtor(
-                C3.Behaviors.mikal_cannon_3d_physics
-            );
-            const inst2 = this.runtime.GetInstanceByUID(body2UID);
-            const behInst2 = inst2.GetBehaviorSdkInstanceFromCtor(
-                C3.Behaviors.mikal_cannon_3d_physics
-            );
-            if (behInst1) {
-                behInst1.collisionData = {
-                    target: { uid: body2UID },
-                    started,
-                    contactCollider: contactCollider1,
-                };
-                behInst1.Trigger(
-                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
-                );
-            }
-            if (behInst2) {
-                behInst2.collisionData = {
-                    target: { uid: body1UID },
-                    started,
-                    contactCollider: contactCollider2,
-                };
-                behInst2.Trigger(
-                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
-                );
+        for (const collisionEvent of collisionEvents) {
+            switch (collisionEvent.type) {
+                case this.CollisionMsgType.BODY:
+                    this.handleBodyCollisionEvent(collisionEvent);
+                    break;
+                case this.CollisionMsgType.CHARACTER_CONTROLLER:
+                    this.handleCharacterControllerCollisionEvent(
+                        collisionEvent
+                    );
+                    break;
+                default:
+                    console.warn(
+                        "Unknown collision event type",
+                        collisionEvent
+                    );
             }
         }
     }
@@ -1055,7 +1107,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const bodyDefined = this.bodyDefined;
             const PhysicsType = this._behaviorType._behavior;
 
-
             if (
                 this.pluginType === "3DObjectPlugin" &&
                 !bodyDefined &&
@@ -1131,7 +1182,12 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 this.pluginType = "Shape3DPlugin";
                 if (!this.bodyDefined) {
                     const shape = this._inst.GetSdkInstance()._shape;
-                    this.DefineBody(this.pluginType, shape, this.shapeProperty, this.bodyType);
+                    this.DefineBody(
+                        this.pluginType,
+                        shape,
+                        this.shapeProperty,
+                        this.bodyType
+                    );
                     this.bodyDefined = true;
                     this.Trigger(
                         C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
@@ -1351,7 +1407,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
             const rotQuat = globalThis.glMatrix.quat.create();
             globalThis.glMatrix.quat.fromEuler(rotQuat, xAngle, yAngle, zAngle);
-            
+
             // const shapeTypeMap = {
             //     0: "auto",
             //     1: "modelMesh",
@@ -1368,23 +1424,35 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             if (shapeProperty === 1) {
                 const drawMeshes = inst.gltf.drawMeshes;
 
-                const meshes = drawMeshes.map(mesh => {
+                const meshes = drawMeshes.map((mesh) => {
                     const drawVerts = Array.from(mesh.drawVerts[0]);
-                    
-                    const transformedVertices = transformDrawVerts(0, 0, 0, 0,0,0, inst.xScale, inst.yScale, inst.zScale, drawVerts, scale, scale3DObject);
-                    
+
+                    const transformedVertices = transformDrawVerts(
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        inst.xScale,
+                        inst.yScale,
+                        inst.zScale,
+                        drawVerts,
+                        scale,
+                        scale3DObject
+                    );
+
                     const indices = Array.from(mesh.drawIndices[0]);
-            
+
                     return {
                         vertices: transformedVertices,
-                        indices: indices
+                        indices: indices,
                     };
                 });
-            
+
                 modelMesh = {
-                    meshes: meshes
+                    meshes: meshes,
                 };
-                
             }
 
             const command = {
@@ -1410,12 +1478,11 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 bodyType: bodyType,
                 shape: null,
                 mass: this.mass,
-                modelMesh
+                modelMesh,
             };
             this.PhysicsType.commands.push(command);
             return true;
         }
-        
 
         // Get mesh points from object
         _getMeshPoints(worldInfo) {
@@ -1737,8 +1804,18 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             return true;
         }
 
+        _OnCharacterControllerCollision() {
+            return true;
+        }
+
         _CollisionData() {
             const collisionData = this.collisionData;
+            if (!collisionData) return "{}";
+            return JSON.stringify(collisionData);
+        }
+
+        _CharacterCollisionData() {
+            const collisionData = this.characterCollisionData;
             if (!collisionData) return "{}";
             return JSON.stringify(collisionData);
         }
@@ -2130,7 +2207,20 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
     };
 }
 
-function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zScale, drawVerts, scale, scale3DObject) {
+function transformDrawVerts(
+    xAngle,
+    yAngle,
+    zAngle,
+    x,
+    y,
+    z,
+    xScale,
+    yScale,
+    zScale,
+    drawVerts,
+    scale,
+    scale3DObject
+) {
     const vec3 = globalThis.glMatrix.vec3;
     const mat4 = globalThis.glMatrix.mat4;
     const quat = globalThis.glMatrix.quat;
@@ -2145,11 +2235,25 @@ function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zSc
     quat.fromEuler(rotate, xAngle, yAngle, zAngle);
 
     // Create transformation matrix from rotation, translation, and scale
-    mat4.fromRotationTranslationScale(modelScaleRotate, rotate, [x, y, z], [scale3DObject/xScale, -scale3DObject/yScale, scale3DObject/zScale]);
+    mat4.fromRotationTranslationScale(
+        modelScaleRotate,
+        rotate,
+        [x, y, z],
+        [
+            scale3DObject / xScale,
+            -scale3DObject / yScale,
+            scale3DObject / zScale,
+        ]
+    );
 
     // Transform each vertex and log intermediate results
     for (let i = 0; i < drawVerts.length; i += 3) {
-        vec3.set(vOut, drawVerts[i] / scale, drawVerts[i + 1] / scale, drawVerts[i + 2] / scale);
+        vec3.set(
+            vOut,
+            drawVerts[i] / scale,
+            drawVerts[i + 1] / scale,
+            drawVerts[i + 2] / scale
+        );
 
         vec3.transformMat4(vOut, vOut, modelScaleRotate);
 
@@ -2157,7 +2261,6 @@ function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zSc
     }
     return xformVerts;
 }
-
 
 
 B_C.Instance = getInstanceJs(

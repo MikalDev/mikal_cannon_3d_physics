@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.17.0",
+    version: "2.18.0",
     category:
         // "attributes",
         "movements",
@@ -1690,6 +1690,23 @@ module.exports = {
             displayText: "{my}: On collision",
             description: "On body physics collision.",
         },
+        OnCharacterControllerCollision: {
+            category: "body",
+            forward: "_OnCharacterControllerCollision",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isTrigger: true,
+            isFakeTrigger: false,
+            isStatic: false,
+            isLooping: false,
+            isInvertible: false,
+            isCompatibleWithTriggers: false,
+            params: [],
+            listName: "On character controller collision",
+            displayText: "{my}: On character controller collision",
+            description: "On character controller collision.",
+        },
         OnAnyRaycastResult: {
             // The category of the action as it appears in the add condition dialog
             category: "general",
@@ -1968,6 +1985,18 @@ module.exports = {
             isVariadicParameters: false,
             params: [],
             description: "Collision data as JSON string.",
+        },
+        // CharacterCollisionData
+        CharacterCollisionData: {
+            category: "body",
+            forward: "_CharacterCollisionData",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            returnType: "string",
+            isVariadicParameters: false,
+            params: [],
+            description: "Character collision data as JSON string.",
         },
         // Velocity X
         VelocityX: {

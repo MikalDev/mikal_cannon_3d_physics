@@ -786,6 +786,12 @@
             "description": "On body physics collision.",
             "params": {}
           },
+          "OnCharacterControllerCollision": {
+            "list-name": "On character controller collision",
+            "display-text": "{my}: On character controller collision",
+            "description": "On character controller collision.",
+            "params": {}
+          },
           "OnAnyRaycastResult": {
             "list-name": "On any raycast result",
             "display-text": "{my}: On any raycast result",
@@ -861,6 +867,11 @@
           "CollisionData": {
             "translated-name": "CollisionData",
             "description": "Collision data as JSON string.",
+            "params": {}
+          },
+          "CharacterCollisionData": {
+            "translated-name": "CharacterCollisionData",
+            "description": "Character collision data as JSON string.",
             "params": {}
           },
           "VelocityX": {

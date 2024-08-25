@@ -439,6 +439,19 @@
         "isInvertible": false,
         "isCompatibleWithTriggers": false,
         "params": []
+      },
+      {
+        "id": "OnCharacterControllerCollision",
+        "scriptName": "OnCharacterControllerCollision",
+        "highlight": false,
+        "deprecated": false,
+        "isTrigger": true,
+        "isFakeTrigger": false,
+        "isStatic": false,
+        "isLooping": false,
+        "isInvertible": false,
+        "isCompatibleWithTriggers": false,
+        "params": []
       }
     ],
     "actions": [
@@ -1064,6 +1077,16 @@
         "id": "CollisionData",
         "scriptName": "CollisionData",
         "expressionName": "CollisionData",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "string",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CharacterCollisionData",
+        "scriptName": "CharacterCollisionData",
+        "expressionName": "CharacterCollisionData",
         "highlight": false,
         "deprecated": false,
         "returnType": "string",

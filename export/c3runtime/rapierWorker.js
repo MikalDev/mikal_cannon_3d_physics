@@ -8448,6 +8448,7 @@ let defaultLinearDamping = 0.0;
 let timestepMode = 0;
 let timestepValue = 1 / 60;
 let collisionEvents = [];
+let characterControllerCollisionEvents = [];
 let postDefineCommands = new Map();
 
 const CommandType = {
@@ -8505,7 +8506,7 @@ async function initWorld() {
     await RAPIER.init();
     const gravity = { x: 0.0, y: 0.0, z: -9.81 };
     rapierWorld = new RAPIER.World(gravity);
-    console.log("worker init world");
+    console.info("[rapierWorker] worker init world");
     return true;
 }
 
@@ -8788,8 +8789,11 @@ function addBody(config) {
 
     if (config.shapeType === ShapeType.ModelMesh && config.modelMesh) {
         // Model Mesh
-        config.modelMesh.meshes.forEach(mesh => {
-            const colliderDesc = RAPIER.ColliderDesc.trimesh(mesh.vertices, mesh.indices);
+        config.modelMesh.meshes.forEach((mesh) => {
+            const colliderDesc = RAPIER.ColliderDesc.trimesh(
+                mesh.vertices,
+                mesh.indices
+            );
             const collider = rapierWorld.createCollider(colliderDesc, body);
 
             collider.setMass(config.mass);
@@ -8922,7 +8926,8 @@ function stepWorld(dt, frame) {
         rapierWorld.timestep = dt;
     }
 
-    collisionEvents = [];
+    collisionEvents = [...characterControllerCollisionEvents];
+    characterControllerCollisionEvents = [];
     let eventQueue = new RAPIER.EventQueue(true);
     rapierWorld.step(eventQueue);
     handleCollisionEvents(eventQueue);
@@ -8949,6 +8954,11 @@ function stepWorld(dt, frame) {
     return Comlink.transfer(worldData, [worldData.bodiesData.buffer]);
 }
 
+const CollisionMsgType = {
+    BODY: "body",
+    CHARACTER_CONTROLLER: "characterController",
+};
+
 function handleCollisionEvents(eventQueue) {
     eventQueue.drainCollisionEvents((handle1, handle2, started) => {
         // Accessing collider information (assuming `world` is your Rapier world)
@@ -8964,6 +8974,7 @@ function handleCollisionEvents(eventQueue) {
         const body2 = collider2.parent();
         // Create message to send to main thread
         const msg = {
+            type: CollisionMsgType.BODY,
             started,
             body1UID: body1.uid,
             body2UID: body2.uid,
@@ -9262,6 +9273,7 @@ function translateCharacterController(config) {
     for (let i = 0; i < characterController.numComputedCollisions(); i++) {
         // Do something with the collision
         let collision = characterController.computedCollision(i);
+        processCharacterControllerCollision(uid, collision);
     }
 
     const correctedMovement = characterController.computedMovement();
@@ -9270,6 +9282,32 @@ function translateCharacterController(config) {
     correctedMovement.y = correctedMovement.y + t.y;
     correctedMovement.z = correctedMovement.z + t.z;
     body.setNextKinematicTranslation(correctedMovement);
+}
+
+function processCharacterControllerCollision(uid, collision) {
+    const collider = collision.collider;
+    const body = collider.parent();
+    const normal1 = collision.normal1;
+    const normal2 = collision.normal2;
+    const toi = collision.toi;
+    const translationDeltaApplied = collision.translationDeltaApplied;
+    const translationDeltaRemaining = collision.translationDeltaRemaining;
+    const witness1 = collision.witness1;
+    const witness2 = collision.witness2;
+    // Create message to send to main thread
+    const msg = {
+        type: CollisionMsgType.CHARACTER_CONTROLLER,
+        body1UID: uid,
+        body2UID: body.uid,
+        normal1,
+        normal2,
+        toi,
+        translationDeltaApplied,
+        translationDeltaRemaining,
+        witness1,
+        witness2,
+    };
+    characterControllerCollisionEvents.push(msg);
 }
 
 function setVelocity(config) {
@@ -9406,13 +9444,13 @@ function removeBody(config) {
     }
 }
 
-function bufferIfNoHandle(handle, config){
+function bufferIfNoHandle(handle, config) {
     if (handle === undefined) {
         const configCopy = JSON.parse(JSON.stringify(config));
         addPostDefineCommands(configCopy);
-        return true
+        return true;
     }
-    return false
+    return false;
 }
 
 // Expose the worker's API using Comlink

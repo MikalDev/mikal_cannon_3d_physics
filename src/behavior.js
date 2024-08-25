@@ -3,7 +3,6 @@
 // import * as Comlink from "https://kindeyegames.com/forumfiles/comlink.js";
 
 // import * as Comlink from "./comlink.js";
-console.log("comlink-imported");
 
 const Mikal_Rapier_Comlink = (function () {
     /**
@@ -491,7 +490,7 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         this.rapierWorker = new Worker(path, { type: "module" });
         this.comRapier = Comlink.wrap(this.rapierWorker);
         const worldReady = await this.comRapier.initWorld();
-        console.log("rapier world ready", worldReady);
+        console.info("[rapier] world ready", worldReady);
         this.worldReady = worldReady;
     }
 
@@ -567,43 +566,86 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         this.runtime.UpdateRender();
     }
 
+    handleCharacterControllerCollisionEvent(collisionEvent) {
+        const { body1UID, body2UID } = collisionEvent;
+        const inst1 = this.runtime.GetInstanceByUID(body1UID);
+        if (!inst1) return;
+        const behInst1 = inst1.GetBehaviorSdkInstanceFromCtor(
+            C3.Behaviors.mikal_cannon_3d_physics
+        );
+        if (!behInst1) return;
+        behInst1.characterCollisionData = {
+            target: { uid: body2UID },
+            event: collisionEvent,
+        };
+        behInst1.Trigger(
+            C3.Behaviors.mikal_cannon_3d_physics.Cnds
+                .OnCharacterControllerCollision
+        );
+    }
+
+    handleBodyCollisionEvent(collisionEvent) {
+        const {
+            body1UID,
+            body2UID,
+            started,
+            contactCollider1,
+            contactCollider2,
+        } = collisionEvent;
+        const inst1 = this.runtime.GetInstanceByUID(body1UID);
+        if (!inst1) return;
+        const behInst1 = inst1.GetBehaviorSdkInstanceFromCtor(
+            C3.Behaviors.mikal_cannon_3d_physics
+        );
+        const inst2 = this.runtime.GetInstanceByUID(body2UID);
+        if (!inst2) return;
+        const behInst2 = inst2.GetBehaviorSdkInstanceFromCtor(
+            C3.Behaviors.mikal_cannon_3d_physics
+        );
+        if (behInst1) {
+            behInst1.collisionData = {
+                target: { uid: body2UID },
+                started,
+                contactCollider: contactCollider1,
+            };
+            behInst1.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
+            );
+        }
+        if (behInst2) {
+            behInst2.collisionData = {
+                target: { uid: body1UID },
+                started,
+                contactCollider: contactCollider2,
+            };
+            behInst2.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
+            );
+        }
+    }
+
+    CollisionMsgType = {
+        BODY: "body",
+        CHARACTER_CONTROLLER: "characterController",
+    };
+
     handleCollisionEvents(collisionEvents) {
         if (!collisionEvents) return;
-        for (const collisonEvent of collisionEvents) {
-            const {
-                body1UID,
-                body2UID,
-                started,
-                contactCollider1,
-                contactCollider2,
-            } = collisonEvent;
-            const inst1 = this.runtime.GetInstanceByUID(body1UID);
-            const behInst1 = inst1.GetBehaviorSdkInstanceFromCtor(
-                C3.Behaviors.mikal_cannon_3d_physics
-            );
-            const inst2 = this.runtime.GetInstanceByUID(body2UID);
-            const behInst2 = inst2.GetBehaviorSdkInstanceFromCtor(
-                C3.Behaviors.mikal_cannon_3d_physics
-            );
-            if (behInst1) {
-                behInst1.collisionData = {
-                    target: { uid: body2UID },
-                    started,
-                    contactCollider: contactCollider1,
-                };
-                behInst1.Trigger(
-                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
-                );
-            }
-            if (behInst2) {
-                behInst2.collisionData = {
-                    target: { uid: body1UID },
-                    started,
-                    contactCollider: contactCollider2,
-                };
-                behInst2.Trigger(
-                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
-                );
+        for (const collisionEvent of collisionEvents) {
+            switch (collisionEvent.type) {
+                case this.CollisionMsgType.BODY:
+                    this.handleBodyCollisionEvent(collisionEvent);
+                    break;
+                case this.CollisionMsgType.CHARACTER_CONTROLLER:
+                    this.handleCharacterControllerCollisionEvent(
+                        collisionEvent
+                    );
+                    break;
+                default:
+                    console.warn(
+                        "Unknown collision event type",
+                        collisionEvent
+                    );
             }
         }
     }

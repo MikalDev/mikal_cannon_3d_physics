@@ -93,7 +93,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const bodyDefined = this.bodyDefined;
             const PhysicsType = this._behaviorType._behavior;
 
-
             if (
                 this.pluginType === "3DObjectPlugin" &&
                 !bodyDefined &&
@@ -169,7 +168,12 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 this.pluginType = "Shape3DPlugin";
                 if (!this.bodyDefined) {
                     const shape = this._inst.GetSdkInstance()._shape;
-                    this.DefineBody(this.pluginType, shape, this.shapeProperty, this.bodyType);
+                    this.DefineBody(
+                        this.pluginType,
+                        shape,
+                        this.shapeProperty,
+                        this.bodyType
+                    );
                     this.bodyDefined = true;
                     this.Trigger(
                         C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
@@ -389,7 +393,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
             const rotQuat = globalThis.glMatrix.quat.create();
             globalThis.glMatrix.quat.fromEuler(rotQuat, xAngle, yAngle, zAngle);
-            
+
             // const shapeTypeMap = {
             //     0: "auto",
             //     1: "modelMesh",
@@ -406,23 +410,35 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             if (shapeProperty === 1) {
                 const drawMeshes = inst.gltf.drawMeshes;
 
-                const meshes = drawMeshes.map(mesh => {
+                const meshes = drawMeshes.map((mesh) => {
                     const drawVerts = Array.from(mesh.drawVerts[0]);
-                    
-                    const transformedVertices = transformDrawVerts(0, 0, 0, 0,0,0, inst.xScale, inst.yScale, inst.zScale, drawVerts, scale, scale3DObject);
-                    
+
+                    const transformedVertices = transformDrawVerts(
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        inst.xScale,
+                        inst.yScale,
+                        inst.zScale,
+                        drawVerts,
+                        scale,
+                        scale3DObject
+                    );
+
                     const indices = Array.from(mesh.drawIndices[0]);
-            
+
                     return {
                         vertices: transformedVertices,
-                        indices: indices
+                        indices: indices,
                     };
                 });
-            
+
                 modelMesh = {
-                    meshes: meshes
+                    meshes: meshes,
                 };
-                
             }
 
             const command = {
@@ -448,12 +464,11 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 bodyType: bodyType,
                 shape: null,
                 mass: this.mass,
-                modelMesh
+                modelMesh,
             };
             this.PhysicsType.commands.push(command);
             return true;
         }
-        
 
         // Get mesh points from object
         _getMeshPoints(worldInfo) {
@@ -775,8 +790,18 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             return true;
         }
 
+        _OnCharacterControllerCollision() {
+            return true;
+        }
+
         _CollisionData() {
             const collisionData = this.collisionData;
+            if (!collisionData) return "{}";
+            return JSON.stringify(collisionData);
+        }
+
+        _CharacterCollisionData() {
+            const collisionData = this.characterCollisionData;
             if (!collisionData) return "{}";
             return JSON.stringify(collisionData);
         }
@@ -1168,7 +1193,20 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
     };
 }
 
-function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zScale, drawVerts, scale, scale3DObject) {
+function transformDrawVerts(
+    xAngle,
+    yAngle,
+    zAngle,
+    x,
+    y,
+    z,
+    xScale,
+    yScale,
+    zScale,
+    drawVerts,
+    scale,
+    scale3DObject
+) {
     const vec3 = globalThis.glMatrix.vec3;
     const mat4 = globalThis.glMatrix.mat4;
     const quat = globalThis.glMatrix.quat;
@@ -1183,11 +1221,25 @@ function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zSc
     quat.fromEuler(rotate, xAngle, yAngle, zAngle);
 
     // Create transformation matrix from rotation, translation, and scale
-    mat4.fromRotationTranslationScale(modelScaleRotate, rotate, [x, y, z], [scale3DObject/xScale, -scale3DObject/yScale, scale3DObject/zScale]);
+    mat4.fromRotationTranslationScale(
+        modelScaleRotate,
+        rotate,
+        [x, y, z],
+        [
+            scale3DObject / xScale,
+            -scale3DObject / yScale,
+            scale3DObject / zScale,
+        ]
+    );
 
     // Transform each vertex and log intermediate results
     for (let i = 0; i < drawVerts.length; i += 3) {
-        vec3.set(vOut, drawVerts[i] / scale, drawVerts[i + 1] / scale, drawVerts[i + 2] / scale);
+        vec3.set(
+            vOut,
+            drawVerts[i] / scale,
+            drawVerts[i + 1] / scale,
+            drawVerts[i + 2] / scale
+        );
 
         vec3.transformMat4(vOut, vOut, modelScaleRotate);
 
@@ -1195,4 +1247,3 @@ function transformDrawVerts(xAngle, yAngle, zAngle, x, y, z, xScale, yScale, zSc
     }
     return xformVerts;
 }
-
