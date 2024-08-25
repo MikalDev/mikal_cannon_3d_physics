@@ -8588,7 +8588,7 @@ function createDefaultCollider(config) {
         case ShapeType.Capsule:
             colliderDesc = RAPIER.ColliderDesc.capsule(
                 config.depth / 2,
-                config.height / 2
+                config.width / 2
             );
             break;
         default:
