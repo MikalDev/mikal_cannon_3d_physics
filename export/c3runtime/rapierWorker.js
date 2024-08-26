@@ -8562,6 +8562,11 @@ const ShapeType = {
     Capsule: 5,
 };
 
+const ColliderType = {
+    Solid: 0,
+    Sensor: 1
+};
+
 // THE BELOW IS USED FOR 3DOBJECT EXCLUDING MODEL MESH
 function createDefaultCollider(config) {
     const shapeType = config.shapeType;
@@ -8588,7 +8593,7 @@ function createDefaultCollider(config) {
         case ShapeType.Capsule:
             colliderDesc = RAPIER.ColliderDesc.capsule(
                 config.depth / 2,
-                config.height / 2
+                config.width / 2
             );
             break;
         default:
@@ -8794,29 +8799,41 @@ function addBody(config) {
                 mesh.vertices,
                 mesh.indices
             );
+            // Set sensor property during creation if specified
+            if (config.colliderType === ColliderType.Sensor) {
+                colliderDesc.setSensor(true);
+            }
             const collider = rapierWorld.createCollider(colliderDesc, body);
-
             collider.setMass(config.mass);
             collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
         });
     } else if (config.meshPoints && config.meshPoints.length > 0) {
         // Mesh Points
         const colliderDesc = createTrimeshCollider(config.meshPoints);
+        // Set sensor property during creation if specified
+        if (config.colliderType === ColliderType.Sensor) {
+            colliderDesc.setSensor(true);
+        }
         const collider = rapierWorld.createCollider(colliderDesc, body);
-
         collider.setMass(config.mass);
         collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
     } else if (config.shape !== null) {
         // 3DShape
         const colliderDesc = createCollider(config);
+        // Set sensor property during creation if specified
+        if (config.colliderType === ColliderType.Sensor) {
+            colliderDesc.setSensor(true);
+        }
         const collider = rapierWorld.createCollider(colliderDesc, body);
-
         collider.setMass(config.mass);
         collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
     } else {
         // 3DObject w/ default shape: box, ball, cylinder
         const colliderDesc = createDefaultCollider(config);
-
+        // Set sensor property during creation if specified
+        if (config.colliderType === ColliderType.Sensor) {
+            colliderDesc.setSensor(true);
+        }
         const collider = rapierWorld.createCollider(colliderDesc, body);
         collider.setMass(config.mass);
         collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
@@ -9268,7 +9285,7 @@ function translateCharacterController(config) {
         console.warn("Character controller not found", tag);
         return;
     }
-    characterController.computeColliderMovement(body.collider(), translation);
+    characterController.computeColliderMovement(body.collider(), translation, RAPIER.QueryFilterFlags['EXCLUDE_SENSORS']);
     // (optional) Check collisions
     for (let i = 0; i < characterController.numComputedCollisions(); i++) {
         // Do something with the collision
@@ -9276,7 +9293,22 @@ function translateCharacterController(config) {
         processCharacterControllerCollision(uid, collision);
     }
 
+    // Pass 1: Compute movement excluding sensors
+    characterController.computeColliderMovement(body.collider(), translation, RAPIER.QueryFilterFlags.EXCLUDE_SENSORS);
+
+    // Store the computed movement from the first pass
     const correctedMovement = characterController.computedMovement();
+
+    // Pass 2: Gather collision data only (without affecting movement)
+    characterController.computeColliderMovement(body.collider(), translation);
+
+    // Check and process collisions
+    for (let i = 0; i < characterController.numComputedCollisions(); i++) {
+        let collision = characterController.computedCollision(i);
+        processCharacterControllerCollision(uid, collision);
+    }
+
+    // Apply the computed movement from Pass 1
     const t = body.translation();
     correctedMovement.x = correctedMovement.x + t.x;
     correctedMovement.y = correctedMovement.y + t.y;

@@ -3,7 +3,7 @@ const SDK = self.SDK;
 const BEHAVIOR_INFO = {
     ...{
   "id": "mikal_cannon_3d_physics",
-  "version": "2.18.0",
+  "version": "2.19.0",
   "category": "movements",
   "author": "Mikal",
   "addonType": "behavior",
@@ -90,6 +90,21 @@ const BEHAVIOR_INFO = {
   "fixed",
   "kinematic-position",
   "kinematic-velocity"
+],
+            },
+          },
+{
+            type: "combo",
+            id: "colliderType",
+            options: {
+              ...{
+  "initialValue": "solid"
+},
+              
+              
+              items: [
+  "solid",
+  "sensor"
 ],
             },
           },
