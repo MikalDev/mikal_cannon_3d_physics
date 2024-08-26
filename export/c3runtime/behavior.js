@@ -1022,11 +1022,12 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 this.immovable = properties[1];
                 this.shapeProperty = properties[2];
                 this.bodyType = properties[3];
-                this.mass = properties[4];
-                this.sizeOverride = properties[5];
-                this.bodySizeHeight = properties[6];
-                this.bodySizeWidth = properties[7];
-                this.bodySizeDepth = properties[8];
+                this.colliderType = properties[4];
+                this.mass = properties[5];
+                this.sizeOverride = properties[6];
+                this.bodySizeHeight = properties[7];
+                this.bodySizeWidth = properties[8];
+                this.bodySizeDepth = properties[9];
             }
             this.defaultMass = 1;
             this.body = null;
@@ -1117,6 +1118,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 const result = this._create3DObjectShape(
                     this.shapeProperty,
                     this.bodyType,
+                    this.colliderType,
                     wi
                 );
                 // Not ready
@@ -1186,7 +1188,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                         this.pluginType,
                         shape,
                         this.shapeProperty,
-                        this.bodyType
+                        this.bodyType,
+                        this.colliderType
                     );
                     this.bodyDefined = true;
                     this.Trigger(
@@ -1198,7 +1201,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 pluginType instanceof C3?.Plugins?.Sprite
             ) {
                 this.pluginType = "SpritePlugin";
-                this.DefineBody(this.pluginType, null, null, this.bodyType);
+                this.DefineBody(this.pluginType, null, null, this.bodyType, this.colliderType);
                 this.Trigger(
                     C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
                 );
@@ -1214,7 +1217,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             }
         }
 
-        async DefineBody(pluginType, shape, shapeType, bodyType) {
+        async DefineBody(pluginType, shape, shapeType, bodyType, colliderType) {
             const PhysicsType = this._behaviorType._behavior;
             const shapeInst = this._inst.GetSdkInstance();
             const wi = this._inst.GetWorldInfo();
@@ -1251,6 +1254,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     enableRot2: enableRot[2],
                     shapeType: shapeType,
                     bodyType,
+                    colliderType,
                     shape,
                     mass: this.mass,
                 };
@@ -1272,6 +1276,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     enableRot2: enableRot[2],
                     shapeType: shapeType,
                     bodyType,
+                    colliderType,
                     shape: null,
                     mass: this.mass,
                     meshPoints: meshPoints,
@@ -1316,6 +1321,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     enableRot2: enableRot[2],
                     shapeType: this.shapeProperty,
                     bodyType: this.bodyType,
+                    colliderType: this.colliderType,
                     shape,
                     mass: this.mass,
                 };
@@ -1338,6 +1344,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     enableRot2: enableRot[2],
                     shapeType: this.shapeProperty,
                     bodyType: this.bodyType,
+                    colliderType: this.colliderType,
                     shape: null,
                     mass: this.mass,
                     meshPoints: meshPoints,
@@ -1375,7 +1382,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             return [pitch, yaw, roll]; // Returns Euler angles in radians
         }
 
-        _create3DObjectShape(shapeProperty, bodyType, worldInfo) {
+        _create3DObjectShape(shapeProperty, bodyType, colliderType, worldInfo) {
             // Get bbox of 3DObject
             const inst = this._inst.GetSdkInstance();
             const xMinBB = inst.xMinBB;
@@ -1476,6 +1483,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 enableRot2: true,
                 shapeType: shapeProperty,
                 bodyType: bodyType,
+                colliderType: colliderType,
                 shape: null,
                 mass: this.mass,
                 modelMesh,
