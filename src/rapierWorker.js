@@ -8564,7 +8564,7 @@ const ShapeType = {
 
 const ColliderType = {
     Solid: 0,
-    Sensor: 1
+    Sensor: 1,
 };
 
 // THE BELOW IS USED FOR 3DOBJECT EXCLUDING MODEL MESH
@@ -9280,12 +9280,23 @@ function translateCharacterController(config) {
     const handle = uidHandle.get(uid);
     if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
+    if (!body) {
+        console.warn(
+            "[rapierWorker] translateCharacterController, body not found for uid:",
+            uid
+        );
+        return;
+    }
     const characterController = characterControllers.get(tag);
     if (!characterController) {
         console.warn("Character controller not found", tag);
         return;
     }
-    characterController.computeColliderMovement(body.collider(), translation, RAPIER.QueryFilterFlags['EXCLUDE_SENSORS']);
+    characterController.computeColliderMovement(
+        body.collider(),
+        translation,
+        RAPIER.QueryFilterFlags["EXCLUDE_SENSORS"]
+    );
     // (optional) Check collisions
     for (let i = 0; i < characterController.numComputedCollisions(); i++) {
         // Do something with the collision
@@ -9294,7 +9305,11 @@ function translateCharacterController(config) {
     }
 
     // Pass 1: Compute movement excluding sensors
-    characterController.computeColliderMovement(body.collider(), translation, RAPIER.QueryFilterFlags.EXCLUDE_SENSORS);
+    characterController.computeColliderMovement(
+        body.collider(),
+        translation,
+        RAPIER.QueryFilterFlags.EXCLUDE_SENSORS
+    );
 
     // Store the computed movement from the first pass
     const correctedMovement = characterController.computedMovement();

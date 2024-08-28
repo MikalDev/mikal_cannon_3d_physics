@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.19.0",
+    version: "2.19.1",
     category:
         // "attributes",
         "movements",
@@ -157,10 +157,7 @@ module.exports = {
             desc: "Collider type.",
             options: {
                 initialValue: "solid",
-                items: [
-                    { solid: "Solid" },
-                    { sensor: "Sensor" }
-                ],
+                items: [{ solid: "Solid" }, { sensor: "Sensor" }],
             },
         },
         {
