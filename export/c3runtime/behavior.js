@@ -486,6 +486,11 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
             },
+"SetCCD": {
+            "forward": (inst) => inst._SetCCD,
+            
+            "autoScriptInterface": true,
+            },
 "UpdateHeightfield": {
             "forward": (inst) => inst._UpdateHeightfield,
             
@@ -767,6 +772,89 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         }
     }
 
+    handleRaycastResults(raycastResults) {
+        const vec3 = globalThis.glMatrix.vec3;
+        const scale = this.scale;
+        if (!raycastResults) return;
+        for (const result of raycastResults) {
+            const uid = result.uid;
+            const tag = result.tag;
+            const dir = vec3.create();
+            const origin = vec3.create();
+            const hasHit = result.hasHit;
+            if (hasHit) {
+                vec3.set(dir, result.dir.x, result.dir.y, result.dir.z);
+                vec3.set(
+                    origin,
+                    result.origin.x,
+                    result.origin.y,
+                    result.origin.z
+                );
+            }
+            const inst = this.runtime.GetInstanceByUID(uid);
+            if (!inst) continue;
+            const behInst = inst.GetBehaviorSdkInstanceFromCtor(
+                C3.Behaviors.mikal_cannon_3d_physics
+            );
+            if (!behInst) continue;
+            if (result.hasHit) {
+                const hitPointWorld = vec3.create();
+                vec3.add(
+                    hitPointWorld,
+                    origin,
+                    vec3.mul(
+                        dir,
+                        dir,
+                        vec3.fromValues(
+                            result.timeOfImpact,
+                            result.timeOfImpact,
+                            result.timeOfImpact
+                        )
+                    )
+                );
+                behInst.raycastResult = {
+                    hasHit: true,
+                    hitFaceIndex: 0,
+                    hitPointWorld: [
+                        hitPointWorld[0] * scale,
+                        hitPointWorld[1] * scale,
+                        hitPointWorld[2] * scale,
+                    ],
+                    hitNormalWorld: [
+                        result.normal.x,
+                        result.normal.y,
+                        result.normal.z,
+                    ],
+                    distance:
+                        vec3.distance(origin, [
+                            hitPointWorld[0],
+                            hitPointWorld[1],
+                            hitPointWorld[2],
+                        ]) * scale,
+                    hitUID: result.hitUID,
+                    tag,
+                };
+            } else {
+                behInst.raycastResult = {
+                    hasHit: false,
+                    hitFaceIndex: -1,
+                    hitPointWorld: [0, 0, 0],
+                    hitNormalWorld: [0, 0, 0],
+                    distance: 0,
+                    hitUID: -1,
+                    tag,
+                };
+            }
+
+            behInst.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyRaycastResult
+            );
+            behInst.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnRaycastResult
+            );
+        }
+    }
+
     async sendCommandsToWorker() {
         // Run only once per tick
         if (!this.worldReady || !this.commands || this.commands.length === 0)
@@ -816,6 +904,9 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         }
         if (!bodies) return;
         this.updateBodies(bodies);
+        if (worldData.raycastResults?.length > 0) {
+            this.handleRaycastResults(worldData.raycastResults);
+        }
         this.runtime.UpdateRender();
     }
 
@@ -1068,6 +1159,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 SetPositionOffset: 23,
                 AddRevoluteJoint: 24,
                 CastShape: 25, // Added command type for castShape
+                SetCCD: 26,
             };
             this._StartTicking();
             this._StartTicking2();
@@ -1201,7 +1293,13 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 pluginType instanceof C3?.Plugins?.Sprite
             ) {
                 this.pluginType = "SpritePlugin";
-                this.DefineBody(this.pluginType, null, null, this.bodyType, this.colliderType);
+                this.DefineBody(
+                    this.pluginType,
+                    null,
+                    null,
+                    this.bodyType,
+                    this.colliderType
+                );
                 this.Trigger(
                     C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
                 );
@@ -1547,6 +1645,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             if (!this.PhysicsType.worldReady) {
                 this.raycastResult = {
                     hasHit: false,
+                    tag,
                 };
                 return;
             }
@@ -1571,7 +1670,14 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 maxToI,
                 filterGroups,
                 skipBackfaces,
+                uid: this.uid,
+                tag,
             };
+            if (tag.includes("-batch")) {
+                // Send batched command instead of raycasting with comlink
+                this.PhysicsType.commands.push(command);
+                return;
+            }
             const result = await this.comRapier.raycast(command);
             if (result.hasHit) {
                 const hitPointWorld = vec3.create();
@@ -1670,6 +1776,15 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 uid: this.uid,
                 type: this.CommandType.SetLinearDamping,
                 damping,
+            };
+            this.PhysicsType.commands.push(command);
+        }
+
+        _SetCCD(enable) {
+            const command = {
+                uid: this.uid,
+                type: this.CommandType.SetCCD,
+                enable,
             };
             this.PhysicsType.commands.push(command);
         }

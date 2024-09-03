@@ -3,7 +3,7 @@ const SDK = self.SDK;
 const BEHAVIOR_INFO = {
     ...{
   "id": "mikal_cannon_3d_physics",
-  "version": "2.19.1",
+  "version": "2.21.0",
   "category": "movements",
   "author": "Mikal",
   "addonType": "behavior",

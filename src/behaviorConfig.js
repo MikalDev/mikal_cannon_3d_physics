@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.19.1",
+    version: "2.21.0",
     category:
         // "attributes",
         "movements",
@@ -819,6 +819,27 @@ module.exports = {
             displayText: "Set {my} mass {0}",
             // The description of the action as it appears in the add action dialog
             description: "Set mass of body.",
+        },
+
+        SetCCD: {
+            category: "body",
+            forward: "_SetCCD",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "enable",
+                    name: "Enable CCD",
+                    desc: "Enable or disable continuous collision detection.",
+                    type: "boolean",
+                    initialValue: "true",
+                },
+            ],
+            listName: "Set CCD",
+            displayText: "Set {my} CCD {0}",
+            description: "Set Continuous Collision Detection (CCD) for body.",
         },
 
         // Update heightfield body action

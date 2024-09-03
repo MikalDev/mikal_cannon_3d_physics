@@ -8450,6 +8450,7 @@ let timestepValue = 1 / 60;
 let collisionEvents = [];
 let characterControllerCollisionEvents = [];
 let postDefineCommands = new Map();
+let raycastResults = [];
 
 const CommandType = {
     AddBody: 0,
@@ -8478,6 +8479,7 @@ const CommandType = {
     SetPositionOffset: 23,
     AddRevoluteJoint: 24,
     CastShape: 25, // Add this line for CastShape
+    SetCCD: 26,
 };
 
 const BodyType = {
@@ -8967,7 +8969,14 @@ function stepWorld(dt, frame) {
         bodiesData[i++] = rotation.z;
         bodiesData[i++] = rotation.w;
     });
-    const worldData = { bodiesData, collisionEvents, frame };
+    const raycastResultsCopy = raycastResults.slice();
+    raycastResults = [];
+    const worldData = {
+        bodiesData,
+        collisionEvents,
+        frame,
+        raycastResults: raycastResultsCopy,
+    };
     return Comlink.transfer(worldData, [worldData.bodiesData.buffer]);
 }
 
@@ -9071,6 +9080,7 @@ function raycast(config) {
     const ray = new RAPIER.Ray(origin, dir);
     const maxToI = config.maxToI;
     const solid = !config.skipBackFaces;
+    const uid = config.uid;
     let filterGroups = parseInt(config.filterGroups, 16);
     filterGroups = 0xffff0000 | filterGroups;
     let result = rapierWorld.castRayAndGetNormal(
@@ -9085,9 +9095,14 @@ function raycast(config) {
     if (result) {
         result.hitUID = hitUID;
         result.hasHit = true;
+        result.uid = uid;
+        result.dir = dir;
+        result.origin = origin;
+        result.tag = config.tag;
     } else {
-        result = { hasHit: false, hitUID: -1 };
+        result = { hasHit: false, hitUID: -1, uid };
     }
+    raycastResults.push(result);
     return result;
 }
 
@@ -9205,6 +9220,17 @@ function setLinearDamping(config) {
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.setLinearDamping(damping);
+    }
+}
+
+function setCCD(config) {
+    const uid = config.uid;
+    const enable = config.enable;
+    const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.enableCcd(enable);
     }
 }
 
@@ -9445,7 +9471,7 @@ const commandFunctions = {
     [CommandType.ApplyImpulseAtPoint]: applyImpulseAtPoint,
     [CommandType.ApplyForce]: applyForce,
     // Can't batch raycast, need to return result
-    //[CommandType.Raycast]: (command) => raycast(command.config),
+    [CommandType.Raycast]: raycast,
     [CommandType.SetWorldGravity]: setWorldGravity,
     [CommandType.SetLinearDamping]: setLinearDamping,
     [CommandType.ApplyTorque]: applyTorque,
@@ -9465,6 +9491,7 @@ const commandFunctions = {
     [CommandType.AddSphericalJoint]: addSphericalJoint,
     [CommandType.SetPositionOffset]: setPositionOffset,
     [CommandType.AddRevoluteJoint]: addRevoluteJoint,
+    [CommandType.SetCCD]: setCCD,
 };
 
 function runCommands(commands) {

@@ -391,6 +391,17 @@
               }
             }
           },
+          "SetCCD": {
+            "list-name": "Set CCD",
+            "display-text": "Set {my} CCD {0}",
+            "description": "Set Continuous Collision Detection (CCD) for body.",
+            "params": {
+              "enable": {
+                "name": "Enable CCD",
+                "desc": "Enable or disable continuous collision detection."
+              }
+            }
+          },
           "UpdateHeightfield": {
             "list-name": "Update heightfield",
             "display-text": "Update {my} heightfield {0}",

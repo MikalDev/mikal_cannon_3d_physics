@@ -514,6 +514,89 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         }
     }
 
+    handleRaycastResults(raycastResults) {
+        const vec3 = globalThis.glMatrix.vec3;
+        const scale = this.scale;
+        if (!raycastResults) return;
+        for (const result of raycastResults) {
+            const uid = result.uid;
+            const tag = result.tag;
+            const dir = vec3.create();
+            const origin = vec3.create();
+            const hasHit = result.hasHit;
+            if (hasHit) {
+                vec3.set(dir, result.dir.x, result.dir.y, result.dir.z);
+                vec3.set(
+                    origin,
+                    result.origin.x,
+                    result.origin.y,
+                    result.origin.z
+                );
+            }
+            const inst = this.runtime.GetInstanceByUID(uid);
+            if (!inst) continue;
+            const behInst = inst.GetBehaviorSdkInstanceFromCtor(
+                C3.Behaviors.mikal_cannon_3d_physics
+            );
+            if (!behInst) continue;
+            if (result.hasHit) {
+                const hitPointWorld = vec3.create();
+                vec3.add(
+                    hitPointWorld,
+                    origin,
+                    vec3.mul(
+                        dir,
+                        dir,
+                        vec3.fromValues(
+                            result.timeOfImpact,
+                            result.timeOfImpact,
+                            result.timeOfImpact
+                        )
+                    )
+                );
+                behInst.raycastResult = {
+                    hasHit: true,
+                    hitFaceIndex: 0,
+                    hitPointWorld: [
+                        hitPointWorld[0] * scale,
+                        hitPointWorld[1] * scale,
+                        hitPointWorld[2] * scale,
+                    ],
+                    hitNormalWorld: [
+                        result.normal.x,
+                        result.normal.y,
+                        result.normal.z,
+                    ],
+                    distance:
+                        vec3.distance(origin, [
+                            hitPointWorld[0],
+                            hitPointWorld[1],
+                            hitPointWorld[2],
+                        ]) * scale,
+                    hitUID: result.hitUID,
+                    tag,
+                };
+            } else {
+                behInst.raycastResult = {
+                    hasHit: false,
+                    hitFaceIndex: -1,
+                    hitPointWorld: [0, 0, 0],
+                    hitNormalWorld: [0, 0, 0],
+                    distance: 0,
+                    hitUID: -1,
+                    tag,
+                };
+            }
+
+            behInst.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyRaycastResult
+            );
+            behInst.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnRaycastResult
+            );
+        }
+    }
+
     async sendCommandsToWorker() {
         // Run only once per tick
         if (!this.worldReady || !this.commands || this.commands.length === 0)
@@ -563,6 +646,9 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         }
         if (!bodies) return;
         this.updateBodies(bodies);
+        if (worldData.raycastResults?.length > 0) {
+            this.handleRaycastResults(worldData.raycastResults);
+        }
         this.runtime.UpdateRender();
     }
 

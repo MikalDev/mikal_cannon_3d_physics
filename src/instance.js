@@ -54,6 +54,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 SetPositionOffset: 23,
                 AddRevoluteJoint: 24,
                 CastShape: 25, // Added command type for castShape
+                SetCCD: 26,
             };
             this._StartTicking();
             this._StartTicking2();
@@ -187,7 +188,13 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 pluginType instanceof C3?.Plugins?.Sprite
             ) {
                 this.pluginType = "SpritePlugin";
-                this.DefineBody(this.pluginType, null, null, this.bodyType, this.colliderType);
+                this.DefineBody(
+                    this.pluginType,
+                    null,
+                    null,
+                    this.bodyType,
+                    this.colliderType
+                );
                 this.Trigger(
                     C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
                 );
@@ -533,6 +540,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             if (!this.PhysicsType.worldReady) {
                 this.raycastResult = {
                     hasHit: false,
+                    tag,
                 };
                 return;
             }
@@ -557,7 +565,14 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 maxToI,
                 filterGroups,
                 skipBackfaces,
+                uid: this.uid,
+                tag,
             };
+            if (tag.includes("-batch")) {
+                // Send batched command instead of raycasting with comlink
+                this.PhysicsType.commands.push(command);
+                return;
+            }
             const result = await this.comRapier.raycast(command);
             if (result.hasHit) {
                 const hitPointWorld = vec3.create();
@@ -656,6 +671,15 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 uid: this.uid,
                 type: this.CommandType.SetLinearDamping,
                 damping,
+            };
+            this.PhysicsType.commands.push(command);
+        }
+
+        _SetCCD(enable) {
+            const command = {
+                uid: this.uid,
+                type: this.CommandType.SetCCD,
+                enable,
             };
             this.PhysicsType.commands.push(command);
         }
