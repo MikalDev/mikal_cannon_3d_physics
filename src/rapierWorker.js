@@ -8797,14 +8797,11 @@ function addBody(config) {
     if (config.shapeType === ShapeType.ModelMesh && config.modelMesh) {
         // Model Mesh
         config.modelMesh.meshes.forEach((mesh) => {
-            const colliderDesc = RAPIER.ColliderDesc.trimesh(
-                mesh.vertices,
-                mesh.indices
-            );
-            // Set sensor property during creation if specified
-            if (config.colliderType === ColliderType.Sensor) {
-                colliderDesc.setSensor(true);
-            }
+            const colliderDesc = RAPIER.ColliderDesc.convexHull(mesh.vertices);
+            // // Set sensor property during creation if specified
+            // if (config.colliderType === ColliderType.Sensor) {
+            //    colliderDesc.setSensor(true);
+            // }
             const collider = rapierWorld.createCollider(colliderDesc, body);
             collider.setMass(config.mass);
             collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
@@ -9083,22 +9080,29 @@ function raycast(config) {
     const uid = config.uid;
     let filterGroups = parseInt(config.filterGroups, 16);
     filterGroups = 0xffff0000 | filterGroups;
-    let result = rapierWorld.castRayAndGetNormal(
+    let resultRaw = rapierWorld.castRayAndGetNormal(
         ray,
         maxToI,
         solid,
         null,
         filterGroups
     );
-    const parent = result?.collider?.parent();
+    let result = {};
+    const parent = resultRaw?.collider?.parent();
     const hitUID = parent?.uid;
-    if (result) {
+    if (resultRaw) {
         result.hitUID = hitUID;
         result.hasHit = true;
         result.uid = uid;
-        result.dir = dir;
-        result.origin = origin;
+        result.dir = { x: dir.x, y: dir.y, z: dir.z };
+        result.origin = { x: origin.x, y: origin.y, z: origin.z };
         result.tag = config.tag;
+        result.timeOfImpact = resultRaw.timeOfImpact;
+        result.normal = {
+            x: resultRaw.normal.x,
+            y: resultRaw.normal.y,
+            z: resultRaw.normal.z,
+        };
     } else {
         result = { hasHit: false, hitUID: -1, uid };
     }
