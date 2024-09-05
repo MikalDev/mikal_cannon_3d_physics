@@ -30,7 +30,8 @@
               "box": "Box",
               "sphere": "Sphere",
               "cylinder": "Cylinder",
-              "capsule": "Capsule"
+              "capsule": "Capsule",
+              "convexHulls": "Convex Hulls"
             }
           },
           "bodyType": {

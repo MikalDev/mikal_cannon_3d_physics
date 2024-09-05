@@ -8555,13 +8555,14 @@ function enablePhysics(config) {
     }
 }
 
-const ShapeType = {
+const ShapeTypeProperty = {
     Auto: 0,
     ModelMesh: 1,
     Box: 2,
     Sphere: 3,
     Cylinder: 4,
     Capsule: 5,
+    ConvexHulls: 6,
 };
 
 const ColliderType = {
@@ -8574,25 +8575,25 @@ function createDefaultCollider(config) {
     const shapeType = config.shapeType;
     let colliderDesc;
     switch (shapeType) {
-        case ShapeType.Box:
+        case ShapeTypeProperty.Box:
             colliderDesc = RAPIER.ColliderDesc.cuboid(
                 config.width / 2,
                 config.height / 2,
                 config.depth / 2
             );
             break;
-        case ShapeType.Sphere:
+        case ShapeTypeProperty.Sphere:
             colliderDesc = RAPIER.ColliderDesc.ball(
                 Math.max(config.width, config.height, config.depth) / 2
             );
             break;
-        case ShapeType.Cylinder:
+        case ShapeTypeProperty.Cylinder:
             colliderDesc = RAPIER.ColliderDesc.cylinder(
                 config.depth / 2,
                 config.width / 2
             );
             break;
-        case ShapeType.Capsule:
+        case ShapeTypeProperty.Capsule:
             colliderDesc = RAPIER.ColliderDesc.capsule(
                 config.depth / 2,
                 config.width / 2
@@ -8794,14 +8795,26 @@ function addBody(config) {
 
     const body = rapierWorld.createRigidBody(rigidBodyDesc);
 
-    if (config.shapeType === ShapeType.ModelMesh && config.modelMesh) {
+    if (
+        (config.shapeType === ShapeTypeProperty.ModelMesh ||
+            config.shapeType == ShapeTypeProperty.ConvexHulls) &&
+        config.modelMesh
+    ) {
         // Model Mesh
         config.modelMesh.meshes.forEach((mesh) => {
-            const colliderDesc = RAPIER.ColliderDesc.convexHull(mesh.vertices);
-            // // Set sensor property during creation if specified
-            // if (config.colliderType === ColliderType.Sensor) {
-            //    colliderDesc.setSensor(true);
-            // }
+            let colliderDesc;
+            if (config.shapeType === ShapeTypeProperty.ModelMesh) {
+                colliderDesc = RAPIER.ColliderDesc.trimesh(
+                    mesh.vertices,
+                    mesh.indices
+                );
+            } else {
+                colliderDesc = RAPIER.ColliderDesc.convexHull(mesh.vertices);
+            }
+            // Set sensor property during creation if specified
+            if (config.colliderType === ColliderType.Sensor) {
+                colliderDesc.setSensor(true);
+            }
             const collider = rapierWorld.createCollider(colliderDesc, body);
             collider.setMass(config.mass);
             collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
@@ -9515,7 +9528,8 @@ function runCommands(commands) {
 function removeBody(config) {
     const uid = config.uid;
     const handle = uidHandle.get(uid);
-    if (bufferIfNoHandle(handle, config)) return;
+    uidHandle.delete(uid);
+    if (!handle) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         rapierWorld.removeRigidBody(body);
