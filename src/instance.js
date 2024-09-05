@@ -408,20 +408,23 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             const rotQuat = globalThis.glMatrix.quat.create();
             globalThis.glMatrix.quat.fromEuler(rotQuat, xAngle, yAngle, zAngle);
 
-            // const shapeTypeMap = {
-            //     0: "auto",
-            //     1: "modelMesh",
-            //     2: "box",
-            //     3: "sphere",
-            //     4: "cylinder",
-            //     5: "capsule"
-            // };
+            const ShapeTypeProperty = {
+                Auto: 0,
+                ModelMesh: 1,
+                Box: 2,
+                Sphere: 3,
+                Cylinder: 4,
+                Capsule: 5,
+                ConvexHulls: 6,
+            };
 
-            // const shapePropertyMap = shapeTypeMap[shapeTypeMap]; // Map the numerical value to a shape type string
             // Model Mesh data
             let modelMesh = null;
 
-            if (shapeProperty === 1) {
+            if (
+                shapeProperty === ShapeTypeProperty.ModelMesh ||
+                shapeProperty === ShapeTypeProperty.ConvexHulls
+            ) {
                 const drawMeshes = inst.gltf.drawMeshes;
 
                 const meshes = drawMeshes.map((mesh) => {

@@ -72,7 +72,8 @@ const BEHAVIOR_INFO = {
   "box",
   "sphere",
   "cylinder",
-  "capsule"
+  "capsule",
+  "convexHulls"
 ],
             },
           },
