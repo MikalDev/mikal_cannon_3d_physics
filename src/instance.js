@@ -1125,7 +1125,14 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 filterGroups,
                 excludeUID,
                 skipBackfaces,
+                tag,
+                uid: this._inst.GetUID(),
             };
+
+            if (tag.includes("-batch")) {
+                this.PhysicsType.commands.push(command);
+                return;
+            }
 
             const result = await this.comRapier.castShape(command);
             if (result.hasHit) {

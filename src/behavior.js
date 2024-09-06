@@ -514,11 +514,101 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         }
     }
 
-    handleRaycastResults(raycastResults) {
+    handleCastShapeResults(castShapeResults) {
         const vec3 = globalThis.glMatrix.vec3;
         const scale = this.scale;
-        if (!raycastResults) return;
-        for (const result of raycastResults) {
+        if (!castShapeResults) return;
+        for (const result of castShapeResults) {
+            const uid = result.uid;
+            const tag = result.tag;
+            const inst = this.runtime.GetInstanceByUID(uid);
+            const origin = result.origin;
+            const direction = result.direction;
+            if (!inst) continue;
+            const behInst = inst.GetBehaviorSdkInstanceFromCtor(
+                C3.Behaviors.mikal_cannon_3d_physics
+            );
+            if (!behInst) continue;
+            if (result.hasHit) {
+                const hitPointWorld = vec3.create();
+                vec3.add(
+                    hitPointWorld,
+                    origin,
+                    vec3.mul(
+                        direction,
+                        direction,
+                        vec3.fromValues(
+                            result.time_of_impact,
+                            result.time_of_impact,
+                            result.time_of_impact
+                        )
+                    )
+                );
+                behInst.castShapeResult = {
+                    hasHit: true,
+                    hitPointWorld: [
+                        hitPointWorld[0] * scale,
+                        hitPointWorld[1] * scale,
+                        hitPointWorld[2] * scale,
+                    ],
+                    witness1: [
+                        result.witness1.x,
+                        result.witness1.y,
+                        result.witness1.z,
+                    ],
+                    witness2: [
+                        result.witness2.x,
+                        result.witness2.y,
+                        result.witness2.z,
+                    ],
+                    normal1: [
+                        result.normal1.x,
+                        result.normal1.y,
+                        result.normal1.z,
+                    ],
+                    normal2: [
+                        result.normal2.x,
+                        result.normal2.y,
+                        result.normal2.z,
+                    ],
+                    distance:
+                        vec3.distance(origin, [
+                            hitPointWorld[0],
+                            hitPointWorld[1],
+                            hitPointWorld[2],
+                        ]) * scale,
+                    hitUID: result.hitUID,
+                    tag,
+                };
+            } else {
+                behInst.castShapeResult = {
+                    hasHit: false,
+                    hitPointWorld: [0, 0, 0],
+                    witness1: [0, 0, 0],
+                    witness2: [0, 0, 0],
+                    normal1: [0, 0, 0],
+                    normal2: [0, 0, 0],
+                    distance: 0,
+                    hitUID: -1,
+                    tag,
+                };
+            }
+
+            behInst.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyCastShapeResult
+            );
+            behInst.Trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCastShapeResult
+            );
+            return true;
+        }
+    }
+
+    handleCastRayResults(castRayResults) {
+        const vec3 = globalThis.glMatrix.vec3;
+        const scale = this.scale;
+        if (!castRayResults) return;
+        for (const result of castRayResults) {
             const uid = result.uid;
             const tag = result.tag;
             const dir = vec3.create();
@@ -646,9 +736,14 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
         }
         if (!bodies) return;
         this.updateBodies(bodies);
-        if (worldData.raycastResults?.length > 0) {
-            this.handleRaycastResults(worldData.raycastResults);
+
+        if (worldData.castRayResults?.length > 0) {
+            this.handleCastRayResults(worldData.castRayResults);
         }
+        if (worldData.castShapeResults?.length > 0) {
+            this.handleCastShapeResults(worldData.castShapeResults);
+        }
+
         this.runtime.UpdateRender();
     }
 

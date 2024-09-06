@@ -8450,7 +8450,8 @@ let timestepValue = 1 / 60;
 let collisionEvents = [];
 let characterControllerCollisionEvents = [];
 let postDefineCommands = new Map();
-let raycastResults = [];
+let castRayResults = [];
+let castShapeResults = [];
 
 const CommandType = {
     AddBody: 0,
@@ -8979,13 +8980,16 @@ function stepWorld(dt, frame) {
         bodiesData[i++] = rotation.z;
         bodiesData[i++] = rotation.w;
     });
-    const raycastResultsCopy = raycastResults.slice();
-    raycastResults = [];
+    const castRayResultsCopy = castRayResults.slice();
+    const castShapeResultsCopy = castShapeResults.slice();
+    castRayResults = [];
+    castShapeResults = [];
     const worldData = {
         bodiesData,
         collisionEvents,
         frame,
-        raycastResults: raycastResultsCopy,
+        castRayResults: castRayResultsCopy,
+        castShapeResults: castShapeResultsCopy,
     };
     return Comlink.transfer(worldData, [worldData.bodiesData.buffer]);
 }
@@ -9117,9 +9121,10 @@ function raycast(config) {
             z: resultRaw.normal.z,
         };
     } else {
+        // @ts-ignore
         result = { hasHit: false, hitUID: -1, uid };
     }
-    raycastResults.push(result);
+    castRayResults.push(result);
     return result;
 }
 
@@ -9192,12 +9197,43 @@ function castShape(config) {
 
         const parent = result?.collider?.parent();
         const hitUID = parent?.uid;
+        let returnResult = {};
         if (result) {
-            result.hitUID = hitUID;
-            result.hasHit = true;
+            returnResult.uid = config.uid;
+            returnResult.hitUID = hitUID;
+            returnResult.hasHit = true;
+            returnResult.time_of_impact = result.time_of_impact;
+            returnResult.direction = [config.dir.x, config.dir.y, config.dir.z];
+            returnResult.origin = [
+                config.origin.x,
+                config.origin.y,
+                config.origin.z,
+            ];
+            returnResult.witness1 = {
+                x: result.witness1.x,
+                y: result.witness1.y,
+                z: result.witness1.z,
+            };
+            returnResult.witness2 = {
+                x: result.witness2.x,
+                y: result.witness2.y,
+                z: result.witness2.z,
+            };
+            returnResult.normal1 = {
+                x: result.normal1.x,
+                y: result.normal1.y,
+                z: result.normal1.z,
+            };
+            returnResult.normal2 = {
+                x: result.normal2.x,
+                y: result.normal2.y,
+                z: result.normal2.z,
+            };
+            returnResult.tag = config.tag;
         } else {
-            result = { hasHit: false, hitUID: -1 };
+            returnResult = { hasHit: false, hitUID: -1 };
         }
+        castShapeResults.push(returnResult);
         return result;
     } catch (error) {
         console.error("Error in castShape:", error);
@@ -9509,6 +9545,7 @@ const commandFunctions = {
     [CommandType.SetPositionOffset]: setPositionOffset,
     [CommandType.AddRevoluteJoint]: addRevoluteJoint,
     [CommandType.SetCCD]: setCCD,
+    [CommandType.CastShape]: castShape,
 };
 
 function runCommands(commands) {
