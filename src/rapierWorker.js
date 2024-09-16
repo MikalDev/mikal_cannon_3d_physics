@@ -9249,7 +9249,7 @@ function castShape(config) {
             returnResult = { hasHit: false, hitUID: -1 };
         }
         castShapeResults.push(returnResult);
-        return result;
+        return returnResult;
     } catch (error) {
         console.error("Error in castShape:", error);
         throw error;

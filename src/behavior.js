@@ -600,7 +600,6 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends C3.SDKBehaviorBase {
             behInst.Trigger(
                 C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCastShapeResult
             );
-            return true;
         }
     }
 
