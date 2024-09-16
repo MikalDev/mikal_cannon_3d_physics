@@ -55,6 +55,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 AddRevoluteJoint: 24,
                 CastShape: 25, // Added command type for castShape
                 SetCCD: 26,
+                SetSizeOverride: 27,
             };
             this._StartTicking();
             this._StartTicking2();
@@ -106,7 +107,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     this.shapeProperty,
                     this.bodyType,
                     this.colliderType,
-                    wi
+                    wi,
+                    false
                 );
                 // Not ready
                 if (!result) return;
@@ -349,6 +351,96 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             this.PhysicsType.commands.push(command);
         }
 
+        _SetSizeOverride(enable, height, width, depth) {
+            this.sizeOverride = enable;
+            this.bodySizeHeight = height;
+            this.bodySizeWidth = width;
+            this.bodySizeDepth = depth;
+            if (this.pluginType == "3DObjectPlugin") {
+                this._create3DObjectShape(
+                    this.shapeProperty,
+                    this.bodyType,
+                    this.colliderType,
+                    wi,
+                    enable
+                );
+                return;
+            }
+            // Only works for 3DShape and Sprite
+            if (!enable) {
+                this._UpdateBody();
+                return;
+            }
+            const PhysicsType = this._behaviorType._behavior;
+            const shapeInst = this._inst.GetSdkInstance();
+            const wi = this._inst.GetWorldInfo();
+            const quat = globalThis.glMatrix.quat;
+            let zHeight = shapeInst._zHeight;
+            if (!zHeight) zHeight = 0;
+            const enableRot = [true, true, true];
+            const initialQuat = quat.create();
+            quat.fromEuler(initialQuat, 0, 0, (wi.GetAngle() * 180) / Math.PI);
+            const scale = PhysicsType.scale;
+            let command = null;
+            const pluginType = this._inst.GetPlugin();
+            if (this.pluginType == "Shape3DPlugin") {
+                // 3DShape can only rotate around z axis
+                if (!this.rotate3D) {
+                    enableRot[0] = false;
+                    enableRot[1] = false;
+                }
+                const shape = this._inst.GetSdkInstance()._shape;
+                command = {
+                    type: this.CommandType.SetSizeOverride,
+                    uid: this._inst.GetUID(),
+                    x: wi.GetX() / scale,
+                    y: wi.GetY() / scale,
+                    z: (wi.GetZElevation() + zHeight / 2) / scale,
+                    q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
+                    width: width / scale,
+                    height: height / scale,
+                    depth: depth / scale,
+                    immovable: this.immovable,
+                    enableRot0: enableRot[0],
+                    enableRot1: enableRot[1],
+                    enableRot2: enableRot[2],
+                    shapeType: this.shapeProperty,
+                    bodyType: this.bodyType,
+                    colliderType: this.colliderType,
+                    shape,
+                    mass: this.mass,
+                };
+            } else if (this.pluginType == "SpritePlugin") {
+                const scale = PhysicsType.scale;
+                const meshPoints = this._getMeshPoints(wi);
+                command = {
+                    type: this.CommandType.UpdateBody,
+                    uid: this._inst.GetUID(),
+                    x: (wi.GetX() - wi.GetWidth() / 2) / scale,
+                    y: (wi.GetY() - wi.GetHeight() / 2) / scale,
+                    z: wi.GetZElevation() / scale,
+                    q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
+                    width: wi.GetWidth() / scale,
+                    height: wi.GetHeight() / scale,
+                    depth: zHeight / scale,
+                    immovable: this.immovable,
+                    enableRot0: enableRot[0],
+                    enableRot1: enableRot[1],
+                    enableRot2: enableRot[2],
+                    shapeType: this.shapeProperty,
+                    bodyType: this.bodyType,
+                    colliderType: this.colliderType,
+                    shape: null,
+                    mass: this.mass,
+                    meshPoints: meshPoints,
+                };
+            } else {
+                console.error("invalid pluginType", pluginType);
+                return;
+            }
+            this.PhysicsType.commands.push(command);
+        }
+
         _quaternionToEuler(quat) {
             // XYZ
             // Quaternion components
@@ -375,7 +467,13 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             return [pitch, yaw, roll]; // Returns Euler angles in radians
         }
 
-        _create3DObjectShape(shapeProperty, bodyType, colliderType, worldInfo) {
+        _create3DObjectShape(
+            shapeProperty,
+            bodyType,
+            colliderType,
+            worldInfo,
+            overrideSize
+        ) {
             // Get bbox of 3DObject
             const inst = this._inst.GetSdkInstance();
             const xMinBB = inst.xMinBB;
@@ -458,8 +556,11 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 };
             }
 
+            const commandType = overrideSize
+                ? this.CommandType.SetSizeOverride
+                : this.CommandType.AddBody;
             const command = {
-                type: this.CommandType.AddBody,
+                type: commandType,
                 uid: this._inst.GetUID(),
                 x: wi.GetX() / scale,
                 y: wi.GetY() / scale,

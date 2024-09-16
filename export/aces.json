@@ -1071,7 +1071,36 @@
           {
             "id": "targetUID",
             "type": "number",
-            "initialValue": "0"
+            "initialValue": 0
+          }
+        ]
+      },
+      {
+        "id": "SetSizeOverride",
+        "scriptName": "SetSizeOverride",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "enable",
+            "type": "boolean",
+            "initialValue": "false"
+          },
+          {
+            "id": "height",
+            "type": "number",
+            "initialValue": 1
+          },
+          {
+            "id": "width",
+            "type": "number",
+            "initialValue": 1
+          },
+          {
+            "id": "depth",
+            "type": "number",
+            "initialValue": 1
           }
         ]
       }

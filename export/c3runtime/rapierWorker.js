@@ -8481,6 +8481,7 @@ const CommandType = {
     AddRevoluteJoint: 24,
     CastShape: 25, // Add this line for CastShape
     SetCCD: 26,
+    SetSizeOverride: 27,
 };
 
 const BodyType = {
@@ -9087,6 +9088,20 @@ function applyForce(config) {
     }
 }
 
+function setSizeOverride(config) {
+    if (!rapierWorld) return;
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    let body = rapierWorld.bodies.get(handle);
+    // Remove the body if it exists
+    if (body) {
+        rapierWorld.removeRigidBody(body);
+    }
+    uidHandle.delete(uid);
+    addBody(config);
+}
+
 // Add function to do a raycast
 function raycast(config) {
     const origin = config.origin;
@@ -9546,6 +9561,7 @@ const commandFunctions = {
     [CommandType.AddRevoluteJoint]: addRevoluteJoint,
     [CommandType.SetCCD]: setCCD,
     [CommandType.CastShape]: castShape,
+    [CommandType.SetSizeOverride]: setSizeOverride,
 };
 
 function runCommands(commands) {

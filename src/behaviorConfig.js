@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.22.0",
+    version: "2.23.0",
     category:
         // "attributes",
         "movements",
@@ -1562,13 +1562,55 @@ module.exports = {
                     name: "Target UID",
                     desc: "Target body UID",
                     type: "number",
-                    initialValue: "0",
+                    initialValue: 0,
                 },
             ],
             listName: "Add revolute joint",
             displayText:
                 "Add {my} revolute joint to uid {6} at {0}, {1}, {2} to {3}, {4}, {5} with axis {7}, {8}, {9}",
             description: "Add revolute joint between self and target.",
+        },
+        SetSizeOverride: {
+            category: "body",
+            forward: "_SetSizeOverride",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "enable",
+                    name: "Enable",
+                    desc: "Enable size override.",
+                    type: "boolean",
+                    initialValue: "false",
+                },
+                {
+                    id: "height",
+                    name: "Height",
+                    desc: "Override height.",
+                    type: "number",
+                    initialValue: 1,
+                },
+                {
+                    id: "width",
+                    name: "Width",
+                    desc: "Override width.",
+                    type: "number",
+                    initialValue: 1,
+                },
+                {
+                    id: "depth",
+                    name: "Depth",
+                    desc: "Override depth.",
+                    type: "number",
+                    initialValue: 1,
+                },
+            ],
+            listName: "Set size override",
+            displayText:
+                "{my} enable {0} set size override to height {1}, width {2}, depth {3}",
+            description: "Set size override for height, width, and depth.",
         },
 
         /*

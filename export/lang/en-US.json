@@ -785,6 +785,29 @@
                 "desc": "Target body UID"
               }
             }
+          },
+          "SetSizeOverride": {
+            "list-name": "Set size override",
+            "display-text": "{my} enable {0} set size override to height {1}, width {2}, depth {3}",
+            "description": "Set size override for height, width, and depth.",
+            "params": {
+              "enable": {
+                "name": "Enable",
+                "desc": "Enable size override."
+              },
+              "height": {
+                "name": "Height",
+                "desc": "Override height."
+              },
+              "width": {
+                "name": "Width",
+                "desc": "Override width."
+              },
+              "depth": {
+                "name": "Depth",
+                "desc": "Override depth."
+              }
+            }
           }
         },
         "conditions": {
