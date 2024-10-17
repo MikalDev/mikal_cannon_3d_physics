@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.23.1",
+    version: "2.24.0",
     category:
         // "attributes",
         "movements",
@@ -615,6 +615,51 @@ module.exports = {
             // The description of the action as it appears in the add action dialog
             description: "Set linear damping",
         },
+
+        SetRestitution: {
+            category: "body",
+            forward: "_SetRestitution",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "restitution",
+                    name: "Restitution",
+                    desc: "Restitution (bounciness) for the body.",
+                    type: "number",
+                    initialValue: "0.0",
+                },
+            ],
+            listName: "Set restitution",
+            displayText: "Set {my} restitution to {0}",
+            description: "Set the restitution (bounciness) of a body.",
+        },
+
+        SetFriction: {
+            category: "body",
+            forward: "_SetFriction",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "friction",
+                    name: "Friction",
+                    desc: "Friction for body.",
+                    type: "number",
+                    initialValue: "0.1",
+                },
+            ],
+            listName: "Set friction",
+            displayText: "Set {my} friction to {0}",
+            description: "Set the friction of a body.",
+        },
+
+        
+        
         SetPositionOffset: {
             // The category of the action as it appears in the add action dialog
             category: "body",

@@ -8482,6 +8482,8 @@ const CommandType = {
     CastShape: 25, // Add this line for CastShape
     SetCCD: 26,
     SetSizeOverride: 27,
+    SetRestitution: 28,
+    SetFriction: 29,
 };
 
 const BodyType = {
@@ -8535,6 +8537,32 @@ function setTimestep(config) {
             timestepValue = config.value;
             if (rapierWorld) rapierWorld.timestep = timestepValue;
             break;
+    }
+}
+
+function setRestitution(config) {
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        const collider = body.collider(0);  // Get the first collider of the body
+        if (collider) {
+            collider.setRestitution(config.restitution);
+        }
+    }
+}
+
+function setFriction(config) {
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        const collider = body.collider(0);  // Get the first collider of the body
+        if (collider) {
+            collider.setFriction(config.friction);
+        }
     }
 }
 
@@ -9562,6 +9590,8 @@ const commandFunctions = {
     [CommandType.SetCCD]: setCCD,
     [CommandType.CastShape]: castShape,
     [CommandType.SetSizeOverride]: setSizeOverride,
+    [CommandType.SetRestitution]: setRestitution,
+    [CommandType.SetFriction]: setFriction,
 };
 
 function runCommands(commands) {

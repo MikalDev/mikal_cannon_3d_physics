@@ -290,6 +290,28 @@
               }
             }
           },
+          "SetRestitution": {
+            "list-name": "Set restitution",
+            "display-text": "Set {my} restitution to {0}",
+            "description": "Set the restitution (bounciness) of a body.",
+            "params": {
+              "restitution": {
+                "name": "Restitution",
+                "desc": "Restitution (bounciness) for the body."
+              }
+            }
+          },
+          "SetFriction": {
+            "list-name": "Set friction",
+            "display-text": "Set {my} friction to {0}",
+            "description": "Set the friction of a body.",
+            "params": {
+              "friction": {
+                "name": "Friction",
+                "desc": "Friction for body."
+              }
+            }
+          },
           "SetPositionOffset": {
             "list-name": "Set position offset",
             "display-text": "Set {my} position offset to {0},{1},{2}",

@@ -56,6 +56,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 CastShape: 25, // Added command type for castShape
                 SetCCD: 26,
                 SetSizeOverride: 27,
+                SetRestitution: 28,
+                SetFriction: 29,
             };
             this._StartTicking();
             this._StartTicking2();
@@ -775,6 +777,24 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 uid: this.uid,
                 type: this.CommandType.SetLinearDamping,
                 damping,
+            };
+            this.PhysicsType.commands.push(command);
+        }
+
+        _SetRestitution(restitution) {
+            const command = {
+                uid: this.uid,
+                type: this.CommandType.SetRestitution,
+                restitution,
+            };
+            this.PhysicsType.commands.push(command);
+        }
+
+        _SetFriction(friction) {
+            const command = {
+                uid: this.uid,
+                type: this.CommandType.SetFriction,
+                friction,
             };
             this.PhysicsType.commands.push(command);
         }

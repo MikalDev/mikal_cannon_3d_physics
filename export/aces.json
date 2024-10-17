@@ -484,6 +484,34 @@
         ]
       },
       {
+        "id": "SetRestitution",
+        "scriptName": "SetRestitution",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "restitution",
+            "type": "number",
+            "initialValue": "0.0"
+          }
+        ]
+      },
+      {
+        "id": "SetFriction",
+        "scriptName": "SetFriction",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "friction",
+            "type": "number",
+            "initialValue": "0.1"
+          }
+        ]
+      },
+      {
         "id": "SetPositionOffset",
         "scriptName": "SetPositionOffset",
         "highlight": false,
