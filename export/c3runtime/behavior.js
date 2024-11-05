@@ -1888,7 +1888,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 uid: this.uid,
                 tag,
             };
-            if (tag.includes("-batch")) {
+            // Always send batched command instead of raycasting with comlink
+            if (true) {
                 // Send batched command instead of raycasting with comlink
                 this.PhysicsType.commands.push(command);
                 return;
@@ -2464,7 +2465,8 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 uid: this._inst.GetUID(),
             };
 
-            if (tag.includes("-batch")) {
+            // Always send batched command instead of raycasting with comlink
+            if (true) {
                 this.PhysicsType.commands.push(command);
                 return;
             }
