@@ -9165,7 +9165,7 @@ function raycast(config) {
         };
     } else {
         // @ts-ignore
-        result = { hasHit: false, hitUID: -1, uid };
+        result = { hasHit: false, hitUID: -1, uid, tag: config.tag };
     }
     castRayResults.push(result);
     return result;
@@ -9241,7 +9241,7 @@ function castShape(config) {
         const parent = result?.collider?.parent();
         const hitUID = parent?.uid;
         let returnResult = {};
-        if (result) {
+        if (result !== null) {
             returnResult.uid = config.uid;
             returnResult.hitUID = hitUID;
             returnResult.hasHit = true;
@@ -9274,7 +9274,7 @@ function castShape(config) {
             };
             returnResult.tag = config.tag;
         } else {
-            returnResult = { hasHit: false, hitUID: -1 };
+            returnResult = { hasHit: false, hitUID: -1, tag:config.tag, uid:config.uid };
         }
         castShapeResults.push(returnResult);
         return returnResult;
