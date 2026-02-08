@@ -41,11 +41,6 @@ module.exports = {
             type: "copy-to-output",
             fileType: "text/javascript",
         },
-        {
-            filename: "comlink.js",
-            type: "copy-to-output",
-            fileType: "text/javascript",
-        },
     ],
     info: {
         Set: {

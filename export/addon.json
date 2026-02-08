@@ -1,5 +1,6 @@
 {
   "is-c3-addon": true,
+  "sdk-version": 2,
   "type": "behavior",
   "name": "Rapier 3D Physics",
   "id": "mikal_cannon_3d_physics",
@@ -24,7 +25,6 @@
     "icon.svg",
     "editor.js",
     "c3runtime/rapierWorker.js",
-    "c3runtime/rapier3d-compat.js",
-    "c3runtime/comlink.js"
+    "c3runtime/rapier3d-compat.js"
   ]
 }

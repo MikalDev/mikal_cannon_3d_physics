@@ -67,6 +67,7 @@ function getFileListFromConfig(config) {
 function addonFromConfig(config) {
   return {
     "is-c3-addon": true,
+    "sdk-version": 2,
     type: config.addonType,
     name: config.name,
     id: config.id,
@@ -547,12 +548,10 @@ function getRuntimePluginInfoFromConfig(config) {
 // write behavior.js and replace "//<-- BEHAVIOR_INFO -->" with the plugin info
 const plugin = fs.readFileSync("./src/behavior.js", "utf8");
 const instance = fs.readFileSync("./src/instance.js", "utf8");
-const scriptInterface = fs.readFileSync("./src/scriptInterface.js", "utf8");
 const pluginPluginInfo = getRuntimePluginInfoFromConfig(config);
 const pluginWithPluginInfo = plugin
   .replaceAll("//<-- BEHAVIOR_INFO -->", pluginPluginInfo)
-  .replaceAll("//<-- INSTANCE -->", instance)
-  .replaceAll("//<-- SCRIPT_INTERFACE -->", scriptInterface);
+  .replaceAll("//<-- INSTANCE -->", instance);
 
 fs.writeFileSync("./export/c3runtime/behavior.js", pluginWithPluginInfo);
 

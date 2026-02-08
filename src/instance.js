@@ -1,8 +1,25 @@
-function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
-    return class extends parentClass {
-        constructor(inst, properties) {
-            super(inst);
+// SDK v2: Map string shape types to numeric values for worker
+const ShapeStringToNumber = {
+    "box": 0,
+    "prism": 1,
+    "wedge": 2,
+    "pyramid": 3,
+    "corner-out": 4,
+    "corner-in": 5,
+};
 
+function mapShapeToNumber(shape) {
+    if (typeof shape === "number") return shape;
+    const num = ShapeStringToNumber[shape];
+    return num !== undefined ? num : 0; // default to box
+}
+
+function getInstanceJs(parentClass, addonTriggers, C3) {
+    return class extends parentClass {
+        constructor() {
+            super();
+
+            const properties = this._getInitProperties();
             if (properties) {
                 this.enable = properties[0];
                 this.immovable = properties[1];
@@ -19,9 +36,10 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             this.body = null;
             this.shapePositionOffset = null;
             this.shapeAngleOffset = null;
-            this.uid = this._inst.GetUID();
-            this.PhysicsType = this._behaviorType._behavior;
-            this.comRapier = this.PhysicsType.comRapier;
+            // In SDK v2, this.instance and this.behavior are not available in constructor
+            // They will be initialized in _postCreate()
+            this.uid = null;
+            this.PhysicsType = null;
             this.bodyDefined = false;
             this.setBody = {
                 position: { x: 0, y: 0, z: 0 },
@@ -59,12 +77,16 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 SetRestitution: 28,
                 SetFriction: 29,
             };
-            this._StartTicking();
-            this._StartTicking2();
+            this._setTicking(true);
+            this._setTicking2(true);
         }
 
-        Release() {
-            super.Release();
+        _release() {
+            super._release();
+            // SDK v2: Unregister from behavior instance map
+            if (this.PhysicsType) {
+                this.PhysicsType.unregisterBehaviorInstance(this.uid);
+            }
             if (this.bodyDefined) {
                 const PhysicsType = this.PhysicsType;
                 const command = {
@@ -75,51 +97,36 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             }
         }
 
-        SaveToJson() {
+        _saveToJson() {
             return {
                 // data to be saved for savegames
             };
         }
 
-        LoadFromJson(o) {
+        _loadFromJson(o) {
             // load state for savegames
         }
 
-        Tick() {
+        _tick() {
             const PhysicsType = this.PhysicsType;
             PhysicsType.sendCommandsToWorker();
             PhysicsType.Tick();
         }
 
-        Tick2() {
-            const wi = this._inst.GetWorldInfo();
-            const shapeInst = this._inst.GetSdkInstance();
-            let zHeight = shapeInst._zHeight || 0;
+        _tick2() {
+            // SDK v2: Use public IWorldInstance interface
+            const inst = this.instance;
+            const zHeight = inst.depth || 0;
             const bodyDefined = this.bodyDefined;
-            const PhysicsType = this._behaviorType._behavior;
 
-            if (
-                this.pluginType === "3DObjectPlugin" &&
-                !bodyDefined &&
-                this._inst.GetSdkInstance().loaded
-            ) {
-                const loaded = this._inst.GetSdkInstance().loaded;
-                if (!loaded) return;
-                const result = this._create3DObjectShape(
-                    this.shapeProperty,
-                    this.bodyType,
-                    this.colliderType,
-                    wi,
-                    false
-                );
-                // Not ready
-                if (!result) return;
-                this.bodyDefined = true;
-                this.Trigger(
-                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
-                );
-                this._inst.GetSdkInstance()._setCannonBody(this.setBody, true);
-            }
+            // TODO: 3DObjectPlugin support needs plugin-specific API
+            // if (
+            //     this.pluginType === "3DObjectPlugin" &&
+            //     !bodyDefined &&
+            //     inst.loaded
+            // ) {
+            //     ...
+            // }
 
             if (!bodyDefined) return;
             if (!this.enable) return;
@@ -133,22 +140,23 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             if (this.pluginType == "3DObjectPlugin") {
                 this.setBody.position = position;
                 this.setBody.quaternion = quatRot;
-                wi.SetZElevation(position.z);
+                inst.zElevation = position.z;
             } else {
                 const zElevation = position.z - zHeight / 2;
-                wi.SetZElevation(zElevation);
-                wi.SetX(position.x);
-                wi.SetY(position.y);
+                inst.zElevation = zElevation;
+                inst.x = position.x;
+                inst.y = position.y;
                 // angle
-                if (this.rotate3D) {
-                    this.rotate3D._useQuaternion = true;
-                    this.rotate3D._quaternion = [
-                        quatRot.x,
-                        quatRot.y,
-                        quatRot.z,
-                        quatRot.w,
-                    ];
-                } else {
+                // TODO: Re-enable 3D Rotate support
+                // if (this.rotate3D) {
+                //     this.rotate3D._useQuaternion = true;
+                //     this.rotate3D._quaternion = [
+                //         quatRot.x,
+                //         quatRot.y,
+                //         quatRot.z,
+                //         quatRot.w,
+                //     ];
+                // } else {
                     const quat = globalThis.glMatrix.quat;
                     const zRot = quat.fromValues(
                         quatRot.x,
@@ -158,23 +166,32 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     );
                     const angles = this._quaternionToEuler(zRot);
                     const angle = angles[2];
-                    wi.SetAngle(angle);
-                }
+                    inst.angle = angle;
+                // }
             }
-
-            wi.SetBboxChanged();
         }
 
-        PostCreate() {
-            this.rotate3D = this._Behavior3DRotate();
-            const pluginType = this._inst.GetPlugin();
-            if (
-                C3?.Plugins?.Shape3D &&
-                pluginType instanceof C3?.Plugins?.Shape3D
-            ) {
+        _postCreate() {
+            // Initialize properties that require this.instance and this.behavior
+            // (not available in constructor in SDK v2)
+            this.uid = this.instance.uid;
+            this.PhysicsType = this.behavior;
+
+            // SDK v2: Register this behavior instance for collision/raycast lookups
+            this.PhysicsType.registerBehaviorInstance(this.uid, this);
+
+            // TODO: Re-enable 3D Rotate support
+            // this.rotate3D = this._Behavior3DRotate();
+            // SDK v2: Use plugin.id to detect plugin type
+            const plugin = this.instance.objectType.plugin;
+            const pluginId = plugin.id;
+
+            if (pluginId === "Shape3D") {
                 this.pluginType = "Shape3DPlugin";
                 if (!this.bodyDefined) {
-                    const shape = this._inst.GetSdkInstance()._shape;
+                    // SDK v2: Use public I3DShapeInstance.shape property
+                    // Map string shape type to numeric value for worker
+                    const shape = mapShapeToNumber(this.instance.shape);
                     this.DefineBody(
                         this.pluginType,
                         shape,
@@ -183,14 +200,11 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                         this.colliderType
                     );
                     this.bodyDefined = true;
-                    this.Trigger(
+                    this._trigger(
                         C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
                     );
                 }
-            } else if (
-                C3?.Plugins?.Sprite &&
-                pluginType instanceof C3?.Plugins?.Sprite
-            ) {
+            } else if (pluginId === "Sprite") {
                 this.pluginType = "SpritePlugin";
                 this.DefineBody(
                     this.pluginType,
@@ -199,51 +213,47 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     this.bodyType,
                     this.colliderType
                 );
-                this.Trigger(
+                this._trigger(
                     C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
                 );
-            } else if (
-                C3?.Plugins?.Mikal_3DObject &&
-                pluginType instanceof C3?.Plugins?.Mikal_3DObject
-            ) {
+            } else if (pluginId === "Mikal_3DObject") {
                 this.pluginType = "3DObjectPlugin";
-                // define body after loaded
+                // define body after loaded (currently disabled)
             } else {
                 this.pluginType = "invalid";
-                console.error("invalid pluginType", pluginType);
+                console.error("invalid pluginType - plugin id:", pluginId);
             }
         }
 
         async DefineBody(pluginType, shape, shapeType, bodyType, colliderType) {
-            const PhysicsType = this._behaviorType._behavior;
-            const shapeInst = this._inst.GetSdkInstance();
-            const wi = this._inst.GetWorldInfo();
+            // SDK v2: Use public IWorldInstance interface
+            const inst = this.instance;
+            const PhysicsType = this.behavior;
             const quat = globalThis.glMatrix.quat;
-            let zHeight = shapeInst._zHeight;
-            if (!zHeight) zHeight = 0;
-            // let shape = null;
+            const zHeight = inst.depth || 0;
             const enableRot = [true, true, true];
             const scale = PhysicsType.scale;
             const initialQuat = quat.create();
-            quat.fromEuler(initialQuat, 0, 0, (wi.GetAngle() * 180) / Math.PI);
+            // inst.angle is in radians, fromEuler expects degrees
+            quat.fromEuler(initialQuat, 0, 0, (inst.angle * 180) / Math.PI);
             let command = null;
 
             if (pluginType === "Shape3DPlugin") {
                 // 3DShape can only rotate around z axis
-                if (!this.rotate3D) {
+                // TODO: Re-enable 3D Rotate support
+                // if (!this.rotate3D) {
                     enableRot[0] = false;
                     enableRot[1] = false;
-                }
-                // const shape = this._inst.GetSdkInstance()._shape;
+                // }
                 command = {
                     type: this.CommandType.AddBody,
-                    uid: this._inst.GetUID(),
-                    x: wi.GetX() / scale,
-                    y: wi.GetY() / scale,
-                    z: (wi.GetZElevation() + zHeight / 2) / scale,
+                    uid: inst.uid,
+                    x: inst.x / scale,
+                    y: inst.y / scale,
+                    z: (inst.zElevation + zHeight / 2) / scale,
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: wi.GetWidth() / scale,
-                    height: wi.GetHeight() / scale,
+                    width: inst.width / scale,
+                    height: inst.height / scale,
                     depth: zHeight / scale,
                     immovable: this.immovable,
                     enableRot0: enableRot[0],
@@ -256,16 +266,16 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     mass: this.mass,
                 };
             } else if (this.pluginType == "SpritePlugin") {
-                const meshPoints = this._getMeshPoints(wi);
+                const meshPoints = this._getMeshPoints();
                 command = {
                     type: this.CommandType.AddBody,
-                    uid: this._inst.GetUID(),
-                    x: (wi.GetX() - wi.GetWidth() / 2) / scale,
-                    y: (wi.GetY() - wi.GetHeight() / 2) / scale,
-                    z: (wi.GetZElevation() + zHeight / 2) / scale,
+                    uid: inst.uid,
+                    x: (inst.x - inst.width / 2) / scale,
+                    y: (inst.y - inst.height / 2) / scale,
+                    z: (inst.zElevation + zHeight / 2) / scale,
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: wi.GetWidth() / scale,
-                    height: wi.GetHeight() / scale,
+                    width: inst.width / scale,
+                    height: inst.height / scale,
                     depth: zHeight / scale,
                     immovable: this.immovable,
                     enableRot0: enableRot[0],
@@ -283,34 +293,33 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
         }
 
         _UpdateBody() {
-            const PhysicsType = this._behaviorType._behavior;
-            const shapeInst = this._inst.GetSdkInstance();
-            const wi = this._inst.GetWorldInfo();
+            // SDK v2: Use public IWorldInstance interface
+            const inst = this.instance;
+            const PhysicsType = this.behavior;
             const quat = globalThis.glMatrix.quat;
-            let zHeight = shapeInst._zHeight;
-            if (!zHeight) zHeight = 0;
+            const zHeight = inst.depth || 0;
             const enableRot = [true, true, true];
             const initialQuat = quat.create();
-            quat.fromEuler(initialQuat, 0, 0, (wi.GetAngle() * 180) / Math.PI);
+            quat.fromEuler(initialQuat, 0, 0, (inst.angle * 180) / Math.PI);
             const scale = PhysicsType.scale;
             let command = null;
-            const pluginType = this._inst.GetPlugin();
             if (this.pluginType == "Shape3DPlugin") {
                 // 3DShape can only rotate around z axis
-                if (!this.rotate3D) {
+                // TODO: Re-enable 3D Rotate support
+                // if (!this.rotate3D) {
                     enableRot[0] = false;
                     enableRot[1] = false;
-                }
-                const shape = this._inst.GetSdkInstance()._shape;
+                // }
+                const shape = mapShapeToNumber(inst.shape);
                 command = {
                     type: this.CommandType.UpdateBody,
-                    uid: this._inst.GetUID(),
-                    x: wi.GetX() / scale,
-                    y: wi.GetY() / scale,
-                    z: (wi.GetZElevation() + zHeight / 2) / scale,
+                    uid: inst.uid,
+                    x: inst.x / scale,
+                    y: inst.y / scale,
+                    z: (inst.zElevation + zHeight / 2) / scale,
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: wi.GetWidth() / scale,
-                    height: wi.GetHeight() / scale,
+                    width: inst.width / scale,
+                    height: inst.height / scale,
                     depth: zHeight / scale,
                     immovable: this.immovable,
                     enableRot0: enableRot[0],
@@ -323,17 +332,16 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     mass: this.mass,
                 };
             } else if (this.pluginType == "SpritePlugin") {
-                const scale = PhysicsType.scale;
-                const meshPoints = this._getMeshPoints(wi);
+                const meshPoints = this._getMeshPoints();
                 command = {
                     type: this.CommandType.UpdateBody,
-                    uid: this._inst.GetUID(),
-                    x: (wi.GetX() - wi.GetWidth() / 2) / scale,
-                    y: (wi.GetY() - wi.GetHeight() / 2) / scale,
-                    z: wi.GetZElevation() / scale,
+                    uid: inst.uid,
+                    x: (inst.x - inst.width / 2) / scale,
+                    y: (inst.y - inst.height / 2) / scale,
+                    z: inst.zElevation / scale,
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: wi.GetWidth() / scale,
-                    height: wi.GetHeight() / scale,
+                    width: inst.width / scale,
+                    height: inst.height / scale,
                     depth: zHeight / scale,
                     immovable: this.immovable,
                     enableRot0: enableRot[0],
@@ -347,13 +355,15 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     meshPoints: meshPoints,
                 };
             } else {
-                console.error("invalid pluginType", pluginType);
+                console.error("invalid pluginType", this.pluginType);
                 return;
             }
             this.PhysicsType.commands.push(command);
         }
 
         _SetSizeOverride(enable, height, width, depth) {
+            // SDK v2: Use public IWorldInstance interface
+            const inst = this.instance;
             this.sizeOverride = enable;
             this.bodySizeHeight = height;
             this.bodySizeWidth = width;
@@ -363,7 +373,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     this.shapeProperty,
                     this.bodyType,
                     this.colliderType,
-                    wi,
+                    null, // worldInfo not needed with public API
                     enable
                 );
                 return;
@@ -373,31 +383,28 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 this._UpdateBody();
                 return;
             }
-            const PhysicsType = this._behaviorType._behavior;
-            const shapeInst = this._inst.GetSdkInstance();
-            const wi = this._inst.GetWorldInfo();
+            const PhysicsType = this.behavior;
             const quat = globalThis.glMatrix.quat;
-            let zHeight = shapeInst._zHeight;
-            if (!zHeight) zHeight = 0;
+            const zHeight = inst.depth || 0;
             const enableRot = [true, true, true];
             const initialQuat = quat.create();
-            quat.fromEuler(initialQuat, 0, 0, (wi.GetAngle() * 180) / Math.PI);
+            quat.fromEuler(initialQuat, 0, 0, (inst.angle * 180) / Math.PI);
             const scale = PhysicsType.scale;
             let command = null;
-            const pluginType = this._inst.GetPlugin();
             if (this.pluginType == "Shape3DPlugin") {
                 // 3DShape can only rotate around z axis
-                if (!this.rotate3D) {
+                // TODO: Re-enable 3D Rotate support
+                // if (!this.rotate3D) {
                     enableRot[0] = false;
                     enableRot[1] = false;
-                }
-                const shape = this._inst.GetSdkInstance()._shape;
+                // }
+                const shape = mapShapeToNumber(inst.shape);
                 command = {
                     type: this.CommandType.SetSizeOverride,
-                    uid: this._inst.GetUID(),
-                    x: wi.GetX() / scale,
-                    y: wi.GetY() / scale,
-                    z: (wi.GetZElevation() + zHeight / 2) / scale,
+                    uid: inst.uid,
+                    x: inst.x / scale,
+                    y: inst.y / scale,
+                    z: (inst.zElevation + zHeight / 2) / scale,
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
                     width: width / scale,
                     height: height / scale,
@@ -413,17 +420,16 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     mass: this.mass,
                 };
             } else if (this.pluginType == "SpritePlugin") {
-                const scale = PhysicsType.scale;
-                const meshPoints = this._getMeshPoints(wi);
+                const meshPoints = this._getMeshPoints();
                 command = {
                     type: this.CommandType.UpdateBody,
-                    uid: this._inst.GetUID(),
-                    x: (wi.GetX() - wi.GetWidth() / 2) / scale,
-                    y: (wi.GetY() - wi.GetHeight() / 2) / scale,
-                    z: wi.GetZElevation() / scale,
+                    uid: inst.uid,
+                    x: (inst.x - inst.width / 2) / scale,
+                    y: (inst.y - inst.height / 2) / scale,
+                    z: inst.zElevation / scale,
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: wi.GetWidth() / scale,
-                    height: wi.GetHeight() / scale,
+                    width: inst.width / scale,
+                    height: inst.height / scale,
                     depth: zHeight / scale,
                     immovable: this.immovable,
                     enableRot0: enableRot[0],
@@ -437,7 +443,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                     meshPoints: meshPoints,
                 };
             } else {
-                console.error("invalid pluginType", pluginType);
+                console.error("invalid pluginType", this.pluginType);
                 return;
             }
             this.PhysicsType.commands.push(command);
@@ -469,6 +475,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             return [pitch, yaw, roll]; // Returns Euler angles in radians
         }
 
+        // TODO: Re-enable 3DObjectPlugin support
+        // This requires Mikal_3DObject plugin-specific APIs (xMinBB, xMaxBB, gltf, etc.)
+        // that don't have public SDK v2 equivalents
         _create3DObjectShape(
             shapeProperty,
             bodyType,
@@ -476,135 +485,27 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             worldInfo,
             overrideSize
         ) {
-            // Get bbox of 3DObject
-            const inst = this._inst.GetSdkInstance();
-            const xMinBB = inst.xMinBB;
-            const xMaxBB = inst.xMaxBB;
-            // Check if rendered (larger than 0,0,0)
-            if (
-                xMinBB[0] - xMaxBB[0] === 0 &&
-                (xMinBB[0] - xMaxBB[0] === 0) & (xMinBB[0] - xMaxBB[0] === 0)
-            )
-                return false;
-            const h = !this.sizeOverride
-                ? xMaxBB[0] - xMinBB[0]
-                : this.bodySizeWidth;
-            const w = !this.sizeOverride
-                ? xMaxBB[1] - xMinBB[1]
-                : this.bodySizeHeight;
-            const d = !this.sizeOverride
-                ? xMaxBB[2] - xMinBB[2]
-                : this.bodySizeDepth;
-            const PhysicsType = this._behaviorType._behavior;
-            const scale = PhysicsType.scale;
-            const wi = worldInfo;
-
-            const scale3DObject = inst.scale;
-
-            const xAngle = inst.xAngle;
-            const yAngle = inst.yAngle;
-            const zAngle = inst.zAngle;
-
-            const rotQuat = globalThis.glMatrix.quat.create();
-            globalThis.glMatrix.quat.fromEuler(rotQuat, xAngle, yAngle, zAngle);
-
-            const ShapeTypeProperty = {
-                Auto: 0,
-                ModelMesh: 1,
-                Box: 2,
-                Sphere: 3,
-                Cylinder: 4,
-                Capsule: 5,
-                ConvexHulls: 6,
-            };
-
-            // Model Mesh data
-            let modelMesh = null;
-
-            if (
-                shapeProperty === ShapeTypeProperty.ModelMesh ||
-                shapeProperty === ShapeTypeProperty.ConvexHulls
-            ) {
-                const drawMeshes = inst.gltf.drawMeshes;
-
-                const meshes = drawMeshes.map((mesh) => {
-                    const drawVerts = Array.from(mesh.drawVerts[0]);
-
-                    const transformedVertices = transformDrawVerts(
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        inst.xScale,
-                        inst.yScale,
-                        inst.zScale,
-                        drawVerts,
-                        scale,
-                        scale3DObject
-                    );
-
-                    const indices = Array.from(mesh.drawIndices[0]);
-
-                    return {
-                        vertices: transformedVertices,
-                        indices: indices,
-                    };
-                });
-
-                modelMesh = {
-                    meshes: meshes,
-                };
-            }
-
-            const commandType = overrideSize
-                ? this.CommandType.SetSizeOverride
-                : this.CommandType.AddBody;
-            const command = {
-                type: commandType,
-                uid: this._inst.GetUID(),
-                x: wi.GetX() / scale,
-                y: wi.GetY() / scale,
-                z: wi.GetZElevation() / scale,
-                q: {
-                    x: rotQuat[0],
-                    y: rotQuat[1],
-                    z: rotQuat[2],
-                    w: rotQuat[3],
-                },
-                width: h / scale,
-                height: w / scale,
-                depth: d / scale,
-                immovable: this.immovable,
-                enableRot0: true,
-                enableRot1: true,
-                enableRot2: true,
-                shapeType: shapeProperty,
-                bodyType: bodyType,
-                colliderType: colliderType,
-                shape: null,
-                mass: this.mass,
-                modelMesh,
-            };
-            this.PhysicsType.commands.push(command);
-            return true;
+            console.warn("3DObjectPlugin support temporarily disabled - requires plugin-specific APIs");
+            return false;
         }
 
-        // Get mesh points from object
-        _getMeshPoints(worldInfo) {
+        // Get mesh points from object using public IWorldInstance API
+        _getMeshPoints() {
             const scale = this.PhysicsType.scale;
-            const wi = worldInfo;
-            const points = wi?._meshInfo?.sourceMesh?._pts;
-            const width = wi.GetWidth();
-            const height = wi.GetHeight();
+            const inst = this.instance;
+            const meshSize = inst.getMeshSize();
+            if (!meshSize || meshSize[0] === 0 || meshSize[1] === 0) return [];
+            const [cols, rows] = meshSize;
+            const width = inst.width;
+            const height = inst.height;
             const meshPoints = [];
-            for (const rows of points) {
+            for (let row = 0; row < rows; row++) {
                 const meshRow = [];
-                for (const point of rows) {
-                    const x = (point._x * width) / scale;
-                    const y = (point._y * height) / scale;
-                    const z = point._zElevation / scale;
+                for (let col = 0; col < cols; col++) {
+                    const point = inst.getMeshPoint(col, row);
+                    const x = (point.x * width) / scale;
+                    const y = (point.y * height) / scale;
+                    const z = point.z / scale;
                     meshRow.push({ x, y, z });
                 }
                 meshPoints.push(meshRow);
@@ -612,14 +513,18 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
             return meshPoints;
         }
 
-        _Behavior3DRotate() {
-            const inst = this._inst;
-            const rotate3D = inst.GetBehaviorSdkInstanceFromCtor(
-                C3.Behaviors.mikal_rotate_shape
-            );
-            if (!rotate3D) return null;
-            return rotate3D;
-        }
+        // TODO: Re-enable 3D Rotate support
+        // _Behavior3DRotate() {
+        //     // In SDK v2, this.instance is the SDK wrapper (IInstance), not the internal C3 instance
+        //     // Use runtime.getInstanceByUid() to get the internal C3 instance which has GetBehaviorSdkInstanceFromCtor
+        //     const inst = this.runtime.getInstanceByUid(this.uid);
+        //     if (!inst) return null;
+        //     const rotate3D = inst.GetBehaviorSdkInstanceFromCtor(
+        //         C3.Behaviors.mikal_rotate_shape
+        //     );
+        //     if (!rotate3D) return null;
+        //     return rotate3D;
+        // }
 
         _SetWorldGravity(x, y, z) {
             const gravity = { x, y, z };
@@ -730,10 +635,10 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 };
             }
 
-            this.Trigger(
+            this._trigger(
                 C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyRaycastResult
             );
-            this.Trigger(
+            this._trigger(
                 C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnRaycastResult
             );
             return true;
@@ -908,7 +813,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
         }
 
         _SetTimestep(mode, value) {
-            const PhysicsType = this._behaviorType._behavior;
+            const PhysicsType = this.behavior;
             PhysicsType.timestepMode = mode;
             PhysicsType.timestepValue = value;
             const command = {
@@ -1035,7 +940,9 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
         _ApplyTorque(x, y, z) {
             if (!this.bodyDefined) return;
-            this.comRapier.applyTorque(this.uid, { x: x, y: y, z: z });
+            this.PhysicsType.workerRPC.send("applyTorque", [
+                { uid: this.uid, torque: { x, y, z } },
+            ]);
         }
 
         _SetWorldScale(scale) {
@@ -1073,7 +980,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
         _UpdateHeightfield() {
             if (!this.bodyDefined) return;
             const shape = this.body.shapes[0];
-            const meshPoints = this._getMeshPoints(this._inst.GetWorldInfo());
+            const meshPoints = this._getMeshPoints();
             // Create two dimensional heightfield array using only z values from vertices
             const heightfield = new Array(meshPoints.length)
                 .fill(0)
@@ -1092,7 +999,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
         }
 
         _EnableDebugRender(enable, width) {
-            const behavior = this._behaviorType._behavior;
+            const behavior = this.behavior;
             behavior.debugRender = enable;
             behavior.debugRenderWidth = width;
         }
@@ -1248,7 +1155,7 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 excludeUID,
                 skipBackfaces,
                 tag,
-                uid: this._inst.GetUID(),
+                uid: this.instance.uid,
             };
 
             // Always send batched command instead of raycasting with comlink
@@ -1323,10 +1230,10 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
                 };
             }
 
-            this.Trigger(
+            this._trigger(
                 C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyCastShapeResult
             );
-            this.Trigger(
+            this._trigger(
                 C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCastShapeResult
             );
             return true;
@@ -1350,10 +1257,6 @@ function getInstanceJs(parentClass, scriptInterface, addonTriggers, C3) {
 
         _OnPhysicsReady() {
             return true;
-        }
-
-        GetScriptInterfaceClass() {
-            return scriptInterface;
         }
     };
 }

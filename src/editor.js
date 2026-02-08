@@ -10,7 +10,7 @@ SDK.Behaviors[BEHAVIOR_INFO.id] = class extends SDK.IBehaviorBase {
     SDK.Lang.PushContext("behaviors." + BEHAVIOR_INFO.id.toLowerCase());
     this._info.SetName(self.lang(".name"));
     this._info.SetDescription(self.lang(".description"));
-    this._info.SetVersion(BEHAVIOR_INFO.version);
+    // SetVersion removed - SDK v2 takes version from addon.json
     this._info.SetCategory(BEHAVIOR_INFO.category);
     this._info.SetAuthor(BEHAVIOR_INFO.author);
     this._info.SetHelpUrl(self.lang(".help-url"));
