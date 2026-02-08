@@ -119,9 +119,9 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             const zHeight = inst.depth || 0;
             const bodyDefined = this.bodyDefined;
 
-            // TODO: 3DObjectPlugin support needs plugin-specific API
+            // TODO: GltfStaticPlugin support needs plugin-specific API
             // if (
-            //     this.pluginType === "3DObjectPlugin" &&
+            //     this.pluginType === "GltfStaticPlugin" &&
             //     !bodyDefined &&
             //     inst.loaded
             // ) {
@@ -137,10 +137,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             const position = wBody.translation;
             const quatRot = wBody.rotation;
 
-            if (this.pluginType == "3DObjectPlugin") {
-                this.setBody.position = position;
-                this.setBody.quaternion = quatRot;
+            if (this.pluginType == "GltfStaticPlugin") {
+                inst.x = position.x;
+                inst.y = position.y;
                 inst.zElevation = position.z;
+                inst.quaternion = quatRot;
             } else {
                 const zElevation = position.z - zHeight / 2;
                 inst.zElevation = zElevation;
@@ -216,8 +217,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 this._trigger(
                     C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
                 );
-            } else if (pluginId === "Mikal_3DObject") {
-                this.pluginType = "3DObjectPlugin";
+            } else if (pluginId === "GltfStatic") {
+                this.pluginType = "GltfStaticPlugin";
                 // define body after loaded (currently disabled)
             } else {
                 this.pluginType = "invalid";
@@ -368,7 +369,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             this.bodySizeHeight = height;
             this.bodySizeWidth = width;
             this.bodySizeDepth = depth;
-            if (this.pluginType == "3DObjectPlugin") {
+            if (this.pluginType == "GltfStaticPlugin") {
                 this._create3DObjectShape(
                     this.shapeProperty,
                     this.bodyType,
@@ -475,7 +476,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             return [pitch, yaw, roll]; // Returns Euler angles in radians
         }
 
-        // TODO: Re-enable 3DObjectPlugin support
+        // TODO: Re-enable GltfStaticPlugin support
         // This requires Mikal_3DObject plugin-specific APIs (xMinBB, xMaxBB, gltf, etc.)
         // that don't have public SDK v2 equivalents
         _create3DObjectShape(
@@ -485,7 +486,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             worldInfo,
             overrideSize
         ) {
-            console.warn("3DObjectPlugin support temporarily disabled - requires plugin-specific APIs");
+            console.warn("GltfStaticPlugin support temporarily disabled - requires plugin-specific APIs");
             return false;
         }
 

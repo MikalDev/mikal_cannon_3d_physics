@@ -4499,7 +4499,7 @@ class GI {
             (this.rotationsEnabledZ = true),
             (this.linearDamping = 0),
             (this.angularDamping = 0),
-            (this.canSleep = true),
+            (this.canSleep = false),
             (this.sleeping = false),
             (this.ccdEnabled = false),
             (this.softCcdPrediction = 0),
