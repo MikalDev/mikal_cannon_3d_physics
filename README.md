@@ -12,6 +12,33 @@ Author: Mikal <br>
 - [Actions](#actions)
 - [Conditions](#conditions)
 - [Expressions](#expressions)
+- [Changelog](#changelog)
+
+---
+## Changelog
+
+### v2.25.0 (2026-02-08)
+
+**GltfStatic 3D Rotation Fix**
+- ✅ Fixed critical bug where GltfStatic physics bodies had rotation locked by default
+- ✅ Rotation locks now set on `RigidBodyDesc` before body creation (previously set after, which didn't work)
+- ✅ GltfStatic objects now support full 3D rotation on all axes (X, Y, Z)
+
+**Angular Damping**
+- ✅ Added `defaultAngularDamping = 0.5` to prevent wild spinning
+- ✅ Physics bodies now gradually slow down rotation over time (like air resistance)
+- ✅ Configurable via "Set angular damping" action
+
+**Debug Improvements**
+- 🔍 Added rotation configuration logging (`enableRot0/1/2` flags)
+- 🔍 Added angular velocity tracking in runtime (shows spinning rate on each axis)
+- 🔍 Added dimension warnings for very small colliders (< 0.1 physics units)
+- 🔍 Added quaternion magnitude and identity checks
+- 🔍 Added world vs physics position verification logging
+- 🔍 Warns when colliders are too small and may cause physics instability
+
+**Impact:** GltfStatic objects with Dynamic body type now rotate properly in 3D space with realistic damping.
+
 ---
 ## Usage
 To build the addon, run the following commands:
