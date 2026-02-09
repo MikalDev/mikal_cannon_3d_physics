@@ -80,6 +80,40 @@ Acts: {
 
 Same pattern for `Cnds` (conditions) and `Exps` (expressions).
 
+## Supported Plugins
+
+The physics behavior supports the following Construct 3 object types:
+
+### 3D Objects
+- **3D Shape** (Shape3D plugin) - Limited to Z-axis rotation only
+- **GltfStatic** - Full 3D rotation with quaternions, auto-detects bounding box
+- **Model3D** - Full 3D rotation with Euler angles (radians), requires manual size override or bounding box extraction
+
+### 2D Objects
+- **Sprite** - 2D physics with mesh collision support
+
+### Model3D Integration Details
+
+**Rotation Format:**
+- Model3D uses Euler angles (X, Y, Z in radians) for rotation
+- Physics engine uses quaternions internally
+- Automatic bidirectional conversion at each sync point:
+  - Model3D → Physics: `_eulerToQuaternion()` converts radians to quaternion
+  - Physics → Model3D: `_quaternionToEuler()` converts quaternion to radians
+
+**Position Properties:**
+- Model3D: `offsetX`, `offsetY`, `offsetZ`
+- GltfStatic: `x`, `y`, `zElevation`
+
+**Scale Handling:**
+- Model3D scale (`scaleX`, `scaleY`, `scaleZ`) is automatically applied to physics body dimensions
+- Visual size matches physics size for intuitive behavior
+
+**Body Creation:**
+- Use "Set size override" action to manually specify dimensions
+- Auto-creation triggers when model loads AND (bounding box extracted OR size override enabled)
+- Bounding box extraction attempts to access internal `AnimatedModel` object (may not always succeed)
+
 ## Physics Features
 
 - Body types: Dynamic, Fixed, Kinematic (position/velocity based)

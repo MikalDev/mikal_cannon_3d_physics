@@ -8,7 +8,8 @@
       "Bash(npm run pkg:*)",
       "Bash(npm run:*)",
       "Bash(ls:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(gh release create:*)"
     ]
   }
 }
