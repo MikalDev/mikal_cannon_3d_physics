@@ -119,14 +119,36 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             const zHeight = inst.depth || 0;
             const bodyDefined = this.bodyDefined;
 
-            // TODO: GltfStaticPlugin support needs plugin-specific API
-            // if (
-            //     this.pluginType === "GltfStaticPlugin" &&
-            //     !bodyDefined &&
-            //     inst.loaded
-            // ) {
-            //     ...
-            // }
+            // GltfStatic - auto-create body after model loads
+            if (this.pluginType === "GltfStaticPlugin" && !bodyDefined) {
+                // Check if model is loaded and has bounding box data
+                const hasLoaded = inst.loaded !== undefined ? inst.loaded : false;
+                const hasBBox = inst.xMinBB !== undefined && inst.xMaxBB !== undefined;
+
+                if (!this._gltfLoadCheckLogged) {
+                    console.log(`[Physics Debug] GltfStatic body not yet created - UID: ${this.uid}
+  Model loaded: ${hasLoaded}
+  Bounding box available: ${hasBBox}
+  ${hasBBox ? `  → Auto-creating body from bounding box...` : `  → Use "Set size override" action to create body manually`}`);
+                    this._gltfLoadCheckLogged = true;
+                }
+
+                // Try to auto-create body if loaded and has bounding box
+                if (hasLoaded && hasBBox) {
+                    const result = this._create3DObjectShape(
+                        this.shapeProperty,
+                        this.bodyType,
+                        this.colliderType,
+                        null,
+                        this.sizeOverride
+                    );
+                    if (result) {
+                        console.log(`[Physics Debug] GltfStatic auto-created body from loaded model - UID: ${this.uid}`);
+                        return; // Body created successfully
+                    }
+                }
+                return; // Wait for model to load or manual creation
+            }
 
             if (!bodyDefined) return;
             if (!this.enable) return;
@@ -136,12 +158,49 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             if (!wBody) return;
             const position = wBody.translation;
             const quatRot = wBody.rotation;
+            const angularVel = wBody.angvel ? wBody.angvel() : { x: 0, y: 0, z: 0 };
 
             if (this.pluginType == "GltfStaticPlugin") {
                 inst.x = position.x;
                 inst.y = position.y;
                 inst.zElevation = position.z;
                 inst.quaternion = quatRot;
+
+                // Debug logging (only log occasionally to avoid spam)
+                if (!this._gltfDebugCounter) this._gltfDebugCounter = 0;
+                this._gltfDebugCounter++;
+                if (this._gltfDebugCounter === 1 || this._gltfDebugCounter % 300 === 0) {
+                    // Calculate quaternion magnitude to verify normalization
+                    const quatMagnitude = Math.sqrt(
+                        quatRot.x * quatRot.x +
+                        quatRot.y * quatRot.y +
+                        quatRot.z * quatRot.z +
+                        quatRot.w * quatRot.w
+                    );
+
+                    // Check if quaternion represents rotation (not identity)
+                    const isIdentity = Math.abs(quatRot.x) < 0.001 &&
+                                      Math.abs(quatRot.y) < 0.001 &&
+                                      Math.abs(quatRot.z) < 0.001 &&
+                                      Math.abs(quatRot.w - 1.0) < 0.001;
+
+                    // Check angular velocity magnitude
+                    const angVelMag = Math.sqrt(
+                        angularVel.x * angularVel.x +
+                        angularVel.y * angularVel.y +
+                        angularVel.z * angularVel.z
+                    );
+
+                    console.log(`[Physics Debug] GltfStatic sync - UID: ${this.uid}
+  Position: (${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})
+  Quaternion: x=${quatRot.x.toFixed(3)}, y=${quatRot.y.toFixed(3)}, z=${quatRot.z.toFixed(3)}, w=${quatRot.w.toFixed(3)}
+  Magnitude: ${quatMagnitude.toFixed(4)} (should be ~1.0)
+  ${isIdentity ? '⚠ Identity quaternion (no rotation)' : '✓ Non-identity quaternion (object is rotating!)'}
+  Angular Velocity: x=${angularVel.x.toFixed(3)}, y=${angularVel.y.toFixed(3)}, z=${angularVel.z.toFixed(3)} (mag: ${angVelMag.toFixed(3)} rad/s)
+  ${angVelMag > 0.1 ? '⚠ High angular velocity - object spinning!' : '✓ Low angular velocity'}
+  ✓ Setting inst.x, inst.y, inst.zElevation, inst.quaternion
+  ${this._gltfDebugCounter === 1 ? '  ℹ This confirms physics → GltfStatic connection is working!' : ''}`);
+                }
             } else {
                 const zElevation = position.z - zHeight / 2;
                 inst.zElevation = zElevation;
@@ -187,8 +246,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             const plugin = this.instance.objectType.plugin;
             const pluginId = plugin.id;
 
+            console.log(`[Physics Debug] Object created - UID: ${this.uid}, Plugin: ${pluginId}, Type: ${this.instance.objectType.name}`);
+
             if (pluginId === "Shape3D") {
                 this.pluginType = "Shape3DPlugin";
+                console.log(`[Physics Debug] Shape3D detected - shape: ${this.instance.shape}, creating physics body...`);
                 if (!this.bodyDefined) {
                     // SDK v2: Use public I3DShapeInstance.shape property
                     // Map string shape type to numeric value for worker
@@ -201,12 +263,14 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                         this.colliderType
                     );
                     this.bodyDefined = true;
+                    console.log(`[Physics Debug] Shape3D body defined - UID: ${this.uid}`);
                     this._trigger(
                         C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
                     );
                 }
             } else if (pluginId === "Sprite") {
                 this.pluginType = "SpritePlugin";
+                console.log(`[Physics Debug] Sprite detected - creating physics body...`);
                 this.DefineBody(
                     this.pluginType,
                     null,
@@ -214,15 +278,32 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     this.bodyType,
                     this.colliderType
                 );
+                console.log(`[Physics Debug] Sprite body defined - UID: ${this.uid}`);
                 this._trigger(
                     C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
                 );
             } else if (pluginId === "GltfStatic") {
                 this.pluginType = "GltfStaticPlugin";
-                // define body after loaded (currently disabled)
+                const inst = this.instance;
+                const hasQuaternion = inst.quaternion !== undefined;
+                const quat = inst.quaternion || { x: 0, y: 0, z: 0, w: 1 };
+                console.log(`[Physics Debug] GltfStatic detected - UID: ${this.uid}
+  ✓ Plugin detected successfully
+
+  To create physics body:
+  → Use "Set size override" action with body dimensions
+  → Example: Set size override (Enabled, width, height, depth)
+
+  Current GltfStatic property values (required for physics sync):
+  → inst.x = ${inst.x}
+  → inst.y = ${inst.y}
+  → inst.zElevation = ${inst.zElevation}
+  → inst.quaternion = ${hasQuaternion ? `{x:${quat.x}, y:${quat.y}, z:${quat.z}, w:${quat.w}}` : 'MISSING ⚠'}
+
+  ${!hasQuaternion ? '⚠ WARNING: inst.quaternion is not available! GltfStatic must expose quaternion setter.' : '✓ Quaternion property available'}`);
             } else {
                 this.pluginType = "invalid";
-                console.error("invalid pluginType - plugin id:", pluginId);
+                console.error("[Physics Debug] Invalid pluginType - plugin id:", pluginId);
             }
         }
 
@@ -238,6 +319,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             // inst.angle is in radians, fromEuler expects degrees
             quat.fromEuler(initialQuat, 0, 0, (inst.angle * 180) / Math.PI);
             let command = null;
+
+            console.log(`[Physics Debug] DefineBody called - UID: ${inst.uid}, Type: ${pluginType}, BodyType: ${bodyType}, ColliderType: ${colliderType}`);
 
             if (pluginType === "Shape3DPlugin") {
                 // 3DShape can only rotate around z axis
@@ -290,6 +373,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     meshPoints: meshPoints,
                 };
             }
+            console.log(`[Physics Debug] Queueing AddBody command to worker - UID: ${inst.uid}`);
             this.PhysicsType.commands.push(command);
         }
 
@@ -370,6 +454,10 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             this.bodySizeWidth = width;
             this.bodySizeDepth = depth;
             if (this.pluginType == "GltfStaticPlugin") {
+                console.log(`[Physics Debug] SetSizeOverride for GltfStatic - UID: ${this.uid}
+  Enable: ${enable}
+  Dimensions: W:${width} x H:${height} x D:${depth}
+  ✓ Creating physics body with manual dimensions`);
                 this._create3DObjectShape(
                     this.shapeProperty,
                     this.bodyType,
@@ -476,9 +564,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             return [pitch, yaw, roll]; // Returns Euler angles in radians
         }
 
-        // TODO: Re-enable GltfStaticPlugin support
-        // This requires Mikal_3DObject plugin-specific APIs (xMinBB, xMaxBB, gltf, etc.)
-        // that don't have public SDK v2 equivalents
+        // GltfStatic uses primitive shape colliders (box, capsule, sphere, etc.)
+        // Can auto-create from bounding box or use manual dimensions via SetSizeOverride
         _create3DObjectShape(
             shapeProperty,
             bodyType,
@@ -486,8 +573,197 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             worldInfo,
             overrideSize
         ) {
-            console.warn("GltfStaticPlugin support temporarily disabled - requires plugin-specific APIs");
-            return false;
+            const inst = this.instance;
+            const PhysicsType = this.behavior;
+            const scale = PhysicsType.scale;
+            const enableRot = [true, true, true]; // GltfStatic can rotate on all axes
+
+            // Get initial rotation - GltfStatic uses quaternion
+            const initialQuat = inst.quaternion || { x: 0, y: 0, z: 0, w: 1 };
+
+            // Determine dimensions: from bounding box or manual override
+            let width, height, depth;
+            let dimensionSource = "manual";
+
+            // Try to get dimensions from bounding box if available
+            if (!overrideSize && inst.xMinBB && inst.xMaxBB) {
+                const xMinBB = inst.xMinBB;
+                const xMaxBB = inst.xMaxBB;
+
+                // Check if bounding box is valid (not 0,0,0)
+                const bboxWidth = Math.abs(xMaxBB[0] - xMinBB[0]);
+                const bboxHeight = Math.abs(xMaxBB[1] - xMinBB[1]);
+                const bboxDepth = Math.abs(xMaxBB[2] - xMinBB[2]);
+
+                if (bboxWidth > 0 || bboxHeight > 0 || bboxDepth > 0) {
+                    width = bboxWidth;
+                    height = bboxHeight;
+                    depth = bboxDepth;
+                    dimensionSource = "bounding box";
+                    console.log(`[Physics Debug] Using bounding box dimensions - UID: ${this.uid}
+  xMinBB: [${xMinBB[0].toFixed(2)}, ${xMinBB[1].toFixed(2)}, ${xMinBB[2].toFixed(2)}]
+  xMaxBB: [${xMaxBB[0].toFixed(2)}, ${xMaxBB[1].toFixed(2)}, ${xMaxBB[2].toFixed(2)}]
+  Calculated: W:${width.toFixed(2)} x H:${height.toFixed(2)} x D:${depth.toFixed(2)}`);
+                } else {
+                    console.warn(`[Physics Debug] Bounding box is zero-sized - UID: ${this.uid}`);
+                    return false;
+                }
+            } else if (overrideSize) {
+                // Use manual override dimensions
+                width = this.bodySizeWidth;
+                height = this.bodySizeHeight;
+                depth = this.bodySizeDepth;
+                dimensionSource = "size override";
+            } else {
+                console.warn(`[Physics Debug] _create3DObjectShape for GltfStatic - UID: ${this.uid}
+  ⚠ No dimensions available - model not loaded or size override disabled
+
+  Options:
+  → Wait for model to load (inst.loaded = true)
+  → GltfStatic should expose: inst.xMinBB = [x,y,z] and inst.xMaxBB = [x,y,z]
+  → OR use "Set size override" action with manual dimensions`);
+                return false;
+            }
+
+            // Shape type mapping (from combo property order)
+            // 0: Auto, 1: ModelMesh, 2: Box, 3: Sphere, 4: Cylinder, 5: Capsule, 6: ConvexHulls
+            const shapeNames = {
+                0: "Auto",
+                1: "ModelMesh",
+                2: "Box",
+                3: "Sphere",
+                4: "Cylinder",
+                5: "Capsule",
+                6: "ConvexHulls"
+            };
+
+            const originalShapeName = shapeNames[shapeProperty] || `Unknown(${shapeProperty})`;
+
+            console.log(`[Physics Debug] GltfStatic shape type selection - UID: ${this.uid}
+  Behavior property 'Shape': ${originalShapeName} (${shapeProperty})
+  Dimension source: ${dimensionSource}`);
+
+            // Convert mesh-based shapes to Box for GltfStatic
+            let actualShapeType = shapeProperty;
+            if (shapeProperty === 1 || shapeProperty === 6) { // ModelMesh or ConvexHulls
+                actualShapeType = 2; // Box
+                console.log(`[Physics Debug] Shape conversion - UID: ${this.uid}
+  ${originalShapeName} → Box
+  ℹ Mesh-based shapes not supported, using Box primitive instead`);
+            }
+
+            const shapeName = shapeNames[actualShapeType] || `Unknown(${actualShapeType})`;
+
+            // Log dimension interpretation for different shape types
+            let dimensionInfo = "";
+            switch (actualShapeType) {
+                case 2: // Box
+                    dimensionInfo = `Box uses all three dimensions as extents`;
+                    break;
+                case 3: // Sphere
+                    dimensionInfo = `Sphere uses width as radius (height/depth ignored)`;
+                    break;
+                case 4: // Cylinder
+                    dimensionInfo = `Cylinder uses height as length, width as radius`;
+                    break;
+                case 5: // Capsule
+                    dimensionInfo = `Capsule uses height as length, width as radius`;
+                    break;
+                case 0: // Auto
+                    dimensionInfo = `Auto shape - worker will determine best fit`;
+                    break;
+                default:
+                    dimensionInfo = `Unknown shape type - may not work correctly`;
+            }
+
+            console.log(`[Physics Debug] Shape type info - UID: ${this.uid}
+  Final shape: ${shapeName} (${actualShapeType})
+  ${dimensionInfo}
+  Dimensions (world units): W:${width.toFixed(2)} x H:${height.toFixed(2)} x D:${depth.toFixed(2)}`);
+
+            const scaledWidth = width / scale;
+            const scaledHeight = height / scale;
+            const scaledDepth = depth / scale;
+
+            console.log(`[Physics Debug] Scaling calculation - UID: ${this.uid}
+  Physics scale factor: ${scale}
+  Original dimensions (world units): W:${width.toFixed(2)} x H:${height.toFixed(2)} x D:${depth.toFixed(2)}
+  Scaled dimensions (physics units): W:${scaledWidth.toFixed(4)} x H:${scaledHeight.toFixed(4)} x D:${scaledDepth.toFixed(4)}
+  ℹ For ${shapeName}: ${dimensionInfo.toLowerCase()}`);
+
+            // Check for very small dimensions that could cause physics instability
+            const minDim = Math.min(scaledWidth, scaledHeight, scaledDepth);
+            if (minDim < 0.1) {
+                console.warn(`[Physics Debug] ⚠ Very small physics dimensions detected - UID: ${this.uid}
+  Smallest dimension: ${minDim.toFixed(4)} physics units
+  This may cause unstable physics behavior or wild spinning
+  Consider: Increase model size OR decrease physics scale factor (currently ${scale})`);
+            }
+
+            console.log(`[Physics Debug] Creating GltfStatic physics body - UID: ${this.uid}
+  Shape: ${shapeName} (shapeType: ${actualShapeType})
+  Dimension source: ${dimensionSource}
+  Position (world): (${inst.x.toFixed(2)}, ${inst.y.toFixed(2)}, ${inst.zElevation.toFixed(2)})
+  Position (physics): (${(inst.x/scale).toFixed(4)}, ${(inst.y/scale).toFixed(4)}, ${(inst.zElevation/scale).toFixed(4)})
+  Initial quaternion: (${initialQuat.x.toFixed(3)}, ${initialQuat.y.toFixed(3)}, ${initialQuat.z.toFixed(3)}, ${initialQuat.w.toFixed(3)})
+  Body type: ${bodyType === 0 ? 'Dynamic' : bodyType === 1 ? 'Fixed' : 'Kinematic'} (${bodyType})
+  Collider type: ${colliderType === 0 ? 'Solid' : 'Sensor'} (${colliderType})
+  Mass: ${this.mass}
+  Immovable: ${this.immovable}`);
+
+            const command = {
+                type: this.CommandType.AddBody,
+                uid: inst.uid,
+                x: inst.x / scale,
+                y: inst.y / scale,
+                z: inst.zElevation / scale,
+                q: {
+                    x: initialQuat.x,
+                    y: initialQuat.y,
+                    z: initialQuat.z,
+                    w: initialQuat.w
+                },
+                width: scaledWidth,
+                height: scaledHeight,
+                depth: scaledDepth,
+                immovable: this.immovable,
+                enableRot0: enableRot[0],
+                enableRot1: enableRot[1],
+                enableRot2: enableRot[2],
+                shapeType: actualShapeType, // Use converted shape type
+                bodyType,
+                colliderType,
+                shape: null, // GltfStatic uses primitive shapes, not Shape3D geometry
+                mass: this.mass,
+            };
+
+            console.log(`[Physics Debug] AddBody command details - UID: ${inst.uid}
+  command.type: ${command.type} (AddBody)
+  command.shapeType: ${command.shapeType} (${shapeName})
+  command.bodyType: ${command.bodyType}
+  command.colliderType: ${command.colliderType}
+  command.width: ${command.width.toFixed(2)} (scaled)
+  command.height: ${command.height.toFixed(2)} (scaled)
+  command.depth: ${command.depth.toFixed(2)} (scaled)
+  command.shape: ${command.shape}
+  ℹ This command will be sent to the physics worker`);
+
+            console.log(`[Physics Debug] Rotation configuration - UID: ${inst.uid}
+  command.enableRot0 (X axis): ${command.enableRot0}
+  command.enableRot1 (Y axis): ${command.enableRot1}
+  command.enableRot2 (Z axis): ${command.enableRot2}
+  ℹ All should be 'true' for full 3D rotation`);
+
+            this.PhysicsType.commands.push(command);
+
+            // Mark body as defined and trigger ready event
+            this.bodyDefined = true;
+            this._trigger(
+                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsReady
+            );
+
+            console.log(`[Physics Debug] GltfStatic body created successfully - UID: ${this.uid}, Shape: ${shapeName}`);
+            return true;
         }
 
         // Get mesh points from object using public IWorldInstance API

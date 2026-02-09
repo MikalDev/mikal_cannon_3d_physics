@@ -8028,6 +8028,7 @@ let rapierWorld = null;
 let uidHandle = new Map();
 let characterControllers = new Map();
 let defaultLinearDamping = 0.0;
+let defaultAngularDamping = 0.5; // Damping for rotation to prevent wild spinning (0.5 = moderate damping)
 let timestepMode = 0;
 let timestepValue = 1 / 60;
 let collisionEvents = [];
@@ -8406,6 +8407,20 @@ function addBody(config) {
     rigidBodyDesc.setTranslation(x, y, z);
     rigidBodyDesc.setRotation(q);
 
+    // CRITICAL: Set rotation locks on descriptor BEFORE creating body
+    // This ensures Rapier initializes the body with correct rotation settings
+    const rotX = config?.enableRot0 ? true : false;
+    const rotY = config?.enableRot1 ? true : false;
+    const rotZ = config?.enableRot2 ? true : false;
+
+    rigidBodyDesc.enabledRotations(rotX, rotY, rotZ);
+
+    console.log(`[Worker] Body ${config.uid} rotation settings (BEFORE creation):
+  X axis: ${rotX ? 'ENABLED' : 'LOCKED'}
+  Y axis: ${rotY ? 'ENABLED' : 'LOCKED'}
+  Z axis: ${rotZ ? 'ENABLED' : 'LOCKED'}
+  ℹ Set on RigidBodyDesc before createRigidBody()`);
+
     const body = rapierWorld.createRigidBody(rigidBodyDesc);
 
     if (
@@ -8464,14 +8479,16 @@ function addBody(config) {
         collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
     }
 
-    body.setEnabledRotations(
-        config?.enableRot0 ? true : false,
-        config?.enableRot1 ? true : false,
-        config?.enableRot2 ? true : false,
-        true
-    );
+    // Note: Rotation locks are now set on rigidBodyDesc BEFORE body creation
+    // (see rigidBodyDesc.enabledRotations above) - no need to set again here
 
     body.setLinearDamping(defaultLinearDamping);
+    body.setAngularDamping(defaultAngularDamping); // Apply angular damping to slow rotation
+
+    console.log(`[Worker] Body ${config.uid} damping applied:
+  Linear damping: ${defaultLinearDamping} (affects movement)
+  Angular damping: ${defaultAngularDamping} (affects rotation - prevents wild spinning)
+  ℹ Higher values = more damping = slower movement/rotation`);
 
     const uid = config.uid;
     body.uid = uid;
