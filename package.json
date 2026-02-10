@@ -9,7 +9,7 @@
   },
   "name": "mikal_cannon_3d_physics",
   "description": "To build the addon, run",
-  "version": "2.26.0",
+  "version": "2.26.1",
   "scripts": {
     "build": "node build.js",
     "dev": "node dev.js",

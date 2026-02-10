@@ -191,14 +191,14 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             if (this.pluginType == "GltfStaticPlugin") {
                 inst.x = position.x;
                 inst.y = position.y;
-                inst.zElevation = position.z;
+                inst.z = position.z;
                 inst.quaternion = quatRot;
 
             } else if (this.pluginType === "Model3DPlugin") {
-                // Convert physics position to Model3D offsets
-                inst.offsetX = position.x;
-                inst.offsetY = position.y;
-                inst.offsetZ = position.z;
+                // Set Model3D world position (base position, keep offsets at 0)
+                inst.x = position.x;
+                inst.y = position.y;
+                inst.z = position.z;
 
                 // Convert quaternion to Euler angles (radians)
                 const quat = globalThis.glMatrix.quat;
@@ -211,7 +211,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 inst.rotationZ = eulerAngles[2]; // Z-axis rotation (roll)
             } else {
                 const zElevation = position.z - zHeight / 2;
-                inst.zElevation = zElevation;
+                inst.z = zElevation;
                 inst.x = position.x;
                 inst.y = position.y;
                 // angle
@@ -334,7 +334,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     uid: inst.uid,
                     x: inst.x / scale,
                     y: inst.y / scale,
-                    z: (inst.zElevation + zHeight / 2) / scale,
+                    z: (inst.z + zHeight / 2) / scale,
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
                     width: inst.width / scale,
                     height: inst.height / scale,
@@ -356,7 +356,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     uid: inst.uid,
                     x: (inst.x - inst.width / 2) / scale,
                     y: (inst.y - inst.height / 2) / scale,
-                    z: (inst.zElevation + zHeight / 2) / scale,
+                    z: (inst.z + zHeight / 2) / scale,
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
                     width: inst.width / scale,
                     height: inst.height / scale,
@@ -373,7 +373,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     meshPoints: meshPoints,
                 };
             }
-            // Removed verbose debug log
+            console.log("[Physics] AddBody command:", JSON.stringify(command, null, 2));
             this.PhysicsType.commands.push(command);
         }
 
@@ -401,7 +401,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     uid: inst.uid,
                     x: inst.x / scale,
                     y: inst.y / scale,
-                    z: (inst.zElevation + zHeight / 2) / scale,
+                    z: (inst.z + zHeight / 2) / scale,
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
                     width: inst.width / scale,
                     height: inst.height / scale,
@@ -423,7 +423,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     uid: inst.uid,
                     x: (inst.x - inst.width / 2) / scale,
                     y: (inst.y - inst.height / 2) / scale,
-                    z: inst.zElevation / scale,
+                    z: inst.z / scale,
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
                     width: inst.width / scale,
                     height: inst.height / scale,
@@ -443,6 +443,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 console.error("invalid pluginType", this.pluginType);
                 return;
             }
+            console.log("[Physics] AddBody command (SetSizeOverride Shape3D):", JSON.stringify(command, null, 2));
             this.PhysicsType.commands.push(command);
         }
 
@@ -491,7 +492,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     uid: inst.uid,
                     x: inst.x / scale,
                     y: inst.y / scale,
-                    z: (inst.zElevation + zHeight / 2) / scale,
+                    z: (inst.z + zHeight / 2) / scale,
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
                     width: width / scale,
                     height: height / scale,
@@ -513,7 +514,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     uid: inst.uid,
                     x: (inst.x - inst.width / 2) / scale,
                     y: (inst.y - inst.height / 2) / scale,
-                    z: inst.zElevation / scale,
+                    z: inst.z / scale,
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
                     width: inst.width / scale,
                     height: inst.height / scale,
@@ -533,6 +534,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 console.error("invalid pluginType", this.pluginType);
                 return;
             }
+            console.log("[Physics] AddBody command (SetSizeOverride Sprite):", JSON.stringify(command, null, 2));
             this.PhysicsType.commands.push(command);
         }
 
@@ -604,13 +606,14 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             if (this.pluginType === "GltfStaticPlugin") {
                 posX = inst.x;
                 posY = inst.y;
-                posZ = inst.zElevation;
+                posZ = inst.z;
                 initialQuat = inst.quaternion || { x: 0, y: 0, z: 0, w: 1 };
 
             } else if (this.pluginType === "Model3DPlugin") {
-                posX = inst.offsetX;
-                posY = inst.offsetY;
-                posZ = inst.offsetZ;
+                // Model3D has base position (x, y, z) plus offsets
+                posX = inst.x + (inst.offsetX || 0);
+                posY = inst.y + (inst.offsetY || 0);
+                posZ = inst.z + (inst.offsetZ || 0);
 
                 // Convert Euler (radians) to quaternion
                 initialQuat = this._eulerToQuaternion(
@@ -805,9 +808,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 mass: this.mass,
             };
 
-            
-
-            
+            console.log("[Physics] AddBody command (3D Object):", JSON.stringify(command, null, 2));
 
             this.PhysicsType.commands.push(command);
 
