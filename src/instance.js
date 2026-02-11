@@ -14,6 +14,13 @@ function mapShapeToNumber(shape) {
     return num !== undefined ? num : 0; // default to box
 }
 
+// Convert quaternion (array or object) to {x,y,z,w} object format
+function quatToObject(q) {
+    if (!q) return { x: 0, y: 0, z: 0, w: 1 };
+    if (q.length === 4) return { x: q[0], y: q[1], z: q[2], w: q[3] };
+    return q;
+}
+
 function getInstanceJs(parentClass, addonTriggers, C3) {
     return class extends parentClass {
         constructor() {
@@ -130,7 +137,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                         this.shapeProperty,
                         this.bodyType,
                         this.colliderType,
-                        null,
                         this.sizeOverride
                     );
                     if (!result && !this._gltfCreateWarned) {
@@ -167,7 +173,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                         this.shapeProperty,
                         this.bodyType,
                         this.colliderType,
-                        null,
                         this.sizeOverride
                     );
                     if (!result && !this._model3dCreateWarned) {
@@ -214,28 +219,16 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 inst.z = zElevation;
                 inst.x = position.x;
                 inst.y = position.y;
-                // angle
-                // TODO: Re-enable 3D Rotate support
-                // if (this.rotate3D) {
-                //     this.rotate3D._useQuaternion = true;
-                //     this.rotate3D._quaternion = [
-                //         quatRot.x,
-                //         quatRot.y,
-                //         quatRot.z,
-                //         quatRot.w,
-                //     ];
-                // } else {
-                    const quat = globalThis.glMatrix.quat;
-                    const zRot = quat.fromValues(
-                        quatRot.x,
-                        quatRot.y,
-                        quatRot.z,
-                        quatRot.w
-                    );
-                    const angles = this._quaternionToEuler(zRot);
-                    const angle = angles[2];
-                    inst.angle = angle;
-                // }
+                // Extract Z-axis rotation from quaternion
+                const quat = globalThis.glMatrix.quat;
+                const zRot = quat.fromValues(
+                    quatRot.x,
+                    quatRot.y,
+                    quatRot.z,
+                    quatRot.w
+                );
+                const angles = this._quaternionToEuler(zRot);
+                inst.angle = angles[2];
             }
         }
 
@@ -248,8 +241,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             // SDK v2: Register this behavior instance for collision/raycast lookups
             this.PhysicsType.registerBehaviorInstance(this.uid, this);
 
-            // TODO: Re-enable 3D Rotate support
-            // this.rotate3D = this._Behavior3DRotate();
             // SDK v2: Use plugin.id to detect plugin type
             const plugin = this.instance.objectType.plugin;
             const pluginId = plugin.id;
@@ -324,11 +315,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
             if (pluginType === "Shape3DPlugin") {
                 // 3DShape can only rotate around z axis
-                // TODO: Re-enable 3D Rotate support
-                // if (!this.rotate3D) {
-                    enableRot[0] = false;
-                    enableRot[1] = false;
-                // }
+                enableRot[0] = false;
+                enableRot[1] = false;
                 command = {
                     type: this.CommandType.AddBody,
                     uid: inst.uid,
@@ -390,11 +378,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             let command = null;
             if (this.pluginType == "Shape3DPlugin") {
                 // 3DShape can only rotate around z axis
-                // TODO: Re-enable 3D Rotate support
-                // if (!this.rotate3D) {
-                    enableRot[0] = false;
-                    enableRot[1] = false;
-                // }
+                enableRot[0] = false;
+                enableRot[1] = false;
                 const shape = mapShapeToNumber(inst.shape);
                 command = {
                     type: this.CommandType.UpdateBody,
@@ -455,13 +440,10 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             this.bodySizeWidth = width;
             this.bodySizeDepth = depth;
             if (this.pluginType === "GltfStaticPlugin" || this.pluginType === "Model3DPlugin") {
-                const pluginName = this.pluginType === "GltfStaticPlugin" ? "GltfStatic" : "Model3D";
-                // Size override set
                 this._create3DObjectShape(
                     this.shapeProperty,
                     this.bodyType,
                     this.colliderType,
-                    null, // worldInfo not needed with public API
                     enable
                 );
                 return;
@@ -481,11 +463,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             let command = null;
             if (this.pluginType == "Shape3DPlugin") {
                 // 3DShape can only rotate around z axis
-                // TODO: Re-enable 3D Rotate support
-                // if (!this.rotate3D) {
-                    enableRot[0] = false;
-                    enableRot[1] = false;
-                // }
+                enableRot[0] = false;
+                enableRot[1] = false;
                 const shape = mapShapeToNumber(inst.shape);
                 command = {
                     type: this.CommandType.SetSizeOverride,
@@ -587,13 +566,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
         // GltfStatic and Model3D use primitive shape colliders (box, capsule, sphere, etc.)
         // Can auto-create from bounding box or use manual dimensions via SetSizeOverride
-        _create3DObjectShape(
-            shapeProperty,
-            bodyType,
-            colliderType,
-            worldInfo,
-            overrideSize
-        ) {
+        _create3DObjectShape(shapeProperty, bodyType, colliderType, overrideSize) {
             const inst = this.instance;
             const PhysicsType = this.behavior;
             const scale = PhysicsType.scale;
@@ -607,7 +580,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 posX = inst.x;
                 posY = inst.y;
                 posZ = inst.z;
-                initialQuat = inst.quaternion || { x: 0, y: 0, z: 0, w: 1 };
+                initialQuat = quatToObject(inst.quaternion);
 
             } else if (this.pluginType === "Model3DPlugin") {
                 // Model3D has base position (x, y, z) plus offsets
@@ -846,19 +819,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             return meshPoints;
         }
 
-        // TODO: Re-enable 3D Rotate support
-        // _Behavior3DRotate() {
-        //     // In SDK v2, this.instance is the SDK wrapper (IInstance), not the internal C3 instance
-        //     // Use runtime.getInstanceByUid() to get the internal C3 instance which has GetBehaviorSdkInstanceFromCtor
-        //     const inst = this.runtime.getInstanceByUid(this.uid);
-        //     if (!inst) return null;
-        //     const rotate3D = inst.GetBehaviorSdkInstanceFromCtor(
-        //         C3.Behaviors.mikal_rotate_shape
-        //     );
-        //     if (!rotate3D) return null;
-        //     return rotate3D;
-        // }
-
         _SetWorldGravity(x, y, z) {
             const gravity = { x, y, z };
             const command = {
@@ -912,69 +872,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 uid: this.uid,
                 tag,
             };
-            // Always send batched command instead of raycasting with comlink
-            if (true) {
-                // Send batched command instead of raycasting with comlink
-                this.PhysicsType.commands.push(command);
-                return;
-            }
-            const result = await this.comRapier.raycast(command);
-            if (result.hasHit) {
-                const hitPointWorld = vec3.create();
-                vec3.add(
-                    hitPointWorld,
-                    origin,
-                    vec3.mul(
-                        dir,
-                        dir,
-                        vec3.fromValues(
-                            result.timeOfImpact,
-                            result.timeOfImpact,
-                            result.timeOfImpact
-                        )
-                    )
-                );
-                this.raycastResult = {
-                    hasHit: true,
-                    hitFaceIndex: 0,
-                    hitPointWorld: [
-                        hitPointWorld[0] * scale,
-                        hitPointWorld[1] * scale,
-                        hitPointWorld[2] * scale,
-                    ],
-                    hitNormalWorld: [
-                        result.normal.x,
-                        result.normal.y,
-                        result.normal.z,
-                    ],
-                    distance:
-                        vec3.distance(origin, [
-                            hitPointWorld[0],
-                            hitPointWorld[1],
-                            hitPointWorld[2],
-                        ]) * scale,
-                    hitUID: result.hitUID,
-                    tag,
-                };
-            } else {
-                this.raycastResult = {
-                    hasHit: false,
-                    hitFaceIndex: -1,
-                    hitPointWorld: [0, 0, 0],
-                    hitNormalWorld: [0, 0, 0],
-                    distance: 0,
-                    hitUID: -1,
-                    tag,
-                };
-            }
-
-            this._trigger(
-                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyRaycastResult
-            );
-            this._trigger(
-                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnRaycastResult
-            );
-            return true;
+            this.PhysicsType.commands.push(command);
         }
 
         _RaycastResultAsJSON() {
@@ -1273,9 +1171,12 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
         _ApplyTorque(x, y, z) {
             if (!this.bodyDefined) return;
-            this.PhysicsType.workerRPC.send("applyTorque", [
-                { uid: this.uid, torque: { x, y, z } },
-            ]);
+            const command = {
+                type: this.CommandType.ApplyTorque,
+                uid: this.uid,
+                torque: { x, y, z },
+            };
+            this.PhysicsType.commands.push(command);
         }
 
         _SetWorldScale(scale) {
@@ -1491,85 +1392,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 uid: this.instance.uid,
             };
 
-            // Always send batched command instead of raycasting with comlink
-            if (true) {
-                this.PhysicsType.commands.push(command);
-                return;
-            }
-
-            const result = await this.comRapier.castShape(command);
-            if (result.hasHit) {
-                const hitPointWorld = vec3.create();
-                vec3.add(
-                    hitPointWorld,
-                    origin,
-                    vec3.mul(
-                        direction,
-                        direction,
-                        vec3.fromValues(
-                            result.time_of_impact,
-                            result.time_of_impact,
-                            result.time_of_impact
-                        )
-                    )
-                );
-                this.castShapeResult = {
-                    hasHit: true,
-                    hitPointWorld: [
-                        hitPointWorld[0] * scale,
-                        hitPointWorld[1] * scale,
-                        hitPointWorld[2] * scale,
-                    ],
-                    witness1: [
-                        result.witness1.x,
-                        result.witness1.y,
-                        result.witness1.z,
-                    ],
-                    witness2: [
-                        result.witness2.x,
-                        result.witness2.y,
-                        result.witness2.z,
-                    ],
-                    normal1: [
-                        result.normal1.x,
-                        result.normal1.y,
-                        result.normal1.z,
-                    ],
-                    normal2: [
-                        result.normal2.x,
-                        result.normal2.y,
-                        result.normal2.z,
-                    ],
-                    distance:
-                        vec3.distance(origin, [
-                            hitPointWorld[0],
-                            hitPointWorld[1],
-                            hitPointWorld[2],
-                        ]) * scale,
-                    hitUID: result.hitUID,
-                    tag,
-                };
-            } else {
-                this.castShapeResult = {
-                    hasHit: false,
-                    hitPointWorld: [0, 0, 0],
-                    witness1: [0, 0, 0],
-                    witness2: [0, 0, 0],
-                    normal1: [0, 0, 0],
-                    normal2: [0, 0, 0],
-                    distance: 0,
-                    hitUID: -1,
-                    tag,
-                };
-            }
-
-            this._trigger(
-                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyCastShapeResult
-            );
-            this._trigger(
-                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCastShapeResult
-            );
-            return true;
+            this.PhysicsType.commands.push(command);
         }
 
         _CastShapeResultAsJSON() {
