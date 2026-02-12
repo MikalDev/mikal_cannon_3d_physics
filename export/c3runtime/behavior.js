@@ -873,6 +873,32 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             // load state for savegames
         }
 
+        // === Coordinate Conversion Utilities ===
+        // Convert world coordinates to physics units
+        _toPhysics(worldValue) {
+            return worldValue / this.PhysicsType.scale;
+        }
+
+        // Convert physics units to world coordinates
+        _toWorld(physicsValue) {
+            return physicsValue * this.PhysicsType.scale;
+        }
+
+        // Convert world vector to physics units
+        _vecToPhysics(x, y, z) {
+            const s = this.PhysicsType.scale;
+            return { x: x / s, y: y / s, z: z / s };
+        }
+
+        // Normalize bounding box from {x,y,z} or [x,y,z] format
+        _normalizeBBox(min, max) {
+            const getCoord = (v, i) => v[['x', 'y', 'z'][i]] ?? v[i] ?? 0;
+            return {
+                min: { x: getCoord(min, 0), y: getCoord(min, 1), z: getCoord(min, 2) },
+                max: { x: getCoord(max, 0), y: getCoord(max, 1), z: getCoord(max, 2) }
+            };
+        }
+
         _tick() {
             const PhysicsType = this.PhysicsType;
             PhysicsType.sendCommandsToWorker();
@@ -1060,11 +1086,9 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         async DefineBody(pluginType, shape, shapeType, bodyType, colliderType) {
             // SDK v2: Use public IWorldInstance interface
             const inst = this.instance;
-            const PhysicsType = this.behavior;
             const quat = globalThis.glMatrix.quat;
             const zHeight = inst.depth || 0;
             const enableRot = [true, true, true];
-            const scale = PhysicsType.scale;
             const initialQuat = quat.create();
             // inst.angle is in radians, fromEuler expects degrees
             quat.fromEuler(initialQuat, 0, 0, (inst.angle * 180) / Math.PI);
@@ -1079,13 +1103,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 command = {
                     type: this.CommandType.AddBody,
                     uid: inst.uid,
-                    x: inst.x / scale,
-                    y: inst.y / scale,
-                    z: (inst.z + zHeight / 2) / scale,
+                    ...this._vecToPhysics(inst.x, inst.y, inst.z + zHeight / 2),
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: inst.width / scale,
-                    height: inst.height / scale,
-                    depth: zHeight / scale,
+                    width: this._toPhysics(inst.width),
+                    height: this._toPhysics(inst.height),
+                    depth: this._toPhysics(zHeight),
                     immovable: this.immovable,
                     enableRot0: enableRot[0],
                     enableRot1: enableRot[1],
@@ -1101,13 +1123,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 command = {
                     type: this.CommandType.AddBody,
                     uid: inst.uid,
-                    x: (inst.x - inst.width / 2) / scale,
-                    y: (inst.y - inst.height / 2) / scale,
-                    z: (inst.z + zHeight / 2) / scale,
+                    ...this._vecToPhysics(inst.x - inst.width / 2, inst.y - inst.height / 2, inst.z + zHeight / 2),
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: inst.width / scale,
-                    height: inst.height / scale,
-                    depth: zHeight / scale,
+                    width: this._toPhysics(inst.width),
+                    height: this._toPhysics(inst.height),
+                    depth: this._toPhysics(zHeight),
                     immovable: this.immovable,
                     enableRot0: enableRot[0],
                     enableRot1: enableRot[1],
@@ -1127,13 +1147,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         _UpdateBody() {
             // SDK v2: Use public IWorldInstance interface
             const inst = this.instance;
-            const PhysicsType = this.behavior;
             const quat = globalThis.glMatrix.quat;
             const zHeight = inst.depth || 0;
             const enableRot = [true, true, true];
             const initialQuat = quat.create();
             quat.fromEuler(initialQuat, 0, 0, (inst.angle * 180) / Math.PI);
-            const scale = PhysicsType.scale;
             let command = null;
             if (this.pluginType == "Shape3DPlugin") {
                 // 3DShape can only rotate around z axis
@@ -1143,13 +1161,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 command = {
                     type: this.CommandType.UpdateBody,
                     uid: inst.uid,
-                    x: inst.x / scale,
-                    y: inst.y / scale,
-                    z: (inst.z + zHeight / 2) / scale,
+                    ...this._vecToPhysics(inst.x, inst.y, inst.z + zHeight / 2),
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: inst.width / scale,
-                    height: inst.height / scale,
-                    depth: zHeight / scale,
+                    width: this._toPhysics(inst.width),
+                    height: this._toPhysics(inst.height),
+                    depth: this._toPhysics(zHeight),
                     immovable: this.immovable,
                     enableRot0: enableRot[0],
                     enableRot1: enableRot[1],
@@ -1165,13 +1181,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 command = {
                     type: this.CommandType.UpdateBody,
                     uid: inst.uid,
-                    x: (inst.x - inst.width / 2) / scale,
-                    y: (inst.y - inst.height / 2) / scale,
-                    z: inst.z / scale,
+                    ...this._vecToPhysics(inst.x - inst.width / 2, inst.y - inst.height / 2, inst.z),
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: inst.width / scale,
-                    height: inst.height / scale,
-                    depth: zHeight / scale,
+                    width: this._toPhysics(inst.width),
+                    height: this._toPhysics(inst.height),
+                    depth: this._toPhysics(zHeight),
                     immovable: this.immovable,
                     enableRot0: enableRot[0],
                     enableRot1: enableRot[1],
@@ -1212,13 +1226,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 this._UpdateBody();
                 return;
             }
-            const PhysicsType = this.behavior;
             const quat = globalThis.glMatrix.quat;
             const zHeight = inst.depth || 0;
             const enableRot = [true, true, true];
             const initialQuat = quat.create();
             quat.fromEuler(initialQuat, 0, 0, (inst.angle * 180) / Math.PI);
-            const scale = PhysicsType.scale;
             let command = null;
             if (this.pluginType == "Shape3DPlugin") {
                 // 3DShape can only rotate around z axis
@@ -1228,13 +1240,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 command = {
                     type: this.CommandType.SetSizeOverride,
                     uid: inst.uid,
-                    x: inst.x / scale,
-                    y: inst.y / scale,
-                    z: (inst.z + zHeight / 2) / scale,
+                    ...this._vecToPhysics(inst.x, inst.y, inst.z + zHeight / 2),
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: width / scale,
-                    height: height / scale,
-                    depth: depth / scale,
+                    width: this._toPhysics(width),
+                    height: this._toPhysics(height),
+                    depth: this._toPhysics(depth),
                     immovable: this.immovable,
                     enableRot0: enableRot[0],
                     enableRot1: enableRot[1],
@@ -1250,13 +1260,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 command = {
                     type: this.CommandType.UpdateBody,
                     uid: inst.uid,
-                    x: (inst.x - inst.width / 2) / scale,
-                    y: (inst.y - inst.height / 2) / scale,
-                    z: inst.z / scale,
+                    ...this._vecToPhysics(inst.x - inst.width / 2, inst.y - inst.height / 2, inst.z),
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: inst.width / scale,
-                    height: inst.height / scale,
-                    depth: zHeight / scale,
+                    width: this._toPhysics(inst.width),
+                    height: this._toPhysics(inst.height),
+                    depth: this._toPhysics(zHeight),
                     immovable: this.immovable,
                     enableRot0: enableRot[0],
                     enableRot1: enableRot[1],
@@ -1327,8 +1335,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         // Can auto-create from bounding box or use manual dimensions via SetSizeOverride
         _create3DObjectShape(shapeProperty, bodyType, colliderType, overrideSize) {
             const inst = this.instance;
-            const PhysicsType = this.behavior;
-            const scale = PhysicsType.scale;
             const enableRot = [true, true, true]; // Both plugins can rotate on all axes
 
             // Get initial position and rotation based on plugin type
@@ -1363,46 +1369,31 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
             // Try extracted bounding box first (Model3D only)
             if (this.pluginType === "Model3DPlugin" && !overrideSize && this._extractedBBoxMin && this._extractedBBoxMax) {
-                const min = this._extractedBBoxMin;
-                const max = this._extractedBBoxMax;
-
-                // Convert {x,y,z} or [x,y,z] to consistent format
-                const minX = min.x !== undefined ? min.x : min[0];
-                const minY = min.y !== undefined ? min.y : min[1];
-                const minZ = min.z !== undefined ? min.z : min[2];
-                const maxX = max.x !== undefined ? max.x : max[0];
-                const maxY = max.y !== undefined ? max.y : max[1];
-                const maxZ = max.z !== undefined ? max.z : max[2];
-
-                const bboxWidth = Math.abs(maxX - minX);
-                const bboxHeight = Math.abs(maxY - minY);
-                const bboxDepth = Math.abs(maxZ - minZ);
+                const bbox = this._normalizeBBox(this._extractedBBoxMin, this._extractedBBoxMax);
+                const bboxWidth = Math.abs(bbox.max.x - bbox.min.x);
+                const bboxHeight = Math.abs(bbox.max.y - bbox.min.y);
+                const bboxDepth = Math.abs(bbox.max.z - bbox.min.z);
 
                 if (bboxWidth > 0 || bboxHeight > 0 || bboxDepth > 0) {
                     width = bboxWidth;
                     height = bboxHeight;
                     depth = bboxDepth;
                     dimensionSource = "extracted bounding box";
-                    
                 }
             }
 
             // Try to get dimensions from bounding box if available
             if (!overrideSize && inst.xMinBB && inst.xMaxBB) {
-                const xMinBB = inst.xMinBB;
-                const xMaxBB = inst.xMaxBB;
-
-                // Check if bounding box is valid (not 0,0,0)
-                const bboxWidth = Math.abs(xMaxBB[0] - xMinBB[0]);
-                const bboxHeight = Math.abs(xMaxBB[1] - xMinBB[1]);
-                const bboxDepth = Math.abs(xMaxBB[2] - xMinBB[2]);
+                const bbox = this._normalizeBBox(inst.xMinBB, inst.xMaxBB);
+                const bboxWidth = Math.abs(bbox.max.x - bbox.min.x);
+                const bboxHeight = Math.abs(bbox.max.y - bbox.min.y);
+                const bboxDepth = Math.abs(bbox.max.z - bbox.min.z);
 
                 if (bboxWidth > 0 || bboxHeight > 0 || bboxDepth > 0) {
                     width = bboxWidth;
                     height = bboxHeight;
                     depth = bboxDepth;
                     dimensionSource = "bounding box";
-                    
                 } else {
                     console.warn(`[Physics Debug] Bounding box is zero-sized - UID: ${this.uid}`);
                     return false;
@@ -1497,9 +1488,9 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
             
 
-            const scaledWidth = width / scale;
-            const scaledHeight = height / scale;
-            const scaledDepth = depth / scale;
+            const scaledWidth = this._toPhysics(width);
+            const scaledHeight = this._toPhysics(height);
+            const scaledDepth = this._toPhysics(depth);
 
             
 
@@ -1509,17 +1500,13 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 console.warn(`[Physics Debug] ⚠ Very small physics dimensions detected - UID: ${this.uid}
   Smallest dimension: ${minDim.toFixed(4)} physics units
   This may cause unstable physics behavior or wild spinning
-  Consider: Increase model size OR decrease physics scale factor (currently ${scale})`);
+  Consider: Increase model size OR decrease physics scale factor (currently ${this.PhysicsType.scale})`);
             }
-
-            
 
             const command = {
                 type: this.CommandType.AddBody,
                 uid: inst.uid,
-                x: posX / scale,
-                y: posY / scale,
-                z: posZ / scale,
+                ...this._vecToPhysics(posX, posY, posZ),
                 q: {
                     x: initialQuat.x,
                     y: initialQuat.y,
@@ -1556,7 +1543,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
         // Get mesh points from object using public IWorldInstance API
         _getMeshPoints() {
-            const scale = this.PhysicsType.scale;
             const inst = this.instance;
             const meshSize = inst.getMeshSize();
             if (!meshSize || meshSize[0] === 0 || meshSize[1] === 0) return [];
@@ -1568,10 +1554,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 const meshRow = [];
                 for (let col = 0; col < cols; col++) {
                     const point = inst.getMeshPoint(col, row);
-                    const x = (point.x * width) / scale;
-                    const y = (point.y * height) / scale;
-                    const z = point.z / scale;
-                    meshRow.push({ x, y, z });
+                    meshRow.push(this._vecToPhysics(point.x * width, point.y * height, point.z));
                 }
                 meshPoints.push(meshRow);
             }
@@ -1607,14 +1590,13 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 };
                 return;
             }
-            const scale = this.PhysicsType.scale;
             const vec3 = globalThis.glMatrix.vec3;
             const origin = vec3.fromValues(
-                fromX / scale,
-                fromY / scale,
-                fromZ / scale
+                this._toPhysics(fromX),
+                this._toPhysics(fromY),
+                this._toPhysics(fromZ)
             );
-            const to = vec3.fromValues(x / scale, y / scale, z / scale);
+            const to = vec3.fromValues(this._toPhysics(x), this._toPhysics(y), this._toPhysics(z));
             let maxToI = vec3.distance(origin, to);
             vec3.sub(to, to, origin);
             // Normalize to, making dir vector
@@ -1728,42 +1710,39 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             enableSnapToGround,
             snapToGroundMaxDistance
         ) {
-            const scale = this.PhysicsType.scale;
             const command = {
                 type: this.CommandType.CreateCharacterController,
                 uid: this.uid,
                 tag,
-                offset: offset / scale,
+                offset: this._toPhysics(offset),
                 up: { x: upX, y: upY, z: upZ },
                 maxSlopeClimbAngle,
                 minSlopeSlideAngle,
                 applyImpulsesToDynamicBodies,
                 enableAutostep,
-                autostepMinWidth: autostepMinWidth / scale,
-                autostepMaxHeight: autostepMaxHeight / scale,
+                autostepMinWidth: this._toPhysics(autostepMinWidth),
+                autostepMaxHeight: this._toPhysics(autostepMaxHeight),
                 enableSnapToGround,
-                snapToGroundMaxDistance: snapToGroundMaxDistance / scale,
+                snapToGroundMaxDistance: this._toPhysics(snapToGroundMaxDistance),
             };
             this.PhysicsType.commands.push(command);
         }
 
         _TranslateCharacterController(tag, x, y, z) {
-            const scale = this.PhysicsType.scale;
             const command = {
                 type: this.CommandType.TranslateCharacterController,
                 uid: this.uid,
                 tag,
-                translation: { x: x / scale, y: y / scale, z: z / scale },
+                translation: this._vecToPhysics(x, y, z),
             };
             this.PhysicsType.commands.push(command);
         }
 
         _Translate(x, y, z) {
-            const scale = this.PhysicsType.scale;
             const command = {
                 type: this.CommandType.Translate,
                 uid: this.uid,
-                translation: { x: x / scale, y: y / scale, z: z / scale },
+                translation: this._vecToPhysics(x, y, z),
             };
             this.PhysicsType.commands.push(command);
         }
@@ -1823,11 +1802,10 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetVelocity(x, y, z) {
-            const scale = this.PhysicsType.scale;
             const command = {
                 type: this.CommandType.SetVelocity,
                 uid: this.uid,
-                velocity: { x: x / scale, y: y / scale, z: z / scale },
+                velocity: this._vecToPhysics(x, y, z),
             };
             this.PhysicsType.commands.push(command);
         }
@@ -2006,20 +1984,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             targetAnchorZ,
             targetUID
         ) {
-            const scale = this.PhysicsType.scale;
             const command = {
                 type: this.CommandType.AddSphericalJoint,
                 uid: this.uid,
-                anchor: {
-                    x: anchorX / scale,
-                    y: anchorY / scale,
-                    z: anchorZ / scale,
-                },
-                targetAnchor: {
-                    x: targetAnchorX / scale,
-                    y: targetAnchorY / scale,
-                    z: targetAnchorZ / scale,
-                },
+                anchor: this._vecToPhysics(anchorX, anchorY, anchorZ),
+                targetAnchor: this._vecToPhysics(targetAnchorX, targetAnchorY, targetAnchorZ),
                 targetUID,
             };
             this.PhysicsType.commands.push(command);
@@ -2037,20 +2006,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             axisZ,
             targetUID
         ) {
-            const scale = this.PhysicsType.scale;
             const command = {
                 type: this.CommandType.AddRevoluteJoint,
                 uid: this.uid,
-                anchor: {
-                    x: anchorX / scale,
-                    y: anchorY / scale,
-                    z: anchorZ / scale,
-                },
-                targetAnchor: {
-                    x: targetAnchorX / scale,
-                    y: targetAnchorY / scale,
-                    z: targetAnchorZ / scale,
-                },
+                anchor: this._vecToPhysics(anchorX, anchorY, anchorZ),
+                targetAnchor: this._vecToPhysics(targetAnchorX, targetAnchorY, targetAnchorZ),
                 targetUID,
                 axis: { x: axisX, y: axisY, z: axisZ },
             };
@@ -2058,11 +2018,10 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetPositionOffset(x, y, z) {
-            const scale = this.PhysicsType.scale;
             const command = {
                 type: this.CommandType.SetPositionOffset,
                 uid: this.uid,
-                positionOffset: { x: x / scale, y: y / scale, z: z / scale },
+                positionOffset: this._vecToPhysics(x, y, z),
             };
             this.PhysicsType.commands.push(command);
         }
@@ -2094,15 +2053,14 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 };
                 return;
             }
-            const scale = this.PhysicsType.scale;
             const vec3 = globalThis.glMatrix.vec3;
 
             const origin = vec3.fromValues(
-                fromX / scale,
-                fromY / scale,
-                fromZ / scale
+                this._toPhysics(fromX),
+                this._toPhysics(fromY),
+                this._toPhysics(fromZ)
             );
-            const to = vec3.fromValues(toX / scale, toY / scale, toZ / scale);
+            const to = vec3.fromValues(this._toPhysics(toX), this._toPhysics(toY), this._toPhysics(toZ));
 
             // Calculate direction
             let direction = vec3.create();
@@ -2130,10 +2088,9 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 type: this.CommandType.CastShape,
                 shape: {
                     type: shapeTypeString, // e.g., "box", "sphere", "capsule"
-                    width: width / scale, // Width of the shape for "box"
-                    height: height / scale, // Height of the shape for "box" or "capsule"
-                    depth: depth / scale, // Depth of the shape for "box"
-                    // Add radius if needed for "sphere" or "capsule"
+                    width: this._toPhysics(width),
+                    height: this._toPhysics(height),
+                    depth: this._toPhysics(depth),
                 },
                 origin: { x: origin[0], y: origin[1], z: origin[2] },
                 dir: { x: direction[0], y: direction[1], z: direction[2] },
@@ -2143,7 +2100,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     z: rotZ,
                 },
                 maxToI,
-                targetDistance: targetDistance / scale, // Include targetDistance in the command
+                targetDistance: this._toPhysics(targetDistance),
                 filterGroups,
                 excludeUID,
                 skipBackfaces,
