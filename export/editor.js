@@ -3,7 +3,7 @@ const SDK = self.SDK;
 const BEHAVIOR_INFO = {
     ...{
   "id": "mikal_cannon_3d_physics",
-  "version": "2.26.1",
+  "version": "2.27.0",
   "category": "movements",
   "author": "Mikal",
   "addonType": "behavior",
@@ -17,11 +17,6 @@ const BEHAVIOR_INFO = {
   "fileDependencies": [
     {
       "filename": "rapierWorker.js",
-      "type": "copy-to-output",
-      "fileType": "text/javascript"
-    },
-    {
-      "filename": "rapier3d-compat.js",
       "type": "copy-to-output",
       "fileType": "text/javascript"
     }
