@@ -39,19 +39,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 this.bodySizeWidth = properties[8];
                 this.bodySizeDepth = properties[9];
             }
-            this.defaultMass = 1;
-            this.body = null;
-            this.shapePositionOffset = null;
-            this.shapeAngleOffset = null;
             // In SDK v2, this.instance and this.behavior are not available in constructor
             // They will be initialized in _postCreate()
             this.uid = null;
             this.PhysicsType = null;
             this.bodyDefined = false;
-            this.setBody = {
-                position: { x: 0, y: 0, z: 0 },
-                quaternion: { x: 0, y: 0, z: 0, w: 0 },
-            };
             this.CommandType = {
                 AddBody: 0,
                 StepWorld: 1,
@@ -1187,27 +1179,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
         _VelocityZ() {
             return 0;
-        }
-
-        _UpdateHeightfield() {
-            if (!this.bodyDefined) return;
-            const shape = this.body.shapes[0];
-            const meshPoints = this._getMeshPoints();
-            // Create two dimensional heightfield array using only z values from vertices
-            const heightfield = new Array(meshPoints.length)
-                .fill(0)
-                .map(() => new Array(meshPoints[0].length).fill(0));
-            let index = meshPoints.length - 1;
-            for (const row of meshPoints) {
-                let index2 = 0;
-                for (const point of row) {
-                    heightfield[index][index2] = point.z;
-                    index2++;
-                }
-                index--;
-            }
-            shape.data = heightfield;
-            shape.update();
         }
 
         _EnableDebugRender(enable, width) {

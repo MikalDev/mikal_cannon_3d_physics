@@ -655,20 +655,6 @@
         ]
       },
       {
-        "id": "UpdateHeightfield",
-        "scriptName": "UpdateHeightfield",
-        "highlight": false,
-        "isDeprecated": true,
-        "isAsync": false,
-        "params": [
-          {
-            "id": "heightfield",
-            "type": "number",
-            "initialValue": 0
-          }
-        ]
-      },
-      {
         "id": "SetCollisionFilterGroup",
         "scriptName": "SetCollisionFilterGroup",
         "highlight": false,

@@ -425,17 +425,6 @@
               }
             }
           },
-          "UpdateHeightfield": {
-            "list-name": "Update heightfield",
-            "display-text": "Update {my} heightfield {0}",
-            "description": "Update heightfield for mesh/heightfield.",
-            "params": {
-              "heightfield": {
-                "name": "Heightfield",
-                "desc": "Heightfield."
-              }
-            }
-          },
           "SetCollisionFilterGroup": {
             "list-name": "Set collision groups",
             "display-text": "Set {my} collision groups {0}",

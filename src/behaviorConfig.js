@@ -878,30 +878,6 @@ module.exports = {
             description: "Set Continuous Collision Detection (CCD) for body.",
         },
 
-        // Update heightfield body action
-        UpdateHeightfield: {
-            category: "body",
-            forward: "_UpdateHeightfield",
-            autoScriptInterface: true,
-            highlight: false,
-            isDeprecated: true,
-            isAsync: false,
-            // list of parameters
-            params: [
-                {
-                    id: "heightfield",
-                    name: "Heightfield",
-                    desc: "Heightfield.",
-                    type: "number",
-                    initialValue: 0,
-                },
-            ],
-            listName: "Update heightfield",
-            displayText: "Update {my} heightfield {0}",
-            // The description of the action as it appears in the add action dialog
-            description: "Update heightfield for mesh/heightfield.",
-        },
-
         SetCollisionFilterGroup: {
             category: "body",
             forward: "_SetCollisionFilterGroup",
