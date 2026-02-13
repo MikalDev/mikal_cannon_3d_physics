@@ -1127,7 +1127,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     meshPoints: meshPoints,
                 };
             }
-            console.log("[Physics] AddBody command:", JSON.stringify(command, null, 2));
             this.PhysicsType.commands.push(command);
         }
 
@@ -1188,7 +1187,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 console.error("invalid pluginType", this.pluginType);
                 return;
             }
-            console.log("[Physics] AddBody command (SetSizeOverride Shape3D):", JSON.stringify(command, null, 2));
             this.PhysicsType.commands.push(command);
         }
 
@@ -1267,7 +1265,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 console.error("invalid pluginType", this.pluginType);
                 return;
             }
-            console.log("[Physics] AddBody command (SetSizeOverride Sprite):", JSON.stringify(command, null, 2));
             this.PhysicsType.commands.push(command);
         }
 
@@ -1421,65 +1418,19 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 width *= scaleX;
                 height *= scaleY;
                 depth *= scaleZ;
-
-                console.log(`  Scaled dimensions: W:${width.toFixed(2)} x H:${height.toFixed(2)} x D:${depth.toFixed(2)}`);
             }
 
-            // Shape type mapping (from combo property order)
-            // 0: Auto, 1: ModelMesh, 2: Box, 3: Sphere, 4: Cylinder, 5: Capsule, 6: ConvexHulls
-            const shapeNames = {
-                0: "Auto",
-                1: "ModelMesh",
-                2: "Box",
-                3: "Sphere",
-                4: "Cylinder",
-                5: "Capsule",
-                6: "ConvexHulls"
-            };
-
-            const originalShapeName = shapeNames[shapeProperty] || `Unknown(${shapeProperty})`;
-            const pluginName = this.pluginType === "GltfStaticPlugin" ? "GltfStatic" : "Model3D";
-
-            
-
             // Convert mesh-based shapes to Box for GltfStatic/Model3D
+            // Shape types: 0=Auto, 1=ModelMesh, 2=Box, 3=Sphere, 4=Cylinder, 5=Capsule, 6=ConvexHulls
             let actualShapeType = shapeProperty;
             if (shapeProperty === 1 || shapeProperty === 6) { // ModelMesh or ConvexHulls
                 actualShapeType = 2; // Box
-                
             }
-
-            const shapeName = shapeNames[actualShapeType] || `Unknown(${actualShapeType})`;
-
-            // Log dimension interpretation for different shape types
-            let dimensionInfo = "";
-            switch (actualShapeType) {
-                case 2: // Box
-                    dimensionInfo = `Box uses all three dimensions as extents`;
-                    break;
-                case 3: // Sphere
-                    dimensionInfo = `Sphere uses width as radius (height/depth ignored)`;
-                    break;
-                case 4: // Cylinder
-                    dimensionInfo = `Cylinder uses height as length, width as radius`;
-                    break;
-                case 5: // Capsule
-                    dimensionInfo = `Capsule uses height as length, width as radius`;
-                    break;
-                case 0: // Auto
-                    dimensionInfo = `Auto shape - worker will determine best fit`;
-                    break;
-                default:
-                    dimensionInfo = `Unknown shape type - may not work correctly`;
-            }
-
-            
 
             const scaledWidth = this._toPhysics(width);
             const scaledHeight = this._toPhysics(height);
             const scaledDepth = this._toPhysics(depth);
 
-            
 
             // Check for very small dimensions that could cause physics instability
             const minDim = Math.min(scaledWidth, scaledHeight, scaledDepth);
@@ -1513,8 +1464,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 shape: null, // GltfStatic uses primitive shapes, not Shape3D geometry
                 mass: this.mass,
             };
-
-            console.log("[Physics] AddBody command (3D Object):", JSON.stringify(command, null, 2));
 
             this.PhysicsType.commands.push(command);
 
