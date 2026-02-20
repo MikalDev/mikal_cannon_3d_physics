@@ -992,12 +992,12 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     this._prevPhysicsQuat = quat.clone(currentQuat);
                 } else {
                     // Subsequent frames: compute delta rotation to avoid gimbal lock
-                    // Delta = current * inverse(previous)
+                    // Delta = inverse(previous) * current (local frame delta)
                     const prevInverse = quat.create();
                     quat.invert(prevInverse, this._prevPhysicsQuat);
 
                     const deltaQuat = quat.create();
-                    quat.multiply(deltaQuat, currentQuat, prevInverse);
+                    quat.multiply(deltaQuat, prevInverse, currentQuat);
                     quat.normalize(deltaQuat, deltaQuat);
 
                     // Convert delta quaternion to Euler angles
