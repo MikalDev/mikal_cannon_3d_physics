@@ -36,14 +36,14 @@ Physics runs in a WebAssembly worker thread for non-blocking simulation:
 ```
 Main Thread (instance.js, behavior.js)
     ↓ Batched commands via postMessage
-Physics Worker (rapierWorker.js + rapier3d-compat.js)
+Physics Worker (rapierWorker.js)
     ↓ Results batch (Float32Array transfer)
 Main Thread (updates instance positions)
 ```
 
 **Command Pattern:** Instance methods queue physics commands as objects, sent to worker in batches via `postMessage`. Worker processes simulation and returns results on next frame.
 
-**Comlink:** Embedded inline (not imported) in both `behavior.js` and `rapierWorker.js` as `Mikal_Rapier_Comlink` IIFE. Only used for initial `Comlink.wrap/expose` setup and `initWorld()` call. All runtime physics commands use direct `postMessage` for lower overhead. The standalone `src/comlink.js` file is unused.
+**WorkerRPC:** Minimal RPC helper (30 LOC) in `behavior.js` handles worker communication. Used for `initWorld()` call and `stepWorld()` results. All other commands use fire-and-forget `postMessage`.
 
 ### Key Files
 

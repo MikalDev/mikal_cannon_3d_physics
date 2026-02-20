@@ -798,6 +798,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             this.uid = null;
             this.PhysicsType = null;
             this.bodyDefined = false;
+            this._prevPhysicsQuat = null; // Track previous physics quaternion for delta rotation (Model3D)
             this.CommandType = {
                 AddBody: 0,
                 StepWorld: 1,
@@ -973,19 +974,41 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
             } else if (this.pluginType === "Model3DPlugin") {
                 // Set Model3D world position (base position, keep offsets at 0)
+                // Model3D Z position is at the bottom, so subtract depth/2 from physics center
+                const zDepth = inst.depth || 0;
                 inst.x = position.x;
                 inst.y = position.y;
-                inst.z = position.z;
+                inst.z = position.z - zDepth / 2;
 
-                // Convert quaternion to Euler angles (radians)
                 const quat = globalThis.glMatrix.quat;
-                const quatArray = quat.fromValues(quatRot.x, quatRot.y, quatRot.z, quatRot.w);
-                const eulerAngles = this._quaternionToEuler(quatArray);
-                // eulerAngles = [pitch, yaw, roll] = [X, Y, Z] in radians
+                const currentQuat = quat.fromValues(quatRot.x, quatRot.y, quatRot.z, quatRot.w);
 
-                inst.rotationX = eulerAngles[0]; // X-axis rotation (pitch)
-                inst.rotationY = eulerAngles[1]; // Y-axis rotation (yaw)
-                inst.rotationZ = eulerAngles[2]; // Z-axis rotation (roll)
+                if (!this._prevPhysicsQuat) {
+                    // First frame: set absolute rotation directly
+                    const eulerAngles = this._quaternionToEuler(currentQuat);
+                    inst.rotationX = eulerAngles[0];
+                    inst.rotationY = eulerAngles[1];
+                    inst.rotationZ = eulerAngles[2];
+                    this._prevPhysicsQuat = quat.clone(currentQuat);
+                } else {
+                    // Subsequent frames: compute delta rotation to avoid gimbal lock
+                    // Delta = current * inverse(previous)
+                    const prevInverse = quat.create();
+                    quat.invert(prevInverse, this._prevPhysicsQuat);
+
+                    const deltaQuat = quat.create();
+                    quat.multiply(deltaQuat, currentQuat, prevInverse);
+                    quat.normalize(deltaQuat, deltaQuat);
+
+                    // Convert delta quaternion to Euler angles
+                    const deltaEuler = this._quaternionToEuler(deltaQuat);
+
+                    // Apply delta rotation using addTransform (adds to current rotation)
+                    inst.addTransform(deltaEuler[0], deltaEuler[1], deltaEuler[2], "rotation");
+
+                    // Update previous quaternion for next frame
+                    quat.copy(this._prevPhysicsQuat, currentQuat);
+                }
             } else {
                 const zElevation = position.z - zHeight / 2;
                 inst.z = zElevation;
@@ -1333,8 +1356,10 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
             } else if (this.pluginType === "Model3DPlugin") {
                 // Model3D has base position (x, y, z) plus offsets
+                // Note: Model3D Z position is at the bottom of the model, so add depth/2 for physics center
                 posX = inst.x + (inst.offsetX || 0);
                 posY = inst.y + (inst.offsetY || 0);
+                // depth will be determined later, so we'll adjust posZ after getting dimensions
                 posZ = inst.z + (inst.offsetZ || 0);
 
                 // Convert Euler (radians) to quaternion
@@ -1418,6 +1443,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 width *= scaleX;
                 height *= scaleY;
                 depth *= scaleZ;
+            }
+
+            // Model3D Z position is at the bottom of the model, adjust to physics center
+            if (this.pluginType === "Model3DPlugin") {
+                posZ += depth / 2;
             }
 
             // Convert mesh-based shapes to Box for GltfStatic/Model3D

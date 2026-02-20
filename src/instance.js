@@ -220,9 +220,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
             } else if (this.pluginType === "Model3DPlugin") {
                 // Set Model3D world position (base position, keep offsets at 0)
+                // Model3D Z position is at the bottom, so subtract depth/2 from physics center
+                const zDepth = inst.depth || 0;
                 inst.x = position.x;
                 inst.y = position.y;
-                inst.z = position.z;
+                inst.z = position.z - zDepth / 2;
 
                 const quat = globalThis.glMatrix.quat;
                 const currentQuat = quat.fromValues(quatRot.x, quatRot.y, quatRot.z, quatRot.w);
@@ -600,8 +602,10 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
             } else if (this.pluginType === "Model3DPlugin") {
                 // Model3D has base position (x, y, z) plus offsets
+                // Note: Model3D Z position is at the bottom of the model, so add depth/2 for physics center
                 posX = inst.x + (inst.offsetX || 0);
                 posY = inst.y + (inst.offsetY || 0);
+                // depth will be determined later, so we'll adjust posZ after getting dimensions
                 posZ = inst.z + (inst.offsetZ || 0);
 
                 // Convert Euler (radians) to quaternion
@@ -685,6 +689,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 width *= scaleX;
                 height *= scaleY;
                 depth *= scaleZ;
+            }
+
+            // Model3D Z position is at the bottom of the model, adjust to physics center
+            if (this.pluginType === "Model3DPlugin") {
+                posZ += depth / 2;
             }
 
             // Convert mesh-based shapes to Box for GltfStatic/Model3D

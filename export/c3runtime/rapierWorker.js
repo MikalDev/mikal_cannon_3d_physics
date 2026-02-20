@@ -8415,12 +8415,6 @@ function addBody(config) {
 
     rigidBodyDesc.enabledRotations(rotX, rotY, rotZ);
 
-    console.log(`[Worker] Body ${config.uid} rotation settings (BEFORE creation):
-  X axis: ${rotX ? 'ENABLED' : 'LOCKED'}
-  Y axis: ${rotY ? 'ENABLED' : 'LOCKED'}
-  Z axis: ${rotZ ? 'ENABLED' : 'LOCKED'}
-  ℹ Set on RigidBodyDesc before createRigidBody()`);
-
     const body = rapierWorld.createRigidBody(rigidBodyDesc);
 
     if (
@@ -8483,12 +8477,7 @@ function addBody(config) {
     // (see rigidBodyDesc.enabledRotations above) - no need to set again here
 
     body.setLinearDamping(defaultLinearDamping);
-    body.setAngularDamping(defaultAngularDamping); // Apply angular damping to slow rotation
-
-    console.log(`[Worker] Body ${config.uid} damping applied:
-  Linear damping: ${defaultLinearDamping} (affects movement)
-  Angular damping: ${defaultAngularDamping} (affects rotation - prevents wild spinning)
-  ℹ Higher values = more damping = slower movement/rotation`);
+    body.setAngularDamping(defaultAngularDamping);
 
     const uid = config.uid;
     body.uid = uid;
