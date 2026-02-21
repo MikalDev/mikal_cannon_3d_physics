@@ -8584,11 +8584,13 @@ function stepWorld(dt, frame) {
     // Collect and return bodies' data...
     const bodies = rapierWorld.bodies;
     const numBodies = bodies.len();
-    const bodiesData = new Float32Array(numBodies * 8);
+    const bodiesData = new Float32Array(numBodies * 14);
     let i = 0;
     bodies.forEach((body) => {
         const translation = body.translation();
         const rotation = body.rotation();
+        const linvel = body.linvel();
+        const angvel = body.angvel();
         bodiesData[i++] = body.uid;
         bodiesData[i++] = translation.x;
         bodiesData[i++] = translation.y;
@@ -8597,6 +8599,12 @@ function stepWorld(dt, frame) {
         bodiesData[i++] = rotation.y;
         bodiesData[i++] = rotation.z;
         bodiesData[i++] = rotation.w;
+        bodiesData[i++] = linvel.x;
+        bodiesData[i++] = linvel.y;
+        bodiesData[i++] = linvel.z;
+        bodiesData[i++] = angvel.x;
+        bodiesData[i++] = angvel.y;
+        bodiesData[i++] = angvel.z;
     });
     const castRayResultsCopy = castRayResults.slice();
     const castShapeResultsCopy = castShapeResults.slice();

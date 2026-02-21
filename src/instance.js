@@ -1062,15 +1062,27 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _VelocityX() {
-            return 0;
+            return globalThis.Mikal_Rapier_Bodies?.get(this.uid)?.velocity?.x ?? 0;
         }
 
         _VelocityY() {
-            return 0;
+            return globalThis.Mikal_Rapier_Bodies?.get(this.uid)?.velocity?.y ?? 0;
         }
 
         _VelocityZ() {
-            return 0;
+            return globalThis.Mikal_Rapier_Bodies?.get(this.uid)?.velocity?.z ?? 0;
+        }
+
+        _AngularVelocityX() {
+            return globalThis.Mikal_Rapier_Bodies?.get(this.uid)?.angularVelocity?.x ?? 0;
+        }
+
+        _AngularVelocityY() {
+            return globalThis.Mikal_Rapier_Bodies?.get(this.uid)?.angularVelocity?.y ?? 0;
+        }
+
+        _AngularVelocityZ() {
+            return globalThis.Mikal_Rapier_Bodies?.get(this.uid)?.angularVelocity?.z ?? 0;
         }
 
         _EnableDebugRender(enable, width) {
