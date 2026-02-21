@@ -76,6 +76,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 SetSizeOverride: 27,
                 SetRestitution: 28,
                 SetFriction: 29,
+                SetEnabledRotations: 30,
+                SetEnabledTranslations: 31,
             };
             this._setTicking(true);
             this._setTicking2(true);
@@ -807,6 +809,30 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 uid: this.uid,
                 type: this.CommandType.SetCCD,
                 enable,
+            };
+            this.PhysicsType.commands.push(command);
+        }
+
+        _SetEnabledRotations(x, y, z) {
+            if (!this.bodyDefined) return;
+            const command = {
+                uid: this.uid,
+                type: this.CommandType.SetEnabledRotations,
+                enableX: x,
+                enableY: y,
+                enableZ: z,
+            };
+            this.PhysicsType.commands.push(command);
+        }
+
+        _SetEnabledTranslations(x, y, z) {
+            if (!this.bodyDefined) return;
+            const command = {
+                uid: this.uid,
+                type: this.CommandType.SetEnabledTranslations,
+                enableX: x,
+                enableY: y,
+                enableZ: z,
             };
             this.PhysicsType.commands.push(command);
         }

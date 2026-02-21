@@ -8068,6 +8068,8 @@ const CommandType = {
     SetSizeOverride: 27,
     SetRestitution: 28,
     SetFriction: 29,
+    SetEnabledRotations: 30,
+    SetEnabledTranslations: 31,
 };
 
 const BodyType = {
@@ -8147,6 +8149,26 @@ function setFriction(config) {
         if (collider) {
             collider.setFriction(config.friction);
         }
+    }
+}
+
+function setEnabledRotations(config) {
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setEnabledRotations(config.enableX, config.enableY, config.enableZ, true);
+    }
+}
+
+function setEnabledTranslations(config) {
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setEnabledTranslations(config.enableX, config.enableY, config.enableZ, true);
     }
 }
 
@@ -9189,6 +9211,8 @@ const commandFunctions = {
     [CommandType.SetSizeOverride]: setSizeOverride,
     [CommandType.SetRestitution]: setRestitution,
     [CommandType.SetFriction]: setFriction,
+    [CommandType.SetEnabledRotations]: setEnabledRotations,
+    [CommandType.SetEnabledTranslations]: setEnabledTranslations,
 };
 
 function runCommands(commands) {

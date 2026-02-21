@@ -878,6 +878,76 @@ module.exports = {
             description: "Set Continuous Collision Detection (CCD) for body.",
         },
 
+        SetEnabledRotations: {
+            category: "body",
+            forward: "_SetEnabledRotations",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "enableX",
+                    name: "Enable X rotation",
+                    desc: "Allow rotation around X axis.",
+                    type: "boolean",
+                    initialValue: "true",
+                },
+                {
+                    id: "enableY",
+                    name: "Enable Y rotation",
+                    desc: "Allow rotation around Y axis.",
+                    type: "boolean",
+                    initialValue: "true",
+                },
+                {
+                    id: "enableZ",
+                    name: "Enable Z rotation",
+                    desc: "Allow rotation around Z axis.",
+                    type: "boolean",
+                    initialValue: "true",
+                },
+            ],
+            listName: "Set enabled rotations",
+            displayText: "Set {my} enabled rotations X:{0} Y:{1} Z:{2}",
+            description: "Lock or unlock rotation axes. Set false to prevent rotation on that axis.",
+        },
+
+        SetEnabledTranslations: {
+            category: "body",
+            forward: "_SetEnabledTranslations",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "enableX",
+                    name: "Enable X translation",
+                    desc: "Allow movement along X axis.",
+                    type: "boolean",
+                    initialValue: "true",
+                },
+                {
+                    id: "enableY",
+                    name: "Enable Y translation",
+                    desc: "Allow movement along Y axis.",
+                    type: "boolean",
+                    initialValue: "true",
+                },
+                {
+                    id: "enableZ",
+                    name: "Enable Z translation",
+                    desc: "Allow movement along Z axis.",
+                    type: "boolean",
+                    initialValue: "true",
+                },
+            ],
+            listName: "Set enabled translations",
+            displayText: "Set {my} enabled translations X:{0} Y:{1} Z:{2}",
+            description: "Lock or unlock translation axes. Set false to pin the body on that axis.",
+        },
+
         SetCollisionFilterGroup: {
             category: "body",
             forward: "_SetCollisionFilterGroup",
