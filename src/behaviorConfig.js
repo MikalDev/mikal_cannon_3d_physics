@@ -883,7 +883,7 @@ module.exports = {
             forward: "_SetCollisionFilterGroup",
             autoScriptInterface: true,
             highlight: false,
-            isDeprecated: true,
+            deprecated: true,
             isAsync: false,
             // list of parameters
             params: [
@@ -938,7 +938,7 @@ module.exports = {
             forward: "_SetCollisionFilterMask",
             autoScriptInterface: true,
             highlight: false,
-            isDeprecated: true,
+            deprecated: true,
             isAsync: false,
             // list of parameters
             params: [
