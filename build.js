@@ -557,10 +557,20 @@ fs.writeFileSync("./export/c3runtime/behavior.js", pluginWithPluginInfo);
 
 if (config.fileDependencies) {
   config.fileDependencies.forEach((file) => {
-    fs.copyFileSync(
-      path.join(__dirname, "src", file.filename),
-      path.join(__dirname, "export", "c3runtime", file.filename)
-    );
+    if (file.filename === "rapierWorker.js") {
+      const lib = fs.readFileSync(path.join(__dirname, "src", "rapierLib.js"), "utf8");
+      const logic = fs.readFileSync(path.join(__dirname, "src", "rapierWorkerLogic.js"), "utf8");
+      fs.writeFileSync(
+        path.join(__dirname, "export", "c3runtime", "rapierWorker.js"),
+        lib + "\n" + logic,
+        "utf8"
+      );
+    } else {
+      fs.copyFileSync(
+        path.join(__dirname, "src", file.filename),
+        path.join(__dirname, "export", "c3runtime", file.filename)
+      );
+    }
   });
 }
 

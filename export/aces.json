@@ -655,10 +655,58 @@
         ]
       },
       {
+        "id": "SetEnabledRotations",
+        "scriptName": "SetEnabledRotations",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "enableX",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "enableY",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "enableZ",
+            "type": "boolean",
+            "initialValue": "true"
+          }
+        ]
+      },
+      {
+        "id": "SetEnabledTranslations",
+        "scriptName": "SetEnabledTranslations",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "enableX",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "enableY",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "enableZ",
+            "type": "boolean",
+            "initialValue": "true"
+          }
+        ]
+      },
+      {
         "id": "SetCollisionFilterGroup",
         "scriptName": "SetCollisionFilterGroup",
         "highlight": false,
-        "isDeprecated": true,
+        "deprecated": true,
         "isAsync": false,
         "params": [
           {
@@ -691,7 +739,7 @@
         "id": "SetCollisionFilterMask",
         "scriptName": "SetCollisionFilterMask",
         "highlight": false,
-        "isDeprecated": true,
+        "deprecated": true,
         "isAsync": false,
         "params": [
           {
@@ -1174,6 +1222,36 @@
         "id": "VelocityZ",
         "scriptName": "VelocityZ",
         "expressionName": "VelocityZ",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "AngularVelocityX",
+        "scriptName": "AngularVelocityX",
+        "expressionName": "AngularVelocityX",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "AngularVelocityY",
+        "scriptName": "AngularVelocityY",
+        "expressionName": "AngularVelocityY",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "AngularVelocityZ",
+        "scriptName": "AngularVelocityZ",
+        "expressionName": "AngularVelocityZ",
         "highlight": false,
         "deprecated": false,
         "returnType": "number",

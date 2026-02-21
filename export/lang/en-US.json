@@ -425,6 +425,44 @@
               }
             }
           },
+          "SetEnabledRotations": {
+            "list-name": "Set enabled rotations",
+            "display-text": "Set {my} enabled rotations X:{0} Y:{1} Z:{2}",
+            "description": "Lock or unlock rotation axes. Set false to prevent rotation on that axis.",
+            "params": {
+              "enableX": {
+                "name": "Enable X rotation",
+                "desc": "Allow rotation around X axis."
+              },
+              "enableY": {
+                "name": "Enable Y rotation",
+                "desc": "Allow rotation around Y axis."
+              },
+              "enableZ": {
+                "name": "Enable Z rotation",
+                "desc": "Allow rotation around Z axis."
+              }
+            }
+          },
+          "SetEnabledTranslations": {
+            "list-name": "Set enabled translations",
+            "display-text": "Set {my} enabled translations X:{0} Y:{1} Z:{2}",
+            "description": "Lock or unlock translation axes. Set false to pin the body on that axis.",
+            "params": {
+              "enableX": {
+                "name": "Enable X translation",
+                "desc": "Allow movement along X axis."
+              },
+              "enableY": {
+                "name": "Enable Y translation",
+                "desc": "Allow movement along Y axis."
+              },
+              "enableZ": {
+                "name": "Enable Z translation",
+                "desc": "Allow movement along Z axis."
+              }
+            }
+          },
           "SetCollisionFilterGroup": {
             "list-name": "Set collision groups",
             "display-text": "Set {my} collision groups {0}",
@@ -941,6 +979,21 @@
           "VelocityZ": {
             "translated-name": "VelocityZ",
             "description": "Velocity z vector.",
+            "params": {}
+          },
+          "AngularVelocityX": {
+            "translated-name": "AngularVelocityX",
+            "description": "Angular velocity x (rad/s).",
+            "params": {}
+          },
+          "AngularVelocityY": {
+            "translated-name": "AngularVelocityY",
+            "description": "Angular velocity y (rad/s).",
+            "params": {}
+          },
+          "AngularVelocityZ": {
+            "translated-name": "AngularVelocityZ",
+            "description": "Angular velocity z (rad/s).",
             "params": {}
           }
         }
