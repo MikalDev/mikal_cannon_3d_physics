@@ -335,123 +335,80 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             }
         }
 
-        async DefineBody(pluginType, shape, shapeType, bodyType, colliderType) {
-            // SDK v2: Use public IWorldInstance interface
+        _buildBodyCommand(type, overrides = {}) {
             const inst = this.instance;
             const quat = globalThis.glMatrix.quat;
             const zHeight = inst.depth || 0;
-            const enableRot = [true, true, true];
             const initialQuat = quat.create();
-            // inst.angle is in radians, fromEuler expects degrees
             quat.fromEuler(initialQuat, 0, 0, (inst.angle * 180) / Math.PI);
+
+            const isShape3D = this.pluginType === "Shape3DPlugin";
+            const isSprite = this.pluginType === "SpritePlugin";
+
+            const posX = isSprite ? inst.x - inst.width / 2 : inst.x;
+            const posY = isSprite ? inst.y - inst.height / 2 : inst.y;
+            const posZ = inst.z + (isShape3D ? zHeight / 2 : 0);
+
+            const base = {
+                type,
+                uid: inst.uid,
+                ...this._vecToPhysics(posX, posY, posZ),
+                q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
+                width: this._toPhysics(inst.width),
+                height: this._toPhysics(inst.height),
+                depth: this._toPhysics(zHeight),
+                immovable: this.immovable,
+                enableRot0: !isShape3D,
+                enableRot1: !isShape3D,
+                enableRot2: true,
+                shapeType: this.shapeProperty,
+                bodyType: this.bodyType,
+                colliderType: this.colliderType,
+                mass: this.mass,
+            };
+
+            return { ...base, ...overrides };
+        }
+
+        async DefineBody(pluginType, shape, shapeType, bodyType, colliderType) {
             let command = null;
 
-            // Removed verbose debug log
-
             if (pluginType === "Shape3DPlugin") {
-                // 3DShape can only rotate around z axis
-                enableRot[0] = false;
-                enableRot[1] = false;
-                command = {
-                    type: this.CommandType.AddBody,
-                    uid: inst.uid,
-                    ...this._vecToPhysics(inst.x, inst.y, inst.z + zHeight / 2),
-                    q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: this._toPhysics(inst.width),
-                    height: this._toPhysics(inst.height),
-                    depth: this._toPhysics(zHeight),
-                    immovable: this.immovable,
-                    enableRot0: enableRot[0],
-                    enableRot1: enableRot[1],
-                    enableRot2: enableRot[2],
-                    shapeType: shapeType,
+                command = this._buildBodyCommand(this.CommandType.AddBody, {
+                    shapeType,
                     bodyType,
                     colliderType,
                     shape,
-                    mass: this.mass,
-                };
-            } else if (this.pluginType == "SpritePlugin") {
-                const meshPoints = this._getMeshPoints();
-                command = {
-                    type: this.CommandType.AddBody,
-                    uid: inst.uid,
-                    ...this._vecToPhysics(inst.x - inst.width / 2, inst.y - inst.height / 2, inst.z + zHeight / 2),
-                    q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: this._toPhysics(inst.width),
-                    height: this._toPhysics(inst.height),
-                    depth: this._toPhysics(zHeight),
-                    immovable: this.immovable,
-                    enableRot0: enableRot[0],
-                    enableRot1: enableRot[1],
-                    enableRot2: enableRot[2],
-                    shapeType: shapeType,
+                });
+            } else if (this.pluginType === "SpritePlugin") {
+                command = this._buildBodyCommand(this.CommandType.AddBody, {
+                    shapeType,
                     bodyType,
                     colliderType,
                     shape: null,
-                    mass: this.mass,
-                    meshPoints: meshPoints,
-                };
+                    meshPoints: this._getMeshPoints(),
+                });
             }
+
             this.PhysicsType.commands.push(command);
         }
 
         _UpdateBody() {
-            // SDK v2: Use public IWorldInstance interface
-            const inst = this.instance;
-            const quat = globalThis.glMatrix.quat;
-            const zHeight = inst.depth || 0;
-            const enableRot = [true, true, true];
-            const initialQuat = quat.create();
-            quat.fromEuler(initialQuat, 0, 0, (inst.angle * 180) / Math.PI);
             let command = null;
-            if (this.pluginType == "Shape3DPlugin") {
-                // 3DShape can only rotate around z axis
-                enableRot[0] = false;
-                enableRot[1] = false;
-                const shape = mapShapeToNumber(inst.shape);
-                command = {
-                    type: this.CommandType.UpdateBody,
-                    uid: inst.uid,
-                    ...this._vecToPhysics(inst.x, inst.y, inst.z + zHeight / 2),
-                    q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: this._toPhysics(inst.width),
-                    height: this._toPhysics(inst.height),
-                    depth: this._toPhysics(zHeight),
-                    immovable: this.immovable,
-                    enableRot0: enableRot[0],
-                    enableRot1: enableRot[1],
-                    enableRot2: enableRot[2],
-                    shapeType: this.shapeProperty,
-                    bodyType: this.bodyType,
-                    colliderType: this.colliderType,
-                    shape,
-                    mass: this.mass,
-                };
-            } else if (this.pluginType == "SpritePlugin") {
-                const meshPoints = this._getMeshPoints();
-                command = {
-                    type: this.CommandType.UpdateBody,
-                    uid: inst.uid,
-                    ...this._vecToPhysics(inst.x - inst.width / 2, inst.y - inst.height / 2, inst.z),
-                    q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: this._toPhysics(inst.width),
-                    height: this._toPhysics(inst.height),
-                    depth: this._toPhysics(zHeight),
-                    immovable: this.immovable,
-                    enableRot0: enableRot[0],
-                    enableRot1: enableRot[1],
-                    enableRot2: enableRot[2],
-                    shapeType: this.shapeProperty,
-                    bodyType: this.bodyType,
-                    colliderType: this.colliderType,
+
+            if (this.pluginType === "Shape3DPlugin") {
+                const shape = mapShapeToNumber(this.instance.shape);
+                command = this._buildBodyCommand(this.CommandType.UpdateBody, { shape });
+            } else if (this.pluginType === "SpritePlugin") {
+                command = this._buildBodyCommand(this.CommandType.UpdateBody, {
                     shape: null,
-                    mass: this.mass,
-                    meshPoints: meshPoints,
-                };
+                    meshPoints: this._getMeshPoints(),
+                });
             } else {
                 console.error("invalid pluginType", this.pluginType);
                 return;
             }
+
             this.PhysicsType.commands.push(command);
         }
 
@@ -476,60 +433,27 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 this._UpdateBody();
                 return;
             }
-            const quat = globalThis.glMatrix.quat;
-            const zHeight = inst.depth || 0;
-            const enableRot = [true, true, true];
-            const initialQuat = quat.create();
-            quat.fromEuler(initialQuat, 0, 0, (inst.angle * 180) / Math.PI);
+
             let command = null;
-            if (this.pluginType == "Shape3DPlugin") {
-                // 3DShape can only rotate around z axis
-                enableRot[0] = false;
-                enableRot[1] = false;
-                const shape = mapShapeToNumber(inst.shape);
-                command = {
-                    type: this.CommandType.SetSizeOverride,
-                    uid: inst.uid,
-                    ...this._vecToPhysics(inst.x, inst.y, inst.z + zHeight / 2),
-                    q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
+
+            if (this.pluginType === "Shape3DPlugin") {
+                const shape = mapShapeToNumber(this.instance.shape);
+                command = this._buildBodyCommand(this.CommandType.SetSizeOverride, {
+                    shape,
                     width: this._toPhysics(width),
                     height: this._toPhysics(height),
                     depth: this._toPhysics(depth),
-                    immovable: this.immovable,
-                    enableRot0: enableRot[0],
-                    enableRot1: enableRot[1],
-                    enableRot2: enableRot[2],
-                    shapeType: this.shapeProperty,
-                    bodyType: this.bodyType,
-                    colliderType: this.colliderType,
-                    shape,
-                    mass: this.mass,
-                };
-            } else if (this.pluginType == "SpritePlugin") {
-                const meshPoints = this._getMeshPoints();
-                command = {
-                    type: this.CommandType.SetSizeOverride,
-                    uid: inst.uid,
-                    ...this._vecToPhysics(inst.x - inst.width / 2, inst.y - inst.height / 2, inst.z),
-                    q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
-                    width: this._toPhysics(inst.width),
-                    height: this._toPhysics(inst.height),
-                    depth: this._toPhysics(zHeight),
-                    immovable: this.immovable,
-                    enableRot0: enableRot[0],
-                    enableRot1: enableRot[1],
-                    enableRot2: enableRot[2],
-                    shapeType: this.shapeProperty,
-                    bodyType: this.bodyType,
-                    colliderType: this.colliderType,
+                });
+            } else if (this.pluginType === "SpritePlugin") {
+                command = this._buildBodyCommand(this.CommandType.SetSizeOverride, {
                     shape: null,
-                    mass: this.mass,
-                    meshPoints: meshPoints,
-                };
+                    meshPoints: this._getMeshPoints(),
+                });
             } else {
                 console.error("invalid pluginType", this.pluginType);
                 return;
             }
+
             this.PhysicsType.commands.push(command);
         }
 
