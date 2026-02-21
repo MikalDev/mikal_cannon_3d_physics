@@ -948,6 +948,62 @@ module.exports = {
             description: "Lock or unlock translation axes. Set false to pin the body on that axis.",
         },
 
+        SetGravityScale: {
+            category: "body",
+            forward: "_SetGravityScale",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "scale",
+                    name: "Gravity scale",
+                    desc: "Gravity multiplier. 1.0 = normal, 0.0 = weightless, -1.0 = inverted.",
+                    type: "number",
+                    initialValue: "1.0",
+                },
+            ],
+            listName: "Set gravity scale",
+            displayText: "Set {my} gravity scale to {0}",
+            description: "Set per-body gravity scale. 1.0 = normal, 0.0 = weightless, 2.0 = double gravity.",
+        },
+
+        ApplyAngularImpulse: {
+            category: "body",
+            forward: "_ApplyAngularImpulse",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "x",
+                    name: "X",
+                    desc: "Angular impulse X.",
+                    type: "number",
+                    initialValue: "0",
+                },
+                {
+                    id: "y",
+                    name: "Y",
+                    desc: "Angular impulse Y.",
+                    type: "number",
+                    initialValue: "0",
+                },
+                {
+                    id: "z",
+                    name: "Z",
+                    desc: "Angular impulse Z.",
+                    type: "number",
+                    initialValue: "0",
+                },
+            ],
+            listName: "Apply angular impulse",
+            displayText: "Apply {my} angular impulse {0}, {1}, {2}",
+            description: "Apply an instantaneous rotational impulse to a body (one-shot, unlike ApplyTorque which is per-step).",
+        },
+
         SetCollisionFilterGroup: {
             category: "body",
             forward: "_SetCollisionFilterGroup",

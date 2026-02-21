@@ -8176,6 +8176,26 @@ function setEnabledTranslations(config) {
     }
 }
 
+function setGravityScale(config) {
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setGravityScale(config.scale, true);
+    }
+}
+
+function applyAngularImpulse(config) {
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.applyTorqueImpulse({ x: config.x, y: config.y, z: config.z }, true);
+    }
+}
+
 function debugRender() {
     if (!rapierWorld) return;
     return rapierWorld.debugRender();
@@ -9217,6 +9237,8 @@ const commandFunctions = {
     [CommandType.SetFriction]: setFriction,
     [CommandType.SetEnabledRotations]: setEnabledRotations,
     [CommandType.SetEnabledTranslations]: setEnabledTranslations,
+    [CommandType.SetGravityScale]: setGravityScale,
+    [CommandType.ApplyAngularImpulse]: applyAngularImpulse,
 };
 
 function runCommands(commands) {

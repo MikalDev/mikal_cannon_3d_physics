@@ -703,6 +703,44 @@
         ]
       },
       {
+        "id": "SetGravityScale",
+        "scriptName": "SetGravityScale",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "scale",
+            "type": "number",
+            "initialValue": "1.0"
+          }
+        ]
+      },
+      {
+        "id": "ApplyAngularImpulse",
+        "scriptName": "ApplyAngularImpulse",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
         "id": "SetCollisionFilterGroup",
         "scriptName": "SetCollisionFilterGroup",
         "highlight": false,

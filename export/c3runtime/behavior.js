@@ -124,6 +124,16 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
             },
+"SetGravityScale": {
+            "forward": (inst) => inst._SetGravityScale,
+            
+            "autoScriptInterface": true,
+            },
+"ApplyAngularImpulse": {
+            "forward": (inst) => inst._ApplyAngularImpulse,
+            
+            "autoScriptInterface": true,
+            },
 "SetCollisionFilterGroup": {
             "forward": (inst) => inst._SetCollisionFilterGroup,
             
@@ -1623,6 +1633,28 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 enableX: x,
                 enableY: y,
                 enableZ: z,
+            };
+            this.PhysicsType.commands.push(command);
+        }
+
+        _SetGravityScale(scale) {
+            if (!this.bodyDefined) return;
+            const command = {
+                uid: this.uid,
+                type: this.CommandType.SetGravityScale,
+                scale,
+            };
+            this.PhysicsType.commands.push(command);
+        }
+
+        _ApplyAngularImpulse(x, y, z) {
+            if (!this.bodyDefined) return;
+            const command = {
+                uid: this.uid,
+                type: this.CommandType.ApplyAngularImpulse,
+                x,
+                y,
+                z,
             };
             this.PhysicsType.commands.push(command);
         }

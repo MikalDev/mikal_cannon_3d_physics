@@ -463,6 +463,36 @@
               }
             }
           },
+          "SetGravityScale": {
+            "list-name": "Set gravity scale",
+            "display-text": "Set {my} gravity scale to {0}",
+            "description": "Set per-body gravity scale. 1.0 = normal, 0.0 = weightless, 2.0 = double gravity.",
+            "params": {
+              "scale": {
+                "name": "Gravity scale",
+                "desc": "Gravity multiplier. 1.0 = normal, 0.0 = weightless, -1.0 = inverted."
+              }
+            }
+          },
+          "ApplyAngularImpulse": {
+            "list-name": "Apply angular impulse",
+            "display-text": "Apply {my} angular impulse {0}, {1}, {2}",
+            "description": "Apply an instantaneous rotational impulse to a body (one-shot, unlike ApplyTorque which is per-step).",
+            "params": {
+              "x": {
+                "name": "X",
+                "desc": "Angular impulse X."
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Angular impulse Y."
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Angular impulse Z."
+              }
+            }
+          },
           "SetCollisionFilterGroup": {
             "list-name": "Set collision groups",
             "display-text": "Set {my} collision groups {0}",
