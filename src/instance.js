@@ -324,10 +324,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 );
             } else if (pluginId === "GltfStatic") {
                 this.pluginType = "GltfStaticPlugin";
-                const inst = this.instance;
-                const hasQuaternion = inst.quaternion !== undefined;
-                const quat = inst.quaternion || { x: 0, y: 0, z: 0, w: 1 };
-                // GltfStatic detected
             } else if (pluginId === "Model3D") {
                 this.pluginType = "Model3DPlugin";
                 const inst = this.instance;
@@ -620,7 +616,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
             // Determine dimensions: from extracted bounding box, bounding box, or manual override
             let width, height, depth;
-            let dimensionSource = "manual";
 
             // Try extracted bounding box first (Model3D only)
             if (this.pluginType === "Model3DPlugin" && !overrideSize && this._extractedBBoxMin && this._extractedBBoxMax) {
@@ -633,7 +628,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     width = bboxWidth;
                     height = bboxHeight;
                     depth = bboxDepth;
-                    dimensionSource = "extracted bounding box";
                 }
             }
 
@@ -648,7 +642,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     width = bboxWidth;
                     height = bboxHeight;
                     depth = bboxDepth;
-                    dimensionSource = "bounding box";
                 } else {
                     console.warn(`[Physics Debug] Bounding box is zero-sized - UID: ${this.uid}`);
                     return false;
@@ -664,7 +657,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 width = inst.width;
                 height = inst.height;
                 depth = inst.depth;
-                dimensionSource = "instance dimensions";
                 
             } else {
                 const pluginName = this.pluginType === "GltfStaticPlugin" ? "GltfStatic" : this.pluginType === "Model3DPlugin" ? "Model3D" : "Unknown";
@@ -1322,59 +1314,4 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             return true;
         }
     };
-}
-
-function transformDrawVerts(
-    xAngle,
-    yAngle,
-    zAngle,
-    x,
-    y,
-    z,
-    xScale,
-    yScale,
-    zScale,
-    drawVerts,
-    scale,
-    scale3DObject
-) {
-    const vec3 = globalThis.glMatrix.vec3;
-    const mat4 = globalThis.glMatrix.mat4;
-    const quat = globalThis.glMatrix.quat;
-
-    const xformVerts = [];
-    const vOut = vec3.create();
-
-    const modelScaleRotate = mat4.create();
-    const rotate = globalThis.glMatrix.quat.create();
-
-    // Create rotation quaternion from Euler angles
-    quat.fromEuler(rotate, xAngle, yAngle, zAngle);
-
-    // Create transformation matrix from rotation, translation, and scale
-    mat4.fromRotationTranslationScale(
-        modelScaleRotate,
-        rotate,
-        [x, y, z],
-        [
-            scale3DObject / xScale,
-            -scale3DObject / yScale,
-            scale3DObject / zScale,
-        ]
-    );
-
-    // Transform each vertex and log intermediate results
-    for (let i = 0; i < drawVerts.length; i += 3) {
-        vec3.set(
-            vOut,
-            drawVerts[i] / scale,
-            drawVerts[i + 1] / scale,
-            drawVerts[i + 2] / scale
-        );
-
-        vec3.transformMat4(vOut, vOut, modelScaleRotate);
-
-        xformVerts.push(vOut[0], vOut[1], vOut[2]);
-    }
-    return xformVerts;
 }
