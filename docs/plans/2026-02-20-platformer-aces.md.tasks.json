@@ -1,0 +1,10 @@
+{
+  "planPath": "docs/plans/2026-02-20-platformer-aces.md",
+  "tasks": [
+    {"id": 18, "subject": "Task 1: Velocity reading", "status": "pending"},
+    {"id": 19, "subject": "Task 2: Axis locks", "status": "pending", "blockedBy": [18]},
+    {"id": 20, "subject": "Task 3: Per-body gravity scale", "status": "pending"},
+    {"id": 21, "subject": "Task 4: Angular impulse", "status": "pending"}
+  ],
+  "lastUpdated": "2026-02-20T00:00:00Z"
+}
