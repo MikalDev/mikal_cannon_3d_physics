@@ -414,7 +414,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
         _SetSizeOverride(enable, height, width, depth) {
             // SDK v2: Use public IWorldInstance interface
-            const inst = this.instance;
             this.sizeOverride = enable;
             this.bodySizeHeight = height;
             this.bodySizeWidth = width;
