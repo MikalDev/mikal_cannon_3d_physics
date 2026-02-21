@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.28.3",
+    version: "2.29.0",
     category:
         // "attributes",
         "movements",
