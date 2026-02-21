@@ -508,7 +508,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             } else if (this.pluginType == "SpritePlugin") {
                 const meshPoints = this._getMeshPoints();
                 command = {
-                    type: this.CommandType.UpdateBody,
+                    type: this.CommandType.SetSizeOverride,
                     uid: inst.uid,
                     ...this._vecToPhysics(inst.x - inst.width / 2, inst.y - inst.height / 2, inst.z),
                     q: { x: 0, y: 0, z: initialQuat[2], w: initialQuat[3] },
@@ -805,7 +805,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             // Normalize to, making dir vector
             vec3.normalize(to, to);
             const dir = to;
-            maxToI = maxToI / vec3.length(dir);
             const command = {
                 type: this.CommandType.Raycast,
                 origin: { x: origin[0], y: origin[1], z: origin[2] },

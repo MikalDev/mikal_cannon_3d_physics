@@ -73,7 +73,8 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
         this.rapierWorker = null;
         this.initWorker(this.runtime);
         this.commands = [];
-        this.cmdTickCount, (this.tickCount = 0);
+        this.cmdTickCount = 0;
+        this.tickCount = 0;
         this.worldReady = false;
         this.scale = 100;
         this.timestepMode = 0;
