@@ -651,7 +651,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 width = this.bodySizeWidth;
                 height = this.bodySizeHeight;
                 depth = this.bodySizeDepth;
-                dimensionSource = "size override";
             } else if (inst.width > 0 && inst.height > 0 && inst.depth > 0) {
                 // Use instance dimensions (Model3D, etc.)
                 width = inst.width;
