@@ -298,6 +298,51 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
           },
+"CollisionTargetUID": {
+            "forward": (inst) => inst._CollisionTargetUID,
+            
+            "autoScriptInterface": true,
+          },
+"CollisionStarted": {
+            "forward": (inst) => inst._CollisionStarted,
+            
+            "autoScriptInterface": true,
+          },
+"CollisionNormalX": {
+            "forward": (inst) => inst._CollisionNormalX,
+            
+            "autoScriptInterface": true,
+          },
+"CollisionNormalY": {
+            "forward": (inst) => inst._CollisionNormalY,
+            
+            "autoScriptInterface": true,
+          },
+"CollisionNormalZ": {
+            "forward": (inst) => inst._CollisionNormalZ,
+            
+            "autoScriptInterface": true,
+          },
+"CollisionContactX": {
+            "forward": (inst) => inst._CollisionContactX,
+            
+            "autoScriptInterface": true,
+          },
+"CollisionContactY": {
+            "forward": (inst) => inst._CollisionContactY,
+            
+            "autoScriptInterface": true,
+          },
+"CollisionContactZ": {
+            "forward": (inst) => inst._CollisionContactZ,
+            
+            "autoScriptInterface": true,
+          },
+"CollisionImpulse": {
+            "forward": (inst) => inst._CollisionImpulse,
+            
+            "autoScriptInterface": true,
+          },
 "CharacterCollisionData": {
             "forward": (inst) => inst._CharacterCollisionData,
             
@@ -695,17 +740,26 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
             body1UID,
             body2UID,
             started,
-            contactCollider1,
-            contactCollider2,
+            contactNormalX, contactNormalY, contactNormalZ,
+            contactPointX, contactPointY, contactPointZ,
+            contactImpulse,
         } = collisionEvent;
+        const scale = this.scale;
         // SDK v2: Use registered behavior instance map
         const behInst1 = this.getBehaviorInstanceByUid(body1UID);
         const behInst2 = this.getBehaviorInstanceByUid(body2UID);
         if (behInst1) {
             behInst1.collisionData = {
                 target: { uid: body2UID },
+                targetUID: body2UID,
                 started,
-                contactCollider: contactCollider1,
+                normalX: contactNormalX,
+                normalY: contactNormalY,
+                normalZ: contactNormalZ,
+                pointX: contactPointX * scale,
+                pointY: contactPointY * scale,
+                pointZ: contactPointZ * scale,
+                impulse: contactImpulse,
             };
             behInst1._trigger(
                 C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
@@ -714,8 +768,16 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
         if (behInst2) {
             behInst2.collisionData = {
                 target: { uid: body1UID },
+                targetUID: body1UID,
                 started,
-                contactCollider: contactCollider2,
+                // Normal is flipped for body2 (outward normal points away from body1)
+                normalX: -contactNormalX,
+                normalY: -contactNormalY,
+                normalZ: -contactNormalZ,
+                pointX: contactPointX * scale,
+                pointY: contactPointY * scale,
+                pointZ: contactPointZ * scale,
+                impulse: contactImpulse,
             };
             behInst2._trigger(
                 C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
@@ -1801,6 +1863,42 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             const collisionData = this.collisionData;
             if (!collisionData) return "{}";
             return JSON.stringify(collisionData);
+        }
+
+        _CollisionTargetUID() {
+            return this.collisionData?.targetUID ?? -1;
+        }
+
+        _CollisionStarted() {
+            return this.collisionData?.started ? 1 : 0;
+        }
+
+        _CollisionNormalX() {
+            return this.collisionData?.normalX ?? 0;
+        }
+
+        _CollisionNormalY() {
+            return this.collisionData?.normalY ?? 0;
+        }
+
+        _CollisionNormalZ() {
+            return this.collisionData?.normalZ ?? 0;
+        }
+
+        _CollisionContactX() {
+            return this.collisionData?.pointX ?? 0;
+        }
+
+        _CollisionContactY() {
+            return this.collisionData?.pointY ?? 0;
+        }
+
+        _CollisionContactZ() {
+            return this.collisionData?.pointZ ?? 0;
+        }
+
+        _CollisionImpulse() {
+            return this.collisionData?.impulse ?? 0;
         }
 
         _CharacterCollisionData() {

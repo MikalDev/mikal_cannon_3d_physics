@@ -650,25 +650,49 @@ const CollisionMsgType = {
 
 function handleCollisionEvents(eventQueue) {
     eventQueue.drainCollisionEvents((handle1, handle2, started) => {
-        // Accessing collider information (assuming `world` is your Rapier world)
         const collider1 = rapierWorld.getCollider(handle1);
         const collider2 = rapierWorld.getCollider(handle2);
-        let contactCollider1,
-            contactCollider2 = null;
-        const prediction = 0;
-        contactCollider1 = collider1.contactCollider(collider2, prediction);
-        contactCollider2 = collider2.contactCollider(collider1, prediction);
-        // Get bodies
         const body1 = collider1.parent();
         const body2 = collider2.parent();
-        // Create message to send to main thread
+
+        // Extract contact data (outward normal for body1 = pointing from body2 toward body1)
+        let contactNormalX = 0, contactNormalY = 0, contactNormalZ = 0;
+        let contactPointX = 0, contactPointY = 0, contactPointZ = 0;
+        let contactImpulse = 0;
+
+        if (started) {
+            let extracted = false;
+            rapierWorld.contactPair(collider1, collider2, (manifold, flipped) => {
+                if (extracted) return;
+                const normal = manifold.normal();
+                // Rapier's manifold normal points from shape1 to shape2 (canonical order).
+                // flipped=false → shape1=collider1=body1, normal points body1→body2 → negate for body1 outward.
+                // flipped=true  → shape1=collider2=body2, normal points body2→body1 → keep for body1 outward.
+                const sign = flipped ? 1 : -1;
+                contactNormalX = normal.x * sign;
+                contactNormalY = normal.y * sign;
+                contactNormalZ = normal.z * sign;
+                if (manifold.numSolverContacts() > 0) {
+                    const pt = manifold.solverContactPoint(0);
+                    contactPointX = pt.x;
+                    contactPointY = pt.y;
+                    contactPointZ = pt.z;
+                }
+                if (manifold.numContacts() > 0) {
+                    contactImpulse = manifold.contactImpulse(0);
+                }
+                extracted = true;
+            });
+        }
+
         const msg = {
             type: CollisionMsgType.BODY,
             started,
             body1UID: body1.uid,
             body2UID: body2.uid,
-            contactCollider1,
-            contactCollider2,
+            contactNormalX, contactNormalY, contactNormalZ,
+            contactPointX, contactPointY, contactPointZ,
+            contactImpulse,
         };
         collisionEvents.push(msg);
     });

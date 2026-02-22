@@ -392,17 +392,26 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
             body1UID,
             body2UID,
             started,
-            contactCollider1,
-            contactCollider2,
+            contactNormalX, contactNormalY, contactNormalZ,
+            contactPointX, contactPointY, contactPointZ,
+            contactImpulse,
         } = collisionEvent;
+        const scale = this.scale;
         // SDK v2: Use registered behavior instance map
         const behInst1 = this.getBehaviorInstanceByUid(body1UID);
         const behInst2 = this.getBehaviorInstanceByUid(body2UID);
         if (behInst1) {
             behInst1.collisionData = {
                 target: { uid: body2UID },
+                targetUID: body2UID,
                 started,
-                contactCollider: contactCollider1,
+                normalX: contactNormalX,
+                normalY: contactNormalY,
+                normalZ: contactNormalZ,
+                pointX: contactPointX * scale,
+                pointY: contactPointY * scale,
+                pointZ: contactPointZ * scale,
+                impulse: contactImpulse,
             };
             behInst1._trigger(
                 C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision
@@ -411,8 +420,16 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
         if (behInst2) {
             behInst2.collisionData = {
                 target: { uid: body1UID },
+                targetUID: body1UID,
                 started,
-                contactCollider: contactCollider2,
+                // Normal is flipped for body2 (outward normal points away from body1)
+                normalX: -contactNormalX,
+                normalY: -contactNormalY,
+                normalZ: -contactNormalZ,
+                pointX: contactPointX * scale,
+                pointY: contactPointY * scale,
+                pointZ: contactPointZ * scale,
+                impulse: contactImpulse,
             };
             behInst2._trigger(
                 C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCollision

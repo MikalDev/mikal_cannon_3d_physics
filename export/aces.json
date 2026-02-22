@@ -1227,6 +1227,96 @@
         "params": []
       },
       {
+        "id": "CollisionTargetUID",
+        "scriptName": "CollisionTargetUID",
+        "expressionName": "CollisionTargetUID",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CollisionStarted",
+        "scriptName": "CollisionStarted",
+        "expressionName": "CollisionStarted",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CollisionNormalX",
+        "scriptName": "CollisionNormalX",
+        "expressionName": "CollisionNormalX",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CollisionNormalY",
+        "scriptName": "CollisionNormalY",
+        "expressionName": "CollisionNormalY",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CollisionNormalZ",
+        "scriptName": "CollisionNormalZ",
+        "expressionName": "CollisionNormalZ",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CollisionContactX",
+        "scriptName": "CollisionContactX",
+        "expressionName": "CollisionContactX",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CollisionContactY",
+        "scriptName": "CollisionContactY",
+        "expressionName": "CollisionContactY",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CollisionContactZ",
+        "scriptName": "CollisionContactZ",
+        "expressionName": "CollisionContactZ",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CollisionImpulse",
+        "scriptName": "CollisionImpulse",
+        "expressionName": "CollisionImpulse",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
         "id": "CharacterCollisionData",
         "scriptName": "CharacterCollisionData",
         "expressionName": "CharacterCollisionData",

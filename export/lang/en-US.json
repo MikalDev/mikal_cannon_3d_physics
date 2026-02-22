@@ -991,6 +991,51 @@
             "description": "Collision data as JSON string.",
             "params": {}
           },
+          "CollisionTargetUID": {
+            "translated-name": "CollisionTargetUID",
+            "description": "UID of the other body involved in the collision.",
+            "params": {}
+          },
+          "CollisionStarted": {
+            "translated-name": "CollisionStarted",
+            "description": "1 if collision started, 0 if collision ended.",
+            "params": {}
+          },
+          "CollisionNormalX": {
+            "translated-name": "CollisionNormalX",
+            "description": "X component of the outward contact normal (points away from the other body).",
+            "params": {}
+          },
+          "CollisionNormalY": {
+            "translated-name": "CollisionNormalY",
+            "description": "Y component of the outward contact normal (points away from the other body).",
+            "params": {}
+          },
+          "CollisionNormalZ": {
+            "translated-name": "CollisionNormalZ",
+            "description": "Z component of the outward contact normal (points away from the other body).",
+            "params": {}
+          },
+          "CollisionContactX": {
+            "translated-name": "CollisionContactX",
+            "description": "X position of the contact point in world units.",
+            "params": {}
+          },
+          "CollisionContactY": {
+            "translated-name": "CollisionContactY",
+            "description": "Y position of the contact point in world units.",
+            "params": {}
+          },
+          "CollisionContactZ": {
+            "translated-name": "CollisionContactZ",
+            "description": "Z position of the contact point in world units.",
+            "params": {}
+          },
+          "CollisionImpulse": {
+            "translated-name": "CollisionImpulse",
+            "description": "Normal impulse magnitude of the collision. Scales with mass and impact speed; useful for damage thresholds.",
+            "params": {}
+          },
           "CharacterCollisionData": {
             "translated-name": "CharacterCollisionData",
             "description": "Character collision data as JSON string.",

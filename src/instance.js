@@ -1005,6 +1005,42 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             return JSON.stringify(collisionData);
         }
 
+        _CollisionTargetUID() {
+            return this.collisionData?.targetUID ?? -1;
+        }
+
+        _CollisionStarted() {
+            return this.collisionData?.started ? 1 : 0;
+        }
+
+        _CollisionNormalX() {
+            return this.collisionData?.normalX ?? 0;
+        }
+
+        _CollisionNormalY() {
+            return this.collisionData?.normalY ?? 0;
+        }
+
+        _CollisionNormalZ() {
+            return this.collisionData?.normalZ ?? 0;
+        }
+
+        _CollisionContactX() {
+            return this.collisionData?.pointX ?? 0;
+        }
+
+        _CollisionContactY() {
+            return this.collisionData?.pointY ?? 0;
+        }
+
+        _CollisionContactZ() {
+            return this.collisionData?.pointZ ?? 0;
+        }
+
+        _CollisionImpulse() {
+            return this.collisionData?.impulse ?? 0;
+        }
+
         _CharacterCollisionData() {
             const collisionData = this.characterCollisionData;
             if (!collisionData) return "{}";
