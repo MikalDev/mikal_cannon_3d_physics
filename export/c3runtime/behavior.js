@@ -134,6 +134,16 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
             },
+"WakeUp": {
+            "forward": (inst) => inst._WakeUp,
+            
+            "autoScriptInterface": true,
+            },
+"Sleep": {
+            "forward": (inst) => inst._Sleep,
+            
+            "autoScriptInterface": true,
+            },
 "SetCollisionFilterGroup": {
             "forward": (inst) => inst._SetCollisionFilterGroup,
             
@@ -377,6 +387,11 @@ const BEHAVIOR_INFO = {
             "forward": (inst) => inst._AngularVelocityZ,
             
             "autoScriptInterface": true,
+          },
+"IsSleeping": {
+            "forward": (inst) => inst._IsSleeping,
+            
+            "autoScriptInterface": true,
           }
     },
   };
@@ -472,7 +487,7 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
         if (!bodies) return;
         globalThis.Mikal_Rapier_Bodies = new Map();
         const scale = this.scale;
-        for (let i = 0; i < bodies.length; i += 14) {
+        for (let i = 0; i < bodies.length; i += 15) {
             const uid = bodies[i];
             const x = bodies[i + 1] * scale;
             const y = bodies[i + 2] * scale;
@@ -487,11 +502,13 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
             const ax = bodies[i + 11];
             const ay = bodies[i + 12];
             const az = bodies[i + 13];
+            const sleeping = bodies[i + 14] === 1;
             globalThis.Mikal_Rapier_Bodies.set(uid, {
                 translation: { x, y, z },
                 rotation: { x: rx, y: ry, z: rz, w: rw },
                 velocity: { x: vx, y: vy, z: vz },
                 angularVelocity: { x: ax, y: ay, z: az },
+                sleeping,
             });
         }
     }
@@ -940,6 +957,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 SetEnabledTranslations: 31,
                 SetGravityScale: 32,
                 ApplyAngularImpulse: 33,
+                WakeUp: 34,
+                Sleep: 35,
             };
             this._setTicking(true);
             this._setTicking2(true);
@@ -1719,6 +1738,20 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 z,
             };
             this.PhysicsType.commands.push(command);
+        }
+
+        _WakeUp() {
+            if (!this.bodyDefined) return;
+            this.PhysicsType.commands.push({ uid: this.uid, type: this.CommandType.WakeUp });
+        }
+
+        _Sleep() {
+            if (!this.bodyDefined) return;
+            this.PhysicsType.commands.push({ uid: this.uid, type: this.CommandType.Sleep });
+        }
+
+        _IsSleeping() {
+            return globalThis.Mikal_Rapier_Bodies?.get(this.uid)?.sleeping ? 1 : 0;
         }
 
         _SetAngularDamping(damping) {

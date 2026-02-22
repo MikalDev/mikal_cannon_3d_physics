@@ -80,6 +80,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 SetEnabledTranslations: 31,
                 SetGravityScale: 32,
                 ApplyAngularImpulse: 33,
+                WakeUp: 34,
+                Sleep: 35,
             };
             this._setTicking(true);
             this._setTicking2(true);
@@ -859,6 +861,20 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 z,
             };
             this.PhysicsType.commands.push(command);
+        }
+
+        _WakeUp() {
+            if (!this.bodyDefined) return;
+            this.PhysicsType.commands.push({ uid: this.uid, type: this.CommandType.WakeUp });
+        }
+
+        _Sleep() {
+            if (!this.bodyDefined) return;
+            this.PhysicsType.commands.push({ uid: this.uid, type: this.CommandType.Sleep });
+        }
+
+        _IsSleeping() {
+            return globalThis.Mikal_Rapier_Bodies?.get(this.uid)?.sleeping ? 1 : 0;
         }
 
         _SetAngularDamping(damping) {

@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.30.0",
+    version: "2.31.0",
     category:
         // "attributes",
         "movements",
@@ -1002,6 +1002,32 @@ module.exports = {
             listName: "Apply angular impulse",
             displayText: "Apply {my} angular impulse {0}, {1}, {2}",
             description: "Apply an instantaneous rotational impulse to a body (one-shot, unlike ApplyTorque which is per-step).",
+        },
+
+        WakeUp: {
+            category: "body",
+            forward: "_WakeUp",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [],
+            listName: "Wake up",
+            displayText: "Wake up {my}",
+            description: "Force a sleeping body to wake up and resume physics simulation.",
+        },
+
+        Sleep: {
+            category: "body",
+            forward: "_Sleep",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [],
+            listName: "Sleep",
+            displayText: "Put {my} to sleep",
+            description: "Force a body to sleep, pausing its physics simulation until woken.",
         },
 
         SetCollisionFilterGroup: {
@@ -2382,6 +2408,17 @@ module.exports = {
             isVariadicParameters: false,
             params: [],
             description: "Angular velocity z (rad/s).",
+        },
+        IsSleeping: {
+            category: "body",
+            forward: "_IsSleeping",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            returnType: "number",
+            isVariadicParameters: false,
+            params: [],
+            description: "1 if the body is currently sleeping (physics paused), 0 if awake.",
         },
         /*
     SampleExpression: {

@@ -51,6 +51,8 @@ const CommandType = {
     SetEnabledTranslations: 31,
     SetGravityScale: 32,
     ApplyAngularImpulse: 33,
+    WakeUp: 34,
+    Sleep: 35,
 };
 
 const BodyType = {
@@ -170,6 +172,26 @@ function applyAngularImpulse(config) {
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.applyTorqueImpulse({ x: config.x, y: config.y, z: config.z }, true);
+    }
+}
+
+function wakeUp(config) {
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.wakeUp();
+    }
+}
+
+function sleep(config) {
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.sleep();
     }
 }
 
@@ -607,7 +629,7 @@ function stepWorld(dt, frame) {
     // Collect and return bodies' data...
     const bodies = rapierWorld.bodies;
     const numBodies = bodies.len();
-    const bodiesData = new Float32Array(numBodies * 14);
+    const bodiesData = new Float32Array(numBodies * 15);
     let i = 0;
     bodies.forEach((body) => {
         const translation = body.translation();
@@ -628,6 +650,7 @@ function stepWorld(dt, frame) {
         bodiesData[i++] = angvel.x;
         bodiesData[i++] = angvel.y;
         bodiesData[i++] = angvel.z;
+        bodiesData[i++] = body.isSleeping() ? 1 : 0;
     });
     const castRayResultsCopy = castRayResults.slice();
     const castShapeResultsCopy = castShapeResults.slice();
@@ -1240,6 +1263,8 @@ const commandFunctions = {
     [CommandType.SetEnabledTranslations]: setEnabledTranslations,
     [CommandType.SetGravityScale]: setGravityScale,
     [CommandType.ApplyAngularImpulse]: applyAngularImpulse,
+    [CommandType.WakeUp]: wakeUp,
+    [CommandType.Sleep]: sleep,
 };
 
 function runCommands(commands) {

@@ -493,6 +493,18 @@
               }
             }
           },
+          "WakeUp": {
+            "list-name": "Wake up",
+            "display-text": "Wake up {my}",
+            "description": "Force a sleeping body to wake up and resume physics simulation.",
+            "params": {}
+          },
+          "Sleep": {
+            "list-name": "Sleep",
+            "display-text": "Put {my} to sleep",
+            "description": "Force a body to sleep, pausing its physics simulation until woken.",
+            "params": {}
+          },
           "SetCollisionFilterGroup": {
             "list-name": "Set collision groups",
             "display-text": "Set {my} collision groups {0}",
@@ -1069,6 +1081,11 @@
           "AngularVelocityZ": {
             "translated-name": "AngularVelocityZ",
             "description": "Angular velocity z (rad/s).",
+            "params": {}
+          },
+          "IsSleeping": {
+            "translated-name": "IsSleeping",
+            "description": "1 if the body is currently sleeping (physics paused), 0 if awake.",
             "params": {}
           }
         }

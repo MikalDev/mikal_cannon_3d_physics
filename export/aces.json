@@ -741,6 +741,22 @@
         ]
       },
       {
+        "id": "WakeUp",
+        "scriptName": "WakeUp",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": []
+      },
+      {
+        "id": "Sleep",
+        "scriptName": "Sleep",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": []
+      },
+      {
         "id": "SetCollisionFilterGroup",
         "scriptName": "SetCollisionFilterGroup",
         "highlight": false,
@@ -1380,6 +1396,16 @@
         "id": "AngularVelocityZ",
         "scriptName": "AngularVelocityZ",
         "expressionName": "AngularVelocityZ",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "IsSleeping",
+        "scriptName": "IsSleeping",
+        "expressionName": "IsSleeping",
         "highlight": false,
         "deprecated": false,
         "returnType": "number",
