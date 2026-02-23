@@ -1207,8 +1207,9 @@ function addRevoluteJoint(config) {
         targetBody,
         true
     );
-    if (!jointMap.has(uid)) jointMap.set(uid, new Map());
-    jointMap.get(uid).set(targetUID, joint);
+    let _targets = jointMap.get(uid);
+    if (!_targets) jointMap.set(uid, _targets = new Map());
+    _targets.set(targetUID, joint);
 }
 
 function setRevoluteMotor(config) {
@@ -1339,11 +1340,8 @@ function removeBody(config) {
         rapierWorld.removeRigidBody(body);
     }
     // Prune stale revolute joint entries for this uid
-    jointMap.delete(uid); // remove as owner
-    for (const [ownerUID, targets] of jointMap) {
-        targets.delete(uid); // remove as target
-        if (targets.size === 0) jointMap.delete(ownerUID);
-    }
+    jointMap.delete(uid);
+    for (const targets of jointMap.values()) targets.delete(uid);
 }
 
 function bufferIfNoHandle(handle, config) {
