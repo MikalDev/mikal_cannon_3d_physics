@@ -9236,7 +9236,10 @@ function addRevoluteJoint(config) {
 function setRevoluteMotor(config) {
     const { uid, targetUID, targetVelocity, maxForce } = config;
     const joint = jointMap.get(`${uid}_${targetUID}`);
-    if (!joint) return;
+    if (!joint) {
+        console.warn(`[rapierWorker] setRevoluteMotor: no joint found for ${uid}_${targetUID}`);
+        return;
+    }
     // configureMotorVelocity(targetVel, dampingCoeff) — dampingCoeff=0 disables motor force
     joint.configureMotorVelocity(targetVelocity, maxForce);
 }
@@ -9244,7 +9247,10 @@ function setRevoluteMotor(config) {
 function setRevoluteLimits(config) {
     const { uid, targetUID, minAngle, maxAngle, enabled } = config;
     const joint = jointMap.get(`${uid}_${targetUID}`);
-    if (!joint) return;
+    if (!joint) {
+        console.warn(`[rapierWorker] setRevoluteLimits: no joint found for ${uid}_${targetUID}`);
+        return;
+    }
     if (enabled) {
         joint.setLimits(minAngle, maxAngle);
     } else {
