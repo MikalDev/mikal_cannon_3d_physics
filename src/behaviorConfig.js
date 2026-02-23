@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.31.0",
+    version: "2.32.0",
     category:
         // "attributes",
         "movements",
@@ -1585,6 +1585,33 @@ module.exports = {
             // The description of the action as it appears in the add action dialog
             description: "Set world scale.",
         },
+
+        PausePhysics: {
+            category: "world",
+            forward: "_PausePhysics",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [],
+            listName: "Pause physics",
+            displayText: "{my}: Pause physics",
+            description: "Pause the physics simulation. Bodies keep their positions.",
+        },
+
+        ResumePhysics: {
+            category: "world",
+            forward: "_ResumePhysics",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [],
+            listName: "Resume physics",
+            displayText: "{my}: Resume physics",
+            description: "Resume the physics simulation.",
+        },
+
         AddSphericalJoint: {
             category: "body",
             forward: "_AddSphericalJoint",
@@ -1733,6 +1760,85 @@ module.exports = {
                 "Add {my} revolute joint to uid {6} at {0}, {1}, {2} to {3}, {4}, {5} with axis {7}, {8}, {9}",
             description: "Add revolute joint between self and target.",
         },
+
+        SetRevoluteMotor: {
+            category: "body",
+            forward: "_SetRevoluteMotor",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "targetUID",
+                    name: "Target UID",
+                    desc: "Target body UID of the revolute joint.",
+                    type: "number",
+                    initialValue: 0,
+                },
+                {
+                    id: "targetVelocity",
+                    name: "Target velocity",
+                    desc: "Target angular velocity in rad/s. Positive = counter-clockwise.",
+                    type: "number",
+                    initialValue: 1,
+                },
+                {
+                    id: "maxForce",
+                    name: "Max force",
+                    desc: "Motor force coefficient (N·m). Set to 0 to disable the motor.",
+                    type: "number",
+                    initialValue: 100,
+                },
+            ],
+            listName: "Set revolute motor",
+            displayText: "{my}: Set revolute motor to uid {0} vel {1} force {2}",
+            description: "Drive a revolute joint at a target angular velocity. Set max force to 0 to disable.",
+        },
+
+        SetRevoluteLimits: {
+            category: "body",
+            forward: "_SetRevoluteLimits",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "targetUID",
+                    name: "Target UID",
+                    desc: "Target body UID of the revolute joint.",
+                    type: "number",
+                    initialValue: 0,
+                },
+                {
+                    id: "minAngle",
+                    name: "Min angle",
+                    desc: "Minimum rotation angle in degrees.",
+                    type: "number",
+                    initialValue: -90,
+                },
+                {
+                    id: "maxAngle",
+                    name: "Max angle",
+                    desc: "Maximum rotation angle in degrees.",
+                    type: "number",
+                    initialValue: 90,
+                },
+                {
+                    id: "enabled",
+                    name: "Enable",
+                    desc: "Enable or disable the angle limits.",
+                    type: "combo",
+                    items: [{ yes: "Enable" }, { no: "Disable" }],
+                    initialValue: "yes",
+                },
+            ],
+            listName: "Set revolute limits",
+            displayText: "{my}: Set revolute limits to uid {0} [{1}°, {2}°] {3}",
+            description: "Set angular limits on a revolute joint.",
+        },
+
         SetSizeOverride: {
             category: "body",
             forward: "_SetSizeOverride",
@@ -2034,6 +2140,43 @@ module.exports = {
             displayText: "{my}: On physics ready",
             description: "Triggered when physics is ready for this body.",
         },
+
+        OnPhysicsPaused: {
+            category: "world",
+            forward: "_OnPhysicsPaused",
+            autoScriptInterface: true,
+            highlight: true,
+            deprecated: false,
+            isTrigger: true,
+            isFakeTrigger: false,
+            isStatic: false,
+            isLooping: false,
+            isInvertible: false,
+            isCompatibleWithTriggers: false,
+            params: [],
+            listName: "On physics paused",
+            displayText: "{my}: On physics paused",
+            description: "Triggered when physics simulation is paused.",
+        },
+
+        IsPhysicsPaused: {
+            category: "world",
+            forward: "_IsPhysicsPaused",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isTrigger: false,
+            isFakeTrigger: false,
+            isStatic: false,
+            isLooping: false,
+            isInvertible: true,
+            isCompatibleWithTriggers: true,
+            params: [],
+            listName: "Is physics paused",
+            displayText: "{my}: is physics paused",
+            description: "True when the physics simulation is paused.",
+        },
+
         /*
     SampleCondition: {
       // The category of the action as it appears in the add condition dialog

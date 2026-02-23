@@ -795,6 +795,18 @@
               }
             }
           },
+          "PausePhysics": {
+            "list-name": "Pause physics",
+            "display-text": "{my}: Pause physics",
+            "description": "Pause the physics simulation. Bodies keep their positions.",
+            "params": {}
+          },
+          "ResumePhysics": {
+            "list-name": "Resume physics",
+            "display-text": "{my}: Resume physics",
+            "description": "Resume the physics simulation.",
+            "params": {}
+          },
           "AddSphericalJoint": {
             "list-name": "Add spherical joint",
             "display-text": "Add {my} spherical joint to uid {6} at {0}, {1}, {2} to {3}, {4}, {5}",
@@ -874,6 +886,52 @@
               "targetUID": {
                 "name": "Target UID",
                 "desc": "Target body UID"
+              }
+            }
+          },
+          "SetRevoluteMotor": {
+            "list-name": "Set revolute motor",
+            "display-text": "{my}: Set revolute motor to uid {0} vel {1} force {2}",
+            "description": "Drive a revolute joint at a target angular velocity. Set max force to 0 to disable.",
+            "params": {
+              "targetUID": {
+                "name": "Target UID",
+                "desc": "Target body UID of the revolute joint."
+              },
+              "targetVelocity": {
+                "name": "Target velocity",
+                "desc": "Target angular velocity in rad/s. Positive = counter-clockwise."
+              },
+              "maxForce": {
+                "name": "Max force",
+                "desc": "Motor force coefficient (N·m). Set to 0 to disable the motor."
+              }
+            }
+          },
+          "SetRevoluteLimits": {
+            "list-name": "Set revolute limits",
+            "display-text": "{my}: Set revolute limits to uid {0} [{1}°, {2}°] {3}",
+            "description": "Set angular limits on a revolute joint.",
+            "params": {
+              "targetUID": {
+                "name": "Target UID",
+                "desc": "Target body UID of the revolute joint."
+              },
+              "minAngle": {
+                "name": "Min angle",
+                "desc": "Minimum rotation angle in degrees."
+              },
+              "maxAngle": {
+                "name": "Max angle",
+                "desc": "Maximum rotation angle in degrees."
+              },
+              "enabled": {
+                "name": "Enable",
+                "desc": "Enable or disable the angle limits.",
+                "items": {
+                  "yes": "Enable",
+                  "no": "Disable"
+                }
               }
             }
           },
@@ -964,6 +1022,18 @@
             "list-name": "On physics ready",
             "display-text": "{my}: On physics ready",
             "description": "Triggered when physics is ready for this body.",
+            "params": {}
+          },
+          "OnPhysicsPaused": {
+            "list-name": "On physics paused",
+            "display-text": "{my}: On physics paused",
+            "description": "Triggered when physics simulation is paused.",
+            "params": {}
+          },
+          "IsPhysicsPaused": {
+            "list-name": "Is physics paused",
+            "display-text": "{my}: is physics paused",
+            "description": "True when the physics simulation is paused.",
             "params": {}
           }
         },

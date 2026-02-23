@@ -209,6 +209,16 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
             },
+"PausePhysics": {
+            "forward": (inst) => inst._PausePhysics,
+            
+            "autoScriptInterface": true,
+            },
+"ResumePhysics": {
+            "forward": (inst) => inst._ResumePhysics,
+            
+            "autoScriptInterface": true,
+            },
 "AddSphericalJoint": {
             "forward": (inst) => inst._AddSphericalJoint,
             
@@ -216,6 +226,16 @@ const BEHAVIOR_INFO = {
             },
 "AddRevoluteJoint": {
             "forward": (inst) => inst._AddRevoluteJoint,
+            
+            "autoScriptInterface": true,
+            },
+"SetRevoluteMotor": {
+            "forward": (inst) => inst._SetRevoluteMotor,
+            
+            "autoScriptInterface": true,
+            },
+"SetRevoluteLimits": {
+            "forward": (inst) => inst._SetRevoluteLimits,
             
             "autoScriptInterface": true,
             },
@@ -268,6 +288,16 @@ const BEHAVIOR_INFO = {
           },
 "OnPhysicsReady": {
             "forward": (inst) => inst._OnPhysicsReady,
+            
+            "autoScriptInterface": true,
+          },
+"OnPhysicsPaused": {
+            "forward": (inst) => inst._OnPhysicsPaused,
+            
+            "autoScriptInterface": true,
+          },
+"IsPhysicsPaused": {
+            "forward": (inst) => inst._IsPhysicsPaused,
             
             "autoScriptInterface": true,
           }
@@ -441,6 +471,7 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
         this.worldReady = false;
         this.scale = 100;
         this.timestepMode = 0;
+        this.isPaused = false;
         this.timestepValue = 1 / 60;
         this.currentPhysicsFrameResponse = 0;
         this.currentPhysicsFrameRequest = 0;
@@ -959,6 +990,10 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 ApplyAngularImpulse: 33,
                 WakeUp: 34,
                 Sleep: 35,
+                PauseWorld: 36,
+                ResumeWorld: 37,
+                SetRevoluteMotor: 38,
+                SetRevoluteLimits: 39,
             };
             this._setTicking(true);
             this._setTicking2(true);
@@ -1754,6 +1789,21 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             return globalThis.Mikal_Rapier_Bodies?.get(this.uid)?.sleeping ? 1 : 0;
         }
 
+        _PausePhysics() {
+            this.PhysicsType.commands.push({ type: this.CommandType.PauseWorld });
+            this.PhysicsType.isPaused = true;
+            this._trigger(C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnPhysicsPaused);
+        }
+
+        _ResumePhysics() {
+            this.PhysicsType.commands.push({ type: this.CommandType.ResumeWorld });
+            this.PhysicsType.isPaused = false;
+        }
+
+        _IsPhysicsPaused() {
+            return this.PhysicsType.isPaused ? 1 : 0;
+        }
+
         _SetAngularDamping(damping) {
             const command = {
                 uid: this.uid,
@@ -2112,6 +2162,28 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             this.PhysicsType.commands.push(command);
         }
 
+        _SetRevoluteMotor(targetUID, targetVelocity, maxForce) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetRevoluteMotor,
+                uid: this.uid,
+                targetUID,
+                targetVelocity,
+                maxForce,
+            });
+        }
+
+        _SetRevoluteLimits(targetUID, minAngle, maxAngle, enabledStr) {
+            const enabled = enabledStr === "yes";
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetRevoluteLimits,
+                uid: this.uid,
+                targetUID,
+                minAngle: minAngle * Math.PI / 180,
+                maxAngle: maxAngle * Math.PI / 180,
+                enabled,
+            });
+        }
+
         _SetPositionOffset(x, y, z) {
             const command = {
                 type: this.CommandType.SetPositionOffset,
@@ -2223,6 +2295,10 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _OnPhysicsReady() {
+            return true;
+        }
+
+        _OnPhysicsPaused() {
             return true;
         }
     };

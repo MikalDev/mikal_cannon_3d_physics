@@ -268,7 +268,34 @@
     ]
   },
   "world": {
-    "conditions": [],
+    "conditions": [
+      {
+        "id": "OnPhysicsPaused",
+        "scriptName": "OnPhysicsPaused",
+        "highlight": true,
+        "deprecated": false,
+        "isTrigger": true,
+        "isFakeTrigger": false,
+        "isStatic": false,
+        "isLooping": false,
+        "isInvertible": false,
+        "isCompatibleWithTriggers": false,
+        "params": []
+      },
+      {
+        "id": "IsPhysicsPaused",
+        "scriptName": "IsPhysicsPaused",
+        "highlight": false,
+        "deprecated": false,
+        "isTrigger": false,
+        "isFakeTrigger": false,
+        "isStatic": false,
+        "isLooping": false,
+        "isInvertible": true,
+        "isCompatibleWithTriggers": true,
+        "params": []
+      }
+    ],
     "actions": [
       {
         "id": "SetWorldGravity",
@@ -364,6 +391,22 @@
             "initialValue": "100"
           }
         ]
+      },
+      {
+        "id": "PausePhysics",
+        "scriptName": "PausePhysics",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": []
+      },
+      {
+        "id": "ResumePhysics",
+        "scriptName": "ResumePhysics",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": []
       }
     ],
     "expressions": [
@@ -1188,6 +1231,63 @@
             "id": "targetUID",
             "type": "number",
             "initialValue": 0
+          }
+        ]
+      },
+      {
+        "id": "SetRevoluteMotor",
+        "scriptName": "SetRevoluteMotor",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "targetUID",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "targetVelocity",
+            "type": "number",
+            "initialValue": 1
+          },
+          {
+            "id": "maxForce",
+            "type": "number",
+            "initialValue": 100
+          }
+        ]
+      },
+      {
+        "id": "SetRevoluteLimits",
+        "scriptName": "SetRevoluteLimits",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "targetUID",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "minAngle",
+            "type": "number",
+            "initialValue": -90
+          },
+          {
+            "id": "maxAngle",
+            "type": "number",
+            "initialValue": 90
+          },
+          {
+            "id": "enabled",
+            "type": "combo",
+            "initialValue": "yes",
+            "items": [
+              "yes",
+              "no"
+            ]
           }
         ]
       },

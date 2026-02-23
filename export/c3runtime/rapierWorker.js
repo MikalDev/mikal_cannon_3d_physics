@@ -8038,6 +8038,8 @@ let characterControllerCollisionEvents = [];
 let postDefineCommands = new Map();
 let castRayResults = [];
 let castShapeResults = [];
+let isPaused = false;
+const jointMap = new Map(); // key: `${uid}_${targetUID}` → revolute joint handle
 
 const CommandType = {
     AddBody: 0,
@@ -8076,6 +8078,10 @@ const CommandType = {
     ApplyAngularImpulse: 33,
     WakeUp: 34,
     Sleep: 35,
+    PauseWorld: 36,
+    ResumeWorld: 37,
+    SetRevoluteMotor: 38,
+    SetRevoluteLimits: 39,
 };
 
 const BodyType = {
@@ -8216,6 +8222,14 @@ function sleep(config) {
     if (body) {
         body.sleep();
     }
+}
+
+function pauseWorld() {
+    isPaused = true;
+}
+
+function resumeWorld() {
+    isPaused = false;
 }
 
 function debugRender() {
@@ -8645,8 +8659,10 @@ function stepWorld(dt, frame) {
     collisionEvents = [...characterControllerCollisionEvents];
     characterControllerCollisionEvents = [];
     let eventQueue = new RAPIER.EventQueue(true);
-    rapierWorld.step(eventQueue);
-    handleCollisionEvents(eventQueue);
+    if (!isPaused) {
+        rapierWorld.step(eventQueue);
+        handleCollisionEvents(eventQueue);
+    }
     eventQueue.free();
 
     // Collect and return bodies' data...
@@ -9214,6 +9230,27 @@ function addRevoluteJoint(config) {
         targetBody,
         true
     );
+    jointMap.set(`${uid}_${targetUID}`, joint);
+}
+
+function setRevoluteMotor(config) {
+    const { uid, targetUID, targetVelocity, maxForce } = config;
+    const joint = jointMap.get(`${uid}_${targetUID}`);
+    if (!joint) return;
+    // configureMotorVelocity(targetVel, dampingCoeff) — dampingCoeff=0 disables motor force
+    joint.configureMotorVelocity(targetVelocity, maxForce);
+}
+
+function setRevoluteLimits(config) {
+    const { uid, targetUID, minAngle, maxAngle, enabled } = config;
+    const joint = jointMap.get(`${uid}_${targetUID}`);
+    if (!joint) return;
+    if (enabled) {
+        joint.setLimits(minAngle, maxAngle);
+    } else {
+        // Rapier has no setLimitsEnabled toggle; use full range to effectively free the joint
+        joint.setLimits(-Math.PI * 10000, Math.PI * 10000);
+    }
 }
 
 function createTrimeshCollider(meshPoints) {
@@ -9288,6 +9325,10 @@ const commandFunctions = {
     [CommandType.ApplyAngularImpulse]: applyAngularImpulse,
     [CommandType.WakeUp]: wakeUp,
     [CommandType.Sleep]: sleep,
+    [CommandType.PauseWorld]: pauseWorld,
+    [CommandType.ResumeWorld]: resumeWorld,
+    [CommandType.SetRevoluteMotor]: setRevoluteMotor,
+    [CommandType.SetRevoluteLimits]: setRevoluteLimits,
 };
 
 function runCommands(commands) {
@@ -9312,6 +9353,14 @@ function removeBody(config) {
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         rapierWorld.removeRigidBody(body);
+    }
+    // Prune stale revolute joint entries for this uid
+    const uidStr = String(uid);
+    for (const key of jointMap.keys()) {
+        const parts = key.split("_");
+        if (parts[0] === uidStr || parts[1] === uidStr) {
+            jointMap.delete(key);
+        }
     }
 }
 

@@ -78,6 +78,7 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
         this.worldReady = false;
         this.scale = 100;
         this.timestepMode = 0;
+        this.isPaused = false;
         this.timestepValue = 1 / 60;
         this.currentPhysicsFrameResponse = 0;
         this.currentPhysicsFrameRequest = 0;
