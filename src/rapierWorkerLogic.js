@@ -16,7 +16,7 @@ let postDefineCommands = new Map();
 let castRayResults = [];
 let castShapeResults = [];
 let isPaused = false;
-const jointMap = new Map(); // key: `${uid}_${targetUID}` → revolute joint handle
+const jointMap = new Map(); // Map<uid, Map<targetUID, joint>>
 
 const CommandType = {
     AddBody: 0,
@@ -1207,14 +1207,15 @@ function addRevoluteJoint(config) {
         targetBody,
         true
     );
-    jointMap.set(`${uid}_${targetUID}`, joint);
+    if (!jointMap.has(uid)) jointMap.set(uid, new Map());
+    jointMap.get(uid).set(targetUID, joint);
 }
 
 function setRevoluteMotor(config) {
     const { uid, targetUID, targetVelocity, maxForce } = config;
-    const joint = jointMap.get(`${uid}_${targetUID}`);
+    const joint = jointMap.get(uid)?.get(targetUID);
     if (!joint) {
-        console.warn(`[rapierWorker] setRevoluteMotor: no joint found for ${uid}_${targetUID}`);
+        console.warn(`[rapierWorker] setRevoluteMotor: no joint found for uid=${uid} targetUID=${targetUID}`);
         return;
     }
     // configureMotorVelocity(targetVel, dampingCoeff) — dampingCoeff=0 disables motor force
@@ -1223,9 +1224,9 @@ function setRevoluteMotor(config) {
 
 function setRevoluteLimits(config) {
     const { uid, targetUID, minAngle, maxAngle, enabled } = config;
-    const joint = jointMap.get(`${uid}_${targetUID}`);
+    const joint = jointMap.get(uid)?.get(targetUID);
     if (!joint) {
-        console.warn(`[rapierWorker] setRevoluteLimits: no joint found for ${uid}_${targetUID}`);
+        console.warn(`[rapierWorker] setRevoluteLimits: no joint found for uid=${uid} targetUID=${targetUID}`);
         return;
     }
     if (enabled) {
@@ -1338,12 +1339,10 @@ function removeBody(config) {
         rapierWorld.removeRigidBody(body);
     }
     // Prune stale revolute joint entries for this uid
-    const uidStr = String(uid);
-    for (const key of jointMap.keys()) {
-        const parts = key.split("_");
-        if (parts[0] === uidStr || parts[1] === uidStr) {
-            jointMap.delete(key);
-        }
+    jointMap.delete(uid); // remove as owner
+    for (const [ownerUID, targets] of jointMap) {
+        targets.delete(uid); // remove as target
+        if (targets.size === 0) jointMap.delete(ownerUID);
     }
 }
 
