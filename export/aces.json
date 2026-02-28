@@ -617,6 +617,98 @@
         ]
       },
       {
+        "id": "SetBodyType",
+        "scriptName": "SetBodyType",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "bodyType",
+            "type": "combo",
+            "initialValue": "dynamic",
+            "items": [
+              "dynamic",
+              "fixed",
+              "kinematicPosition",
+              "kinematicVelocity"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SetNextKinematicTranslation",
+        "scriptName": "SetNextKinematicTranslation",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "SetNextKinematicRotation",
+        "scriptName": "SetNextKinematicRotation",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "SetAngularVelocity",
+        "scriptName": "SetAngularVelocity",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
         "id": "EnablePhysics",
         "scriptName": "EnablePhysics",
         "highlight": false,
@@ -1506,6 +1598,26 @@
         "id": "IsSleeping",
         "scriptName": "IsSleeping",
         "expressionName": "IsSleeping",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "BodyType",
+        "scriptName": "BodyType",
+        "expressionName": "BodyType",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "Mass",
+        "scriptName": "Mass",
+        "expressionName": "Mass",
         "highlight": false,
         "deprecated": false,
         "returnType": "number",

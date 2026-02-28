@@ -86,6 +86,10 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 ResumeWorld: 37,
                 SetRevoluteMotor: 38,
                 SetRevoluteLimits: 39,
+                SetAngularVelocity: 40,
+                SetBodyType: 41,
+                SetNextKinematicTranslation: 42,
+                SetNextKinematicRotation: 43,
             };
             this._setTicking(true);
             this._setTicking2(true);
@@ -368,8 +372,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 height: this._toPhysics(inst.height),
                 depth: this._toPhysics(zHeight),
                 immovable: this.immovable,
-                enableRot0: !isShape3D,
-                enableRot1: !isShape3D,
+                enableRot0: !isShape3D && !isSprite,
+                enableRot1: !isShape3D && !isSprite,
                 enableRot2: true,
                 shapeType: this.shapeProperty,
                 bodyType: this.bodyType,
@@ -390,7 +394,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     colliderType,
                     shape,
                 });
-            } else if (this.pluginType === "SpritePlugin") {
+            } else if (pluginType === "SpritePlugin") {
                 command = this._buildBodyCommand(this.CommandType.AddBody, {
                     shapeType,
                     bodyType,
@@ -681,7 +685,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         _getMeshPoints() {
             const inst = this.instance;
             const meshSize = inst.getMeshSize();
-            if (!meshSize || meshSize[0] === 0 || meshSize[1] === 0) return [];
+            if (!meshSize || meshSize[0] < 2 || meshSize[1] < 2) return [];
             const [cols, rows] = meshSize;
             const width = inst.width;
             const height = inst.height;
@@ -881,6 +885,14 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             return globalThis.Mikal_Rapier_Bodies?.get(this.uid)?.sleeping ? 1 : 0;
         }
 
+        _BodyType() {
+            return globalThis.Mikal_Rapier_Bodies?.get(this.uid)?.bodyType ?? -1;
+        }
+
+        _Mass() {
+            return globalThis.Mikal_Rapier_Bodies?.get(this.uid)?.mass ?? 0;
+        }
+
         _PausePhysics() {
             this.PhysicsType.commands.push({ type: this.CommandType.PauseWorld });
             this.PhysicsType.isPaused = true;
@@ -1018,6 +1030,45 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 velocity: this._vecToPhysics(x, y, z),
             };
             this.PhysicsType.commands.push(command);
+        }
+
+        _SetAngularVelocity(x, y, z) {
+            if (!this.bodyDefined) return;
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetAngularVelocity,
+                uid: this.uid,
+                x, y, z,
+            });
+        }
+
+        _SetBodyType(bodyType) {
+            if (!this.bodyDefined) return;
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetBodyType,
+                uid: this.uid,
+                bodyType,
+            });
+        }
+
+        _SetNextKinematicTranslation(x, y, z) {
+            if (!this.bodyDefined) return;
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetNextKinematicTranslation,
+                uid: this.uid,
+                translation: this._vecToPhysics(x, y, z),
+            });
+        }
+
+        _SetNextKinematicRotation(x, y, z) {
+            if (!this.bodyDefined) return;
+            const quat = globalThis.glMatrix.quat;
+            const rotation = quat.create();
+            quat.fromEuler(rotation, x, y, z);
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetNextKinematicRotation,
+                uid: this.uid,
+                rotation: { x: rotation[0], y: rotation[1], z: rotation[2], w: rotation[3] },
+            });
         }
 
         _SetImmovable(immovable) {

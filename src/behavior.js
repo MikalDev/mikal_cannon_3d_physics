@@ -125,7 +125,7 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
         if (!bodies) return;
         globalThis.Mikal_Rapier_Bodies = new Map();
         const scale = this.scale;
-        for (let i = 0; i < bodies.length; i += 15) {
+        for (let i = 0; i < bodies.length; i += 17) {
             const uid = bodies[i];
             const x = bodies[i + 1] * scale;
             const y = bodies[i + 2] * scale;
@@ -141,12 +141,16 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
             const ay = bodies[i + 12];
             const az = bodies[i + 13];
             const sleeping = bodies[i + 14] === 1;
+            const bodyType = bodies[i + 15];
+            const mass = bodies[i + 16];
             globalThis.Mikal_Rapier_Bodies.set(uid, {
                 translation: { x, y, z },
                 rotation: { x: rx, y: ry, z: rz, w: rw },
                 velocity: { x: vx, y: vy, z: vz },
                 angularVelocity: { x: ax, y: ay, z: az },
                 sleeping,
+                bodyType,
+                mass,
             });
         }
     }

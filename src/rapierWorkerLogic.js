@@ -59,6 +59,10 @@ const CommandType = {
     ResumeWorld: 37,
     SetRevoluteMotor: 38,
     SetRevoluteLimits: 39,
+    SetAngularVelocity: 40,
+    SetBodyType: 41,
+    SetNextKinematicTranslation: 42,
+    SetNextKinematicRotation: 43,
 };
 
 const BodyType = {
@@ -645,7 +649,7 @@ function stepWorld(dt, frame) {
     // Collect and return bodies' data...
     const bodies = rapierWorld.bodies;
     const numBodies = bodies.len();
-    const bodiesData = new Float32Array(numBodies * 15);
+    const bodiesData = new Float32Array(numBodies * 17);
     let i = 0;
     bodies.forEach((body) => {
         const translation = body.translation();
@@ -667,6 +671,8 @@ function stepWorld(dt, frame) {
         bodiesData[i++] = angvel.y;
         bodiesData[i++] = angvel.z;
         bodiesData[i++] = body.isSleeping() ? 1 : 0;
+        bodiesData[i++] = body.bodyType();
+        bodiesData[i++] = body.mass();
     });
     const castRayResultsCopy = castRayResults.slice();
     const castShapeResultsCopy = castShapeResults.slice();
@@ -1169,7 +1175,43 @@ function setVelocity(config) {
     if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
-        body.setLinvel(velocity);
+        body.setLinvel(velocity, true);
+    }
+}
+
+function setAngularVelocity(config) {
+    const handle = uidHandle.get(config.uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setAngvel({ x: config.x, y: config.y, z: config.z }, true);
+    }
+}
+
+function setBodyType(config) {
+    const handle = uidHandle.get(config.uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setBodyType(config.bodyType, true);
+    }
+}
+
+function setNextKinematicTranslation(config) {
+    const handle = uidHandle.get(config.uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setNextKinematicTranslation(config.translation);
+    }
+}
+
+function setNextKinematicRotation(config) {
+    const handle = uidHandle.get(config.uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setNextKinematicRotation(config.rotation);
     }
 }
 
@@ -1267,7 +1309,7 @@ function createTrimeshCollider(meshPoints) {
     }
 
     // Create trimesh collider description
-    const colliderDesc = RAPIER.ColliderDesc.trimesh(vertices, indices);
+    const colliderDesc = RAPIER.ColliderDesc.trimesh(new Float32Array(vertices), new Uint32Array(indices));
 
     return colliderDesc;
 }
@@ -1314,6 +1356,10 @@ const commandFunctions = {
     [CommandType.ResumeWorld]: resumeWorld,
     [CommandType.SetRevoluteMotor]: setRevoluteMotor,
     [CommandType.SetRevoluteLimits]: setRevoluteLimits,
+    [CommandType.SetAngularVelocity]: setAngularVelocity,
+    [CommandType.SetBodyType]: setBodyType,
+    [CommandType.SetNextKinematicTranslation]: setNextKinematicTranslation,
+    [CommandType.SetNextKinematicRotation]: setNextKinematicRotation,
 };
 
 function runCommands(commands) {

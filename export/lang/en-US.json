@@ -361,6 +361,80 @@
               }
             }
           },
+          "SetBodyType": {
+            "list-name": "Set body type",
+            "display-text": "Set {my} body type to {0}",
+            "description": "Switch body type at runtime (Dynamic, Fixed, Kinematic).",
+            "params": {
+              "bodyType": {
+                "name": "Body type",
+                "desc": "Body type to switch to.",
+                "items": {
+                  "dynamic": "Dynamic",
+                  "fixed": "Fixed",
+                  "kinematicPosition": "Kinematic Position",
+                  "kinematicVelocity": "Kinematic Velocity"
+                }
+              }
+            }
+          },
+          "SetNextKinematicTranslation": {
+            "list-name": "Set next kinematic translation",
+            "display-text": "Move {my} kinematic body to {0}, {1}, {2}",
+            "description": "Move a kinematic body to a position. Unlike Translate, this lets Rapier compute velocity for correct collision response with dynamic bodies.",
+            "params": {
+              "x": {
+                "name": "X",
+                "desc": "Target X position."
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Target Y position."
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Target Z position."
+              }
+            }
+          },
+          "SetNextKinematicRotation": {
+            "list-name": "Set next kinematic rotation",
+            "display-text": "Rotate {my} kinematic body to {0}°, {1}°, {2}°",
+            "description": "Rotate a kinematic body. Unlike Rotate, this lets Rapier compute angular velocity for correct collision response with dynamic bodies.",
+            "params": {
+              "x": {
+                "name": "X (degrees)",
+                "desc": "Target X rotation in degrees."
+              },
+              "y": {
+                "name": "Y (degrees)",
+                "desc": "Target Y rotation in degrees."
+              },
+              "z": {
+                "name": "Z (degrees)",
+                "desc": "Target Z rotation in degrees."
+              }
+            }
+          },
+          "SetAngularVelocity": {
+            "list-name": "Set angular velocity",
+            "display-text": "Set {my} angular velocity to {0}, {1}, {2} (rad/s)",
+            "description": "Set angular velocity of body (rad/s).",
+            "params": {
+              "x": {
+                "name": "Angular velocity x",
+                "desc": "Angular velocity x (rad/s)."
+              },
+              "y": {
+                "name": "Angular velocity y",
+                "desc": "Angular velocity y (rad/s)."
+              },
+              "z": {
+                "name": "Angular velocity z",
+                "desc": "Angular velocity z (rad/s)."
+              }
+            }
+          },
           "EnablePhysics": {
             "list-name": "Enable physics",
             "display-text": "Enable {my} physics {0}",
@@ -1156,6 +1230,16 @@
           "IsSleeping": {
             "translated-name": "IsSleeping",
             "description": "1 if the body is currently sleeping (physics paused), 0 if awake.",
+            "params": {}
+          },
+          "BodyType": {
+            "translated-name": "BodyType",
+            "description": "Body type: 0=Dynamic, 1=Fixed, 2=KinematicPosition, 3=KinematicVelocity. -1 if not ready.",
+            "params": {}
+          },
+          "Mass": {
+            "translated-name": "Mass",
+            "description": "Total mass of the body.",
             "params": {}
           }
         }
