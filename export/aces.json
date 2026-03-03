@@ -118,9 +118,9 @@
             "initialValue": "\"\""
           },
           {
-            "id": "skipBackfaces",
+            "id": "solid",
             "type": "boolean",
-            "initialValue": "true"
+            "initialValue": "false"
           },
           {
             "id": "mode",
@@ -237,18 +237,44 @@
             "initialValue": "-1"
           },
           {
-            "id": "skipBackfaces",
+            "id": "solid",
             "type": "boolean",
-            "initialValue": "true"
+            "initialValue": "false"
           }
         ]
       }
     ],
     "expressions": [
       {
+        "id": "RaycastCurrentTag",
+        "scriptName": "RaycastCurrentTag",
+        "expressionName": "RaycastCurrentTag",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "string",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
         "id": "RaycastResultAsJSON",
         "scriptName": "RaycastResultAsJSON",
         "expressionName": "RaycastResultAsJSON",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "string",
+        "isVariadicParameters": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": "\"\""
+          }
+        ]
+      },
+      {
+        "id": "CastShapeCurrentTag",
+        "scriptName": "CastShapeCurrentTag",
+        "expressionName": "CastShapeCurrentTag",
         "highlight": false,
         "deprecated": false,
         "returnType": "string",
@@ -263,7 +289,13 @@
         "deprecated": false,
         "returnType": "string",
         "isVariadicParameters": false,
-        "params": []
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": "\"\""
+          }
+        ]
       }
     ]
   },
@@ -921,6 +953,20 @@
             "id": "filter",
             "type": "string",
             "initialValue": "\"0xFFFF\""
+          }
+        ]
+      },
+      {
+        "id": "SetLightOccluder",
+        "scriptName": "SetLightOccluder",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "enable",
+            "type": "boolean",
+            "initialValue": "true"
           }
         ]
       },

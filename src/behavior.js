@@ -182,7 +182,7 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                         )
                     )
                 );
-                behInst.castShapeResult = {
+                behInst.castShapeResults.set(tag, {
                     hasHit: true,
                     hitPointWorld: [
                         hitPointWorld[0] * scale,
@@ -217,9 +217,9 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                         ]) * scale,
                     hitUID: result.hitUID,
                     tag,
-                };
+                });
             } else {
-                behInst.castShapeResult = {
+                behInst.castShapeResults.set(tag, {
                     hasHit: false,
                     hitPointWorld: [0, 0, 0],
                     witness1: [0, 0, 0],
@@ -229,9 +229,10 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                     distance: 0,
                     hitUID: -1,
                     tag,
-                };
+                });
             }
 
+            behInst._currentCastShapeTag = tag;
             behInst._trigger(
                 C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyCastShapeResult
             );
@@ -278,7 +279,7 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                         )
                     )
                 );
-                behInst.raycastResult = {
+                behInst.raycastResults.set(tag, {
                     hasHit: true,
                     hitFaceIndex: 0,
                     hitPointWorld: [
@@ -299,9 +300,9 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                         ]) * scale,
                     hitUID: result.hitUID,
                     tag,
-                };
+                });
             } else {
-                behInst.raycastResult = {
+                behInst.raycastResults.set(tag, {
                     hasHit: false,
                     hitFaceIndex: -1,
                     hitPointWorld: [0, 0, 0],
@@ -309,15 +310,18 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                     distance: 0,
                     hitUID: -1,
                     tag,
-                };
+                });
             }
 
-            behInst._trigger(
-                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyRaycastResult
-            );
-            behInst._trigger(
-                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnRaycastResult
-            );
+            if (!result.noTrigger) {
+                behInst._currentRaycastTag = tag;
+                behInst._trigger(
+                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyRaycastResult
+                );
+                behInst._trigger(
+                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnRaycastResult
+                );
+            }
         }
     }
 

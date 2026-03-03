@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.32.1",
+    version: "2.32.2",
     category:
         // "attributes",
         "movements",
@@ -196,6 +196,15 @@ module.exports = {
                 initialValue: -1,
             },
         },
+        {
+            type: "check",
+            id: "lightOccluder",
+            name: "Light Occluder",
+            desc: "Mark as a light occluder (collision group bit 15, 0x8000). Raycast with filterGroups 0x8000 to test only against occluders.",
+            options: {
+                initialValue: false,
+            },
+        },
     ],
     aceCategories: {
         // follows the format id: langName
@@ -323,11 +332,11 @@ module.exports = {
                     initialValue: '""',
                 },
                 {
-                    id: "skipBackfaces",
-                    name: "Skip backfaces",
-                    desc: "Skip backfaces.",
+                    id: "solid",
+                    name: "Solid",
+                    desc: "If true, a ray starting inside a collider immediately hits it (TOI=0). If false, the shape is treated as hollow and the ray exits through the far side.",
                     type: "boolean",
-                    initialValue: "true",
+                    initialValue: "false",
                 },
                 {
                     id: "mode",
@@ -489,11 +498,11 @@ module.exports = {
                     initialValue: "-1",
                 },
                 {
-                    id: "skipBackfaces",
-                    name: "Skip Backfaces",
-                    desc: "Skip backfaces.",
+                    id: "solid",
+                    name: "Solid",
+                    desc: "If true, a shape cast starting inside a collider stops immediately (TOI=0). If false, the shape is treated as hollow.",
                     type: "boolean",
-                    initialValue: "true",
+                    initialValue: "false",
                 },
             ],
             listName: "Cast Shape",
@@ -1215,6 +1224,27 @@ module.exports = {
             // The description of the action as it appears in the add action dialog
             description:
                 "Set collision groups membership and filter with hex strings.",
+        },
+
+        SetLightOccluder: {
+            category: "body",
+            forward: "_SetLightOccluder",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "enable",
+                    name: "Enable",
+                    desc: "Enable or disable light occlusion for this body. Light-occluding bodies are in collision group bit 15 (0x8000). Raycast with filterGroups 0x8000 to test only against occluders.",
+                    type: "boolean",
+                    initialValue: "true",
+                },
+            ],
+            listName: "Set light occluder",
+            displayText: "Set {my} light occluder {0}",
+            description: "Mark this body as a light occluder (collision group bit 15). Use filterGroups 0x8000 in raycasts to test only against occluders.",
         },
 
         SetCollisionFilterMask: {
@@ -2407,6 +2437,17 @@ module.exports = {
     */
     },
     Exps: {
+        RaycastCurrentTag: {
+            category: "general",
+            forward: "_RaycastCurrentTag",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            returnType: "string",
+            isVariadicParameters: false,
+            params: [],
+            description: "Tag of the raycast result currently being processed. Use inside On any raycast result.",
+        },
         RaycastResultAsJSON: {
             // The category of the action as it appears in the expression picker
             category: "general",
@@ -2415,10 +2456,28 @@ module.exports = {
             highlight: false,
             deprecated: false,
             returnType: "string",
-            // Set to true if the expression is variadic. False by default if not specified.
+            isVariadicParameters: false,
+            params: [
+                {
+                    id: "tag",
+                    name: "Tag",
+                    desc: "Tag used when firing the raycast.",
+                    type: "string",
+                    initialValue: '""',
+                },
+            ],
+            description: "Raycast result as JSON string for the given tag.",
+        },
+        CastShapeCurrentTag: {
+            category: "general",
+            forward: "_CastShapeCurrentTag",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            returnType: "string",
             isVariadicParameters: false,
             params: [],
-            description: "Raycast result as JSON string.",
+            description: "Tag of the cast shape result currently being processed. Use inside On any cast shape result.",
         },
         CastShapeResultAsJSON: {
             category: "general",
@@ -2427,10 +2486,17 @@ module.exports = {
             highlight: false,
             deprecated: false,
             returnType: "string",
-            // Set to true if the expression is variadic. False by default if not specified.
             isVariadicParameters: false,
-            params: [],
-            description: "Cast shape result as JSON string.",
+            params: [
+                {
+                    id: "tag",
+                    name: "Tag",
+                    desc: "Tag used when firing the shape cast.",
+                    type: "string",
+                    initialValue: '""',
+                },
+            ],
+            description: "Cast shape result as JSON string for the given tag.",
         },
         Enable: {
             // The category of the action as it appears in the expression picker

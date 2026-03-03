@@ -71,6 +71,10 @@
           "body-size-depth": {
             "name": "Depth override",
             "desc": "Body size depth override (not for auto shape)"
+          },
+          "lightOccluder": {
+            "name": "Light Occluder",
+            "desc": "Mark as a light occluder (collision group bit 15, 0x8000). Raycast with filterGroups 0x8000 to test only against occluders."
           }
         },
         "actions": {
@@ -134,9 +138,9 @@
                 "name": "Unused",
                 "desc": "Unused"
               },
-              "skipBackfaces": {
-                "name": "Skip backfaces",
-                "desc": "Skip backfaces."
+              "solid": {
+                "name": "Solid",
+                "desc": "If true, a ray starting inside a collider immediately hits it (TOI=0). If false, the shape is treated as hollow and the ray exits through the far side."
               },
               "mode": {
                 "name": "Mode",
@@ -231,9 +235,9 @@
                 "name": "Exclude Body UID",
                 "desc": "Exclude body UID such as the source."
               },
-              "skipBackfaces": {
-                "name": "Skip Backfaces",
-                "desc": "Skip backfaces."
+              "solid": {
+                "name": "Solid",
+                "desc": "If true, a shape cast starting inside a collider stops immediately (TOI=0). If false, the shape is treated as hollow."
               }
             }
           },
@@ -602,6 +606,17 @@
               "filter": {
                 "name": "Filter",
                 "desc": "Indicates what groups the collider can interact with (one bit per group, hex string)."
+              }
+            }
+          },
+          "SetLightOccluder": {
+            "list-name": "Set light occluder",
+            "display-text": "Set {my} light occluder {0}",
+            "description": "Mark this body as a light occluder (collision group bit 15). Use filterGroups 0x8000 in raycasts to test only against occluders.",
+            "params": {
+              "enable": {
+                "name": "Enable",
+                "desc": "Enable or disable light occlusion for this body. Light-occluding bodies are in collision group bit 15 (0x8000). Raycast with filterGroups 0x8000 to test only against occluders."
               }
             }
           },
@@ -1112,15 +1127,35 @@
           }
         },
         "expressions": {
+          "RaycastCurrentTag": {
+            "translated-name": "RaycastCurrentTag",
+            "description": "Tag of the raycast result currently being processed. Use inside On any raycast result.",
+            "params": {}
+          },
           "RaycastResultAsJSON": {
             "translated-name": "RaycastResultAsJSON",
-            "description": "Raycast result as JSON string.",
+            "description": "Raycast result as JSON string for the given tag.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag used when firing the raycast."
+              }
+            }
+          },
+          "CastShapeCurrentTag": {
+            "translated-name": "CastShapeCurrentTag",
+            "description": "Tag of the cast shape result currently being processed. Use inside On any cast shape result.",
             "params": {}
           },
           "CastShapeResultAsJSON": {
             "translated-name": "CastShapeResultAsJSON",
-            "description": "Cast shape result as JSON string.",
-            "params": {}
+            "description": "Cast shape result as JSON string for the given tag.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag used when firing the shape cast."
+              }
+            }
           },
           "Enable": {
             "translated-name": "Enable",

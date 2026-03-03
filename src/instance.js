@@ -38,12 +38,23 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 this.bodySizeHeight = properties[7];
                 this.bodySizeWidth = properties[8];
                 this.bodySizeDepth = properties[9];
+                this.lightOccluder = properties[10] ?? false;
             }
             // In SDK v2, this.instance and this.behavior are not available in constructor
             // They will be initialized in _postCreate()
             this.uid = null;
             this.PhysicsType = null;
             this.bodyDefined = false;
+            this.raycastResults = new Map();
+            this.castShapeResults = new Map();
+            this._currentRaycastTag = null;
+            this._currentCastShapeTag = null;
+            // Collision group tracking (16-bit each, mirrors worker state).
+            // Bit 15 (0x8000) is reserved as the light occluder group.
+            // Default membership clears bit 15 so bodies are invisible to light raycasts
+            // unless explicitly marked as light occluders.
+            this._collisionMembership = this.lightOccluder ? 0xFFFF : 0x7FFF;
+            this._collisionFilter = 0xFFFF;
             this._prevPhysicsQuat = null; // Track previous physics quaternion for delta rotation (Model3D)
             this.CommandType = {
                 AddBody: 0,
@@ -97,6 +108,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
         _release() {
             super._release();
+            this.raycastResults.clear();
+            this.castShapeResults.clear();
             // SDK v2: Unregister from behavior instance map
             if (this.PhysicsType) {
                 this.PhysicsType.unregisterBehaviorInstance(this.uid);
@@ -119,6 +132,12 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
         _loadFromJson(o) {
             // load state for savegames
+        }
+
+        // Returns { membership, filter } as hex strings for inclusion in body commands
+        _collisionGroupsForCommand() {
+            const toHex = (n) => "0x" + (n & 0xFFFF).toString(16).toUpperCase().padStart(4, "0");
+            return { membership: toHex(this._collisionMembership), filter: toHex(this._collisionFilter) };
         }
 
         // === Coordinate Conversion Utilities ===
@@ -379,6 +398,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 bodyType: this.bodyType,
                 colliderType: this.colliderType,
                 mass: this.mass,
+                ...this._collisionGroupsForCommand(),
             };
 
             return { ...base, ...overrides };
@@ -667,6 +687,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 colliderType,
                 shape: null, // GltfStatic uses primitive shapes, not Shape3D geometry
                 mass: this.mass,
+                ...this._collisionGroupsForCommand(),
             };
 
             this.PhysicsType.commands.push(command);
@@ -720,14 +741,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             z,
             filterGroups,
             mask,
-            skipBackfaces,
+            solid,
             mode
         ) {
             if (!this.PhysicsType.worldReady) {
-                this.raycastResult = {
-                    hasHit: false,
-                    tag,
-                };
+                this.raycastResults.set(tag, { hasHit: false, tag });
                 return;
             }
             const vec3 = globalThis.glMatrix.vec3;
@@ -748,19 +766,69 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 dir: { x: dir[0], y: dir[1], z: dir[2] },
                 maxToI,
                 filterGroups,
-                skipBackfaces,
+                solid,
                 uid: this.uid,
                 tag,
             };
             this.PhysicsType.commands.push(command);
         }
 
-        _RaycastResultAsJSON() {
-            if (!this.raycastResult) {
-                const resut = { hasHit: false, hitUID: -1 };
-                return JSON.stringify(resut);
+        _RaycastCurrentTag() {
+            return this._currentRaycastTag ?? "";
+        }
+
+        _RaycastResultAsJSON(tag) {
+            const result = this.raycastResults.get(tag);
+            return JSON.stringify(result ?? { hasHit: false, hitUID: -1 });
+        }
+
+        // Scripting-only: raycast from this instance's center to toX,toY,toZ.
+        // Tag is auto-suffixed with this uid. No trigger fired.
+        // Read result next tick: _RaycastResultAsJSON(`${tag}_${uid}`)
+        _RaycastFromSelf(tag, toX, toY, toZ, filterGroups = "0x8000", solid = false) {
+            const fullTag = `${tag}_${this.uid}`;
+            if (!this.PhysicsType.worldReady) {
+                this.raycastResults.set(fullTag, { hasHit: false, tag: fullTag });
+                return;
             }
-            return JSON.stringify(this.raycastResult);
+            const bodyData = globalThis.Mikal_Rapier_Bodies?.get(this.uid);
+            let fromX, fromY, fromZ;
+            if (bodyData) {
+                fromX = bodyData.translation.x;
+                fromY = bodyData.translation.y;
+                fromZ = bodyData.translation.z;
+            } else {
+                const inst = this.instance;
+                fromX = inst.x;
+                fromY = inst.y;
+                fromZ = inst.z ?? inst.zElevation ?? 0;
+            }
+            const vec3 = globalThis.glMatrix.vec3;
+            const origin = vec3.fromValues(
+                this._toPhysics(fromX),
+                this._toPhysics(fromY),
+                this._toPhysics(fromZ)
+            );
+            const to = vec3.fromValues(
+                this._toPhysics(toX),
+                this._toPhysics(toY),
+                this._toPhysics(toZ)
+            );
+            const maxToI = vec3.distance(origin, to);
+            vec3.sub(to, to, origin);
+            vec3.normalize(to, to);
+            this.PhysicsType.commands.push({
+                type: this.CommandType.Raycast,
+                origin: { x: origin[0], y: origin[1], z: origin[2] },
+                dir: { x: to[0], y: to[1], z: to[2] },
+                maxToI,
+                filterGroups,
+                solid,
+                uid: this.uid,
+                tag: fullTag,
+                noTrigger: true,
+                excludeUID: this.uid,
+            });
         }
 
         _OnAnyRaycastResult() {
@@ -768,7 +836,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _OnRaycastResult(tag) {
-            return this.raycastResult.tag === tag;
+            return this._currentRaycastTag === tag;
         }
 
         _EnablePhysics(enable) {
@@ -1181,13 +1249,31 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
         _SetCollisionGroups(membership, filter) {
             if (!this.bodyDefined) return;
-            const command = {
+            this._collisionMembership = parseInt(membership, 16);
+            this._collisionFilter = parseInt(filter, 16);
+            this.PhysicsType.commands.push({
                 type: this.CommandType.SetCollisionGroups,
                 uid: this.uid,
                 membership,
                 filter,
-            };
-            this.PhysicsType.commands.push(command);
+            });
+        }
+
+        _SetLightOccluder(enable) {
+            if (!this.bodyDefined) return;
+            const LIGHT_OCCLUDER_BIT = 0x8000; // bit 15, reserved for light occlusion
+            if (enable) {
+                this._collisionMembership |= LIGHT_OCCLUDER_BIT;
+            } else {
+                this._collisionMembership &= ~LIGHT_OCCLUDER_BIT;
+            }
+            const { membership, filter } = this._collisionGroupsForCommand();
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetCollisionGroups,
+                uid: this.uid,
+                membership,
+                filter,
+            });
         }
 
         _ApplyForce(x, y, z, pointX, pointY, pointZ) {
@@ -1355,12 +1441,10 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             targetDistance,
             filterGroups,
             excludeUID,
-            skipBackfaces
+            solid
         ) {
             if (!this.PhysicsType.worldReady) {
-                this.castShapeResult = {
-                    hasHit: false,
-                };
+                this.castShapeResults.set(tag, { hasHit: false, tag });
                 return;
             }
             const vec3 = globalThis.glMatrix.vec3;
@@ -1413,7 +1497,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 targetDistance: this._toPhysics(targetDistance),
                 filterGroups,
                 excludeUID,
-                skipBackfaces,
+                solid,
                 tag,
                 uid: this.instance.uid,
             };
@@ -1421,12 +1505,13 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             this.PhysicsType.commands.push(command);
         }
 
-        _CastShapeResultAsJSON() {
-            if (!this.castShapeResult) {
-                const result = { hasHit: false, hitUID: -1 };
-                return JSON.stringify(result);
-            }
-            return JSON.stringify(this.castShapeResult);
+        _CastShapeCurrentTag() {
+            return this._currentCastShapeTag ?? "";
+        }
+
+        _CastShapeResultAsJSON(tag) {
+            const result = this.castShapeResults.get(tag);
+            return JSON.stringify(result ?? { hasHit: false, hitUID: -1 });
         }
 
         _OnAnyCastShapeResult() {
@@ -1434,7 +1519,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _OnCastShapeResult(tag) {
-            return this.castShapeResult.tag === tag;
+            return this._currentCastShapeTag === tag;
         }
 
         _OnPhysicsReady() {

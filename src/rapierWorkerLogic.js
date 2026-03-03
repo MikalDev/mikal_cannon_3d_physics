@@ -536,6 +536,18 @@ function addBody(config) {
         collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
     }
 
+    // Apply collision groups to all colliders if specified.
+    // Bit 15 (0x8000) of membership is reserved for light occluders.
+    if (config.membership !== undefined && config.filter !== undefined) {
+        const membershipNum = parseInt(config.membership, 16) & 0xFFFF;
+        const filterNum = parseInt(config.filter, 16) & 0xFFFF;
+        const groups = (membershipNum << 16) | filterNum;
+        for (let i = 0; i < body.numColliders(); i++) {
+            const col = rapierWorld.colliders.get(body.collider(i));
+            if (col) col.setCollisionGroups(groups);
+        }
+    }
+
     // Note: Rotation locks are now set on rigidBodyDesc BEFORE body creation
     // (see rigidBodyDesc.enabledRotations above) - no need to set again here
 
@@ -825,16 +837,23 @@ function raycast(config) {
     const dir = config.dir;
     const ray = new RAPIER.Ray(origin, dir);
     const maxToI = config.maxToI;
-    const solid = !config.skipBackFaces;
+    const solid = config.solid;
     const uid = config.uid;
     let filterGroups = parseInt(config.filterGroups, 16);
     filterGroups = 0xffff0000 | filterGroups;
+    let excludeBody = null;
+    if (config.excludeUID !== undefined) {
+        const excludeHandle = uidHandle.get(config.excludeUID);
+        if (excludeHandle !== undefined) excludeBody = rapierWorld.bodies.get(excludeHandle);
+    }
     let resultRaw = rapierWorld.castRayAndGetNormal(
         ray,
         maxToI,
         solid,
         null,
-        filterGroups
+        filterGroups,
+        null,
+        excludeBody
     );
     let result = {};
     const parent = resultRaw?.collider?.parent();
@@ -846,6 +865,7 @@ function raycast(config) {
         result.dir = { x: dir.x, y: dir.y, z: dir.z };
         result.origin = { x: origin.x, y: origin.y, z: origin.z };
         result.tag = config.tag;
+        result.noTrigger = config.noTrigger;
         result.timeOfImpact = resultRaw.timeOfImpact;
         result.normal = {
             x: resultRaw.normal.x,
@@ -854,7 +874,7 @@ function raycast(config) {
         };
     } else {
         // @ts-ignore
-        result = { hasHit: false, hitUID: -1, uid, tag: config.tag };
+        result = { hasHit: false, hitUID: -1, uid, tag: config.tag, noTrigger: config.noTrigger };
     }
     castRayResults.push(result);
     return result;
@@ -899,7 +919,7 @@ function castShape(config) {
         let shape2 = getShapeFromConfig(config.shape); // A function to get the shape based on config
         const maxToI = config.maxToI;
         const targetDistance = config.targetDistance || 1; // Use the targetDistance from the config, default to 1 if not provided
-        const stopAtPenetration = !config.skipBackfaces;
+        const stopAtPenetration = config.solid;
         let filterGroups = parseInt(config.filterGroups, 16);
         filterGroups = 0xffff0000 | filterGroups;
 
