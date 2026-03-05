@@ -8031,6 +8031,7 @@ let uidHandle = new Map();
 let characterControllers = new Map();
 let defaultLinearDamping = 0.0;
 let defaultAngularDamping = 0.5; // Damping for rotation to prevent wild spinning (0.5 = moderate damping)
+let defaultContactSkin = 0.01;  // Keeps colliders slightly separated to reduce contact jitter/oscillation
 let timestepMode = 0;
 let timestepValue = 1 / 60;
 let collisionEvents = [];
@@ -8040,6 +8041,7 @@ let castRayResults = [];
 let castShapeResults = [];
 let isPaused = false;
 const jointMap = new Map(); // Map<uid, Map<targetUID, joint>>
+const bodyEverMoved = new Set(); // handles that have had velocity above sleep threshold
 
 const CommandType = {
     AddBody: 0,
@@ -8457,6 +8459,7 @@ function updateBody(config) {
     // Remove the body if it exists
     if (body) {
         rapierWorld.removeRigidBody(body);
+        bodyEverMoved.delete(handle);
     }
     uidHandle.delete(uid);
     addBody(config);
@@ -8514,11 +8517,13 @@ function addBody(config) {
             if (config.shapeType === ShapeTypeProperty.ModelMesh) {
                 colliderDesc = RAPIER.ColliderDesc.trimesh(
                     mesh.vertices,
-                    mesh.indices
+                    mesh.indices,
+                    RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES
                 );
             } else {
                 colliderDesc = RAPIER.ColliderDesc.convexHull(mesh.vertices);
             }
+            colliderDesc.setContactSkin(defaultContactSkin);
             // Set sensor property during creation if specified
             if (config.colliderType === ColliderType.Sensor) {
                 colliderDesc.setSensor(true);
@@ -8530,6 +8535,7 @@ function addBody(config) {
     } else if (config.meshPoints && config.meshPoints.length > 0) {
         // Mesh Points
         const colliderDesc = createTrimeshCollider(config.meshPoints);
+        colliderDesc.setContactSkin(defaultContactSkin);
         // Set sensor property during creation if specified
         if (config.colliderType === ColliderType.Sensor) {
             colliderDesc.setSensor(true);
@@ -8540,6 +8546,7 @@ function addBody(config) {
     } else if (config.shape !== null) {
         // 3DShape
         const colliderDesc = createCollider(config);
+        colliderDesc.setContactSkin(defaultContactSkin);
         // Set sensor property during creation if specified
         if (config.colliderType === ColliderType.Sensor) {
             colliderDesc.setSensor(true);
@@ -8550,6 +8557,7 @@ function addBody(config) {
     } else {
         // 3DObject w/ default shape: box, ball, cylinder
         const colliderDesc = createDefaultCollider(config);
+        colliderDesc.setContactSkin(defaultContactSkin);
         // Set sensor property during creation if specified
         if (config.colliderType === ColliderType.Sensor) {
             colliderDesc.setSensor(true);
@@ -8678,6 +8686,22 @@ function stepWorld(dt, frame) {
     if (!isPaused) {
         rapierWorld.step(eventQueue);
         handleCollisionEvents(eventQueue);
+        // Force-sleep dynamic bodies whose velocity is already below Rapier's sleep
+        // threshold. Rapier normally requires 2 seconds below threshold before sleeping;
+        // ghost contact impulses keep resetting that timer, causing persistent jitter.
+        // Only applies to bodies that have been in motion (prevents sleeping newly created bodies).
+        rapierWorld.bodies.forEach((body) => {
+            if (!body.isDynamic() || body.isSleeping()) return;
+            const lv = body.linvel();
+            const av = body.angvel();
+            const linSq = lv.x * lv.x + lv.y * lv.y + lv.z * lv.z;
+            const angSq = av.x * av.x + av.y * av.y + av.z * av.z;
+            if (linSq > 0.08 || angSq > 0.125) {
+                bodyEverMoved.add(body.handle);
+            } else if (bodyEverMoved.has(body.handle)) {
+                body.sleep();
+            }
+        });
     }
     eventQueue.free();
 
@@ -8849,6 +8873,7 @@ function setSizeOverride(config) {
     // Remove the body if it exists
     if (body) {
         rapierWorld.removeRigidBody(body);
+        bodyEverMoved.delete(handle);
     }
     uidHandle.delete(uid);
     addBody(config);
@@ -9352,7 +9377,7 @@ function createTrimeshCollider(meshPoints) {
     }
 
     // Create trimesh collider description
-    const colliderDesc = RAPIER.ColliderDesc.trimesh(new Float32Array(vertices), new Uint32Array(indices));
+    const colliderDesc = RAPIER.ColliderDesc.trimesh(new Float32Array(vertices), new Uint32Array(indices), RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES);
 
     return colliderDesc;
 }
@@ -9427,6 +9452,7 @@ function removeBody(config) {
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         rapierWorld.removeRigidBody(body);
+        bodyEverMoved.delete(handle);
     }
     // Prune stale revolute joint entries for this uid
     jointMap.delete(uid);

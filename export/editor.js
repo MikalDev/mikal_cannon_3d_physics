@@ -3,7 +3,7 @@ const SDK = self.SDK;
 const BEHAVIOR_INFO = {
     ...{
   "id": "mikal_cannon_3d_physics",
-  "version": "2.32.0",
+  "version": "2.32.3",
   "category": "movements",
   "author": "Mikal",
   "addonType": "behavior",
@@ -153,6 +153,18 @@ const BEHAVIOR_INFO = {
             options: {
               ...{
   "initialValue": -1
+},
+              
+              
+              
+            },
+          },
+{
+            type: "check",
+            id: "lightOccluder",
+            options: {
+              ...{
+  "initialValue": false
 },
               
               
