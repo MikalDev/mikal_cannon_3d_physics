@@ -98,6 +98,17 @@
               }
             }
           },
+          "SetSolverIterations": {
+            "list-name": "Set solver iterations",
+            "display-text": "{my}: Set solver iterations to {0}",
+            "description": "Set the number of solver iterations for the physics world.",
+            "params": {
+              "iterations": {
+                "name": "Iterations",
+                "desc": "Number of solver iterations (higher = more accurate but slower)."
+              }
+            }
+          },
           "Raycast": {
             "list-name": "Cast ray from to",
             "display-text": "{my}: Cast ray , tag {0} from [i]{1},{2},{3}[/i] to [i]{4},{5},{6}[/i] {7}, {8}, {9} {10}",
@@ -303,6 +314,34 @@
               "restitution": {
                 "name": "Restitution",
                 "desc": "Restitution (bounciness) for the body."
+              }
+            }
+          },
+          "SetRestitutionCombineRule": {
+            "list-name": "Set restitution combine rule",
+            "display-text": "Set {my} restitution combine rule to {0}",
+            "description": "Set how restitution is combined between two colliding bodies.",
+            "params": {
+              "rule": {
+                "name": "Combine rule",
+                "desc": "How restitution values are combined between two colliders.",
+                "items": {
+                  "average": "Average",
+                  "min": "Min",
+                  "multiply": "Multiply",
+                  "max": "Max"
+                }
+              }
+            }
+          },
+          "SetSleepThreshold": {
+            "list-name": "Set sleep threshold",
+            "display-text": "Set {my} sleep threshold to {0}",
+            "description": "Set the linear velocity threshold below which a body can fall asleep.",
+            "params": {
+              "threshold": {
+                "name": "Threshold",
+                "desc": "Sleep threshold (default ~0.01, higher = sleeps sooner)."
               }
             }
           },

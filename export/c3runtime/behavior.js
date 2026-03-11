@@ -39,6 +39,11 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
             },
+"SetSolverIterations": {
+            "forward": (inst) => inst._SetSolverIterations,
+            
+            "autoScriptInterface": true,
+            },
 "Raycast": {
             "forward": (inst) => inst._Raycast,
             
@@ -71,6 +76,16 @@ const BEHAVIOR_INFO = {
             },
 "SetRestitution": {
             "forward": (inst) => inst._SetRestitution,
+            
+            "autoScriptInterface": true,
+            },
+"SetRestitutionCombineRule": {
+            "forward": (inst) => inst._SetRestitutionCombineRule,
+            
+            "autoScriptInterface": true,
+            },
+"SetSleepThreshold": {
+            "forward": (inst) => inst._SetSleepThreshold,
             
             "autoScriptInterface": true,
             },
@@ -1185,6 +1200,9 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 SetCCUp: 51,
                 RemoveCharacterController: 52,
                 SetCCNormalNudgeFactor: 53,
+                SetSolverIterations: 54,
+                SetRestitutionCombineRule: 55,
+                SetSleepThreshold: 56,
             };
             this._setTicking(true);
             this._setTicking2(true);
@@ -2198,6 +2216,31 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             this.PhysicsType.commands.push({
                 type: this.CommandType.RemoveCharacterController,
                 tag,
+            });
+        }
+
+        _SetSolverIterations(iterations) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetSolverIterations,
+                iterations,
+            });
+        }
+
+        _SetRestitutionCombineRule(rule) {
+            if (!this.bodyDefined) return;
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetRestitutionCombineRule,
+                uid: this.uid,
+                rule,
+            });
+        }
+
+        _SetSleepThreshold(threshold) {
+            if (!this.bodyDefined) return;
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetSleepThreshold,
+                uid: this.uid,
+                threshold,
             });
         }
 

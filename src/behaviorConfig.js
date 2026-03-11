@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.32.3",
+    version: "2.33.0",
     category:
         // "attributes",
         "movements",
@@ -258,6 +258,26 @@ module.exports = {
             displayText: "{my}: Set world gravity [i]{0},{1},{2}[/i]",
             // The description of the action as it appears in the add action dialog
             description: "Set world gravity in x,y,z axis.",
+        },
+        SetSolverIterations: {
+            category: "world",
+            forward: "_SetSolverIterations",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "iterations",
+                    name: "Iterations",
+                    desc: "Number of solver iterations (higher = more accurate but slower).",
+                    type: "number",
+                    initialValue: "4",
+                },
+            ],
+            listName: "Set solver iterations",
+            displayText: "{my}: Set solver iterations to {0}",
+            description: "Set the number of solver iterations for the physics world.",
         },
         Raycast: {
             // The category of the action as it appears in the add action dialog
@@ -635,6 +655,54 @@ module.exports = {
             listName: "Set restitution",
             displayText: "Set {my} restitution to {0}",
             description: "Set the restitution (bounciness) of a body.",
+        },
+
+        SetRestitutionCombineRule: {
+            category: "body",
+            forward: "_SetRestitutionCombineRule",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "rule",
+                    name: "Combine rule",
+                    desc: "How restitution values are combined between two colliders.",
+                    type: "combo",
+                    initialValue: "average",
+                    items: [
+                        { average: "Average" },
+                        { min: "Min" },
+                        { multiply: "Multiply" },
+                        { max: "Max" },
+                    ],
+                },
+            ],
+            listName: "Set restitution combine rule",
+            displayText: "Set {my} restitution combine rule to {0}",
+            description: "Set how restitution is combined between two colliding bodies.",
+        },
+
+        SetSleepThreshold: {
+            category: "body",
+            forward: "_SetSleepThreshold",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "threshold",
+                    name: "Threshold",
+                    desc: "Sleep threshold (default ~0.01, higher = sleeps sooner).",
+                    type: "number",
+                    initialValue: "0.01",
+                },
+            ],
+            listName: "Set sleep threshold",
+            displayText: "Set {my} sleep threshold to {0}",
+            description: "Set the linear velocity threshold below which a body can fall asleep.",
         },
 
         SetFriction: {

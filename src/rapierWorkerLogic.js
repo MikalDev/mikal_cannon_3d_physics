@@ -11,6 +11,8 @@ let defaultAngularDamping = 0.5; // Damping for rotation to prevent wild spinnin
 let defaultContactSkin = 0.01;  // Keeps colliders slightly separated to reduce contact jitter/oscillation
 let timestepMode = 0;
 let timestepValue = 1 / 60;
+let accumulator = 0;
+const MAX_STEPS_PER_FRAME = 4;
 let collisionEvents = [];
 let characterControllerCollisionEvents = [];
 let ccResults = new Map(); // Map<uid, {grounded, movementX, movementY, movementZ}>
@@ -76,6 +78,9 @@ const CommandType = {
     SetCCUp: 51,
     RemoveCharacterController: 52,
     SetCCNormalNudgeFactor: 53,
+    SetSolverIterations: 54,
+    SetRestitutionCombineRule: 55,
+    SetSleepThreshold: 56,
 };
 
 const BodyType = {
@@ -120,6 +125,7 @@ function scalePoints(points, height, width, depth) {
 
 function setTimestep(config) {
     timestepMode = config.mode;
+    accumulator = 0;
     switch (timestepMode) {
         case TimestepMode.Default:
             timestepValue = 1 / 60;
@@ -664,16 +670,36 @@ function setPositionOffset(config) {
 
 function stepWorld(dt, frame) {
     if (!rapierWorld) return;
-    if (timestepMode === TimestepMode.Adaptive) {
-        rapierWorld.timestep = dt;
-    }
 
     collisionEvents = [...characterControllerCollisionEvents];
     characterControllerCollisionEvents = [];
-    let eventQueue = new RAPIER.EventQueue(true);
+
     if (!isPaused) {
-        rapierWorld.step(eventQueue);
-        handleCollisionEvents(eventQueue);
+        if (timestepMode === TimestepMode.Adaptive) {
+            // Adaptive: single step with actual dt
+            rapierWorld.timestep = dt;
+            let eventQueue = new RAPIER.EventQueue(true);
+            rapierWorld.step(eventQueue);
+            handleCollisionEvents(eventQueue);
+            eventQueue.free();
+        } else {
+            // Default/Fixed: accumulator with fixed timestep
+            accumulator += dt;
+            let steps = 0;
+            while (accumulator >= timestepValue && steps < MAX_STEPS_PER_FRAME) {
+                let eventQueue = new RAPIER.EventQueue(true);
+                rapierWorld.step(eventQueue);
+                handleCollisionEvents(eventQueue);
+                eventQueue.free();
+                accumulator -= timestepValue;
+                steps++;
+            }
+            // Clamp leftover to prevent spiral of death
+            if (accumulator > timestepValue) {
+                accumulator = timestepValue;
+            }
+        }
+
         // Force-sleep dynamic bodies whose velocity is already below Rapier's sleep
         // threshold. Rapier normally requires 2 seconds below threshold before sleeping;
         // ghost contact impulses keep resetting that timer, causing persistent jitter.
@@ -691,7 +717,6 @@ function stepWorld(dt, frame) {
             }
         });
     }
-    eventQueue.free();
 
     // Collect and return bodies' data...
     const bodies = rapierWorld.bodies;
@@ -1300,6 +1325,34 @@ function removeCharacterController(config) {
     characterControllers.delete(tag);
 }
 
+function setSolverIterations(config) {
+    rapierWorld.numSolverIterations = config.iterations;
+}
+
+function setRestitutionCombineRule(config) {
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        const collider = body.collider(0);
+        if (collider) {
+            // Combo index maps directly: 0=Average, 1=Min, 2=Multiply, 3=Max
+            collider.setRestitutionCombineRule(config.rule);
+        }
+    }
+}
+
+function setSleepThreshold(config) {
+    const uid = config.uid;
+    const handle = uidHandle.get(uid);
+    if (bufferIfNoHandle(handle, config)) return;
+    const body = rapierWorld.bodies.get(handle);
+    if (body) {
+        body.setSleepThreshold(config.threshold);
+    }
+}
+
 function setVelocity(config) {
     const uid = config.uid;
     const velocity = config.velocity;
@@ -1502,6 +1555,9 @@ const commandFunctions = {
     [CommandType.SetCCUp]: setCCUp,
     [CommandType.RemoveCharacterController]: removeCharacterController,
     [CommandType.SetCCNormalNudgeFactor]: setCCNormalNudgeFactor,
+    [CommandType.SetSolverIterations]: setSolverIterations,
+    [CommandType.SetRestitutionCombineRule]: setRestitutionCombineRule,
+    [CommandType.SetSleepThreshold]: setSleepThreshold,
 };
 
 function runCommands(commands) {

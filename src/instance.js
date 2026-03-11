@@ -112,6 +112,9 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 SetCCUp: 51,
                 RemoveCharacterController: 52,
                 SetCCNormalNudgeFactor: 53,
+                SetSolverIterations: 54,
+                SetRestitutionCombineRule: 55,
+                SetSleepThreshold: 56,
             };
             this._setTicking(true);
             this._setTicking2(true);
@@ -1125,6 +1128,31 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             this.PhysicsType.commands.push({
                 type: this.CommandType.RemoveCharacterController,
                 tag,
+            });
+        }
+
+        _SetSolverIterations(iterations) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetSolverIterations,
+                iterations,
+            });
+        }
+
+        _SetRestitutionCombineRule(rule) {
+            if (!this.bodyDefined) return;
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetRestitutionCombineRule,
+                uid: this.uid,
+                rule,
+            });
+        }
+
+        _SetSleepThreshold(threshold) {
+            if (!this.bodyDefined) return;
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetSleepThreshold,
+                uid: this.uid,
+                threshold,
             });
         }
 

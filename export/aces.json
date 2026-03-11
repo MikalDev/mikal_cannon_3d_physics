@@ -354,6 +354,20 @@
         ]
       },
       {
+        "id": "SetSolverIterations",
+        "scriptName": "SetSolverIterations",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "iterations",
+            "type": "number",
+            "initialValue": "4"
+          }
+        ]
+      },
+      {
         "id": "SetTimestep",
         "scriptName": "SetTimestep",
         "highlight": false,
@@ -556,6 +570,40 @@
             "id": "restitution",
             "type": "number",
             "initialValue": "0.0"
+          }
+        ]
+      },
+      {
+        "id": "SetRestitutionCombineRule",
+        "scriptName": "SetRestitutionCombineRule",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "rule",
+            "type": "combo",
+            "initialValue": "average",
+            "items": [
+              "average",
+              "min",
+              "multiply",
+              "max"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "SetSleepThreshold",
+        "scriptName": "SetSleepThreshold",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "threshold",
+            "type": "number",
+            "initialValue": "0.01"
           }
         ]
       },
