@@ -94,9 +94,26 @@
 					"script-info": {
 						"purpose": "imports-for-events"
 					}
+				},
+				{
+					"name": "test_characterController.ts",
+					"type": "application/typescript",
+					"sid": 899999025059765,
+					"script-info": {
+						"purpose": "none"
+					}
+				},
+				{
+					"name": "test_physics_basic.ts",
+					"type": "application/typescript",
+					"sid": 899998604234564,
+					"script-info": {
+						"purpose": "none"
+					}
 				}
 			],
-			"subfolders": []
+			"subfolders": [],
+			"autoReloadOnPreview": true
 		},
 		"sound": {
 			"items": [],

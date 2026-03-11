@@ -1,39 +1,14 @@
-console.log("=== Physics Addon Test Runner loaded ===");
+const suites: any[] = [];
 
-interface TestResult {
-    testName: string;
-    pass: boolean;
-    msg: string;
-}
-
-interface Assert {
-    ok(value: unknown, msg?: string): void;
-    equal(a: unknown, b: unknown, msg?: string): void;
-    near(a: number, b: number, tolerance?: number, msg?: string): void;
-}
-
-interface Test {
-    name: string;
-    fn: (runtime: IRuntime, assert: Assert) => Promise<void>;
-}
-
-interface Suite {
-    name: string;
-    tests: Test[];
-}
-
-const allSuites: Suite[] = [];
-
-export function registerSuite(name: string, tests: Test[]): void {
-    allSuites.push({ name, tests });
+export function registerSuite(name: string, tests: any[]): void {
+    suites.push({ name, tests });
 }
 
 export function waitTicks(runtime: IRuntime, n: number = 1): Promise<void> {
     return new Promise((resolve) => {
         let remaining = n;
         const handler = () => {
-            remaining--;
-            if (remaining <= 0) {
+            if (--remaining <= 0) {
                 runtime.removeEventListener("tick", handler);
                 resolve();
             }
@@ -43,64 +18,44 @@ export function waitTicks(runtime: IRuntime, n: number = 1): Promise<void> {
 }
 
 export function getPhysics(inst: any): any {
-    return (inst as any).behaviors.Rapier3DPhysics;
+    return inst.behaviors.Rapier3DPhysics;
 }
 
-function createAssert(testName: string, results: TestResult[]): Assert {
+function makeAssert(testName: string) {
+    let failed = false;
+    const check = (pass: boolean, msg: string) => {
+        if (!pass) {
+            failed = true;
+            console.error(`  FAIL: ${testName} - ${msg}`);
+        }
+    };
     return {
-        ok(value: unknown, msg: string = "") {
-            const pass = !!value;
-            results.push({ testName, pass, msg: msg || "ok" });
-            if (!pass) console.error(`  FAIL: ${testName} - ${msg}`);
-        },
-        equal(a: unknown, b: unknown, msg: string = "") {
-            const pass = a === b;
-            const detail = msg || `expected ${b}, got ${a}`;
-            results.push({ testName, pass, msg: detail });
-            if (!pass) console.error(`  FAIL: ${testName} - ${detail}`);
-        },
-        near(a: number, b: number, tolerance: number = 0.01, msg: string = "") {
-            const pass = Math.abs(a - b) <= tolerance;
-            const detail = msg || `expected ~${b}, got ${a} (+-${tolerance})`;
-            results.push({ testName, pass, msg: detail });
-            if (!pass) console.error(`  FAIL: ${testName} - ${detail}`);
-        },
+        get failed() { return failed; },
+        ok(value: unknown, msg = "expected truthy") { check(!!value, msg); },
+        equal(a: unknown, b: unknown, msg = "") { check(a === b, msg || `expected ${b}, got ${a}`); },
+        near(a: number, b: number, tol = 0.01, msg = "") { check(Math.abs(a - b) <= tol, msg || `expected ~${b}, got ${a} (+-${tol})`); },
     };
 }
 
 export async function runAllTests(runtime: IRuntime): Promise<void> {
-    console.log(`Running ${allSuites.length} suite(s)...`);
-    const results: TestResult[] = [];
+    console.log(`=== Running ${suites.length} suite(s) ===`);
+    let passed = 0, failed = 0;
 
-    for (const suite of allSuites) {
+    for (const suite of suites) {
         console.log(`\n--- ${suite.name} ---`);
         for (const test of suite.tests) {
-            const testResults: TestResult[] = [];
-            const assert = createAssert(test.name, testResults);
+            const assert = makeAssert(test.name);
             try {
                 await test.fn(runtime, assert);
             } catch (err: any) {
-                testResults.push({ testName: test.name, pass: false, msg: `threw: ${err.message}` });
+                console.error(`  FAIL: ${test.name} - threw: ${err.message}`);
+                failed++;
+                continue;
             }
-            results.push(...testResults);
-            if (testResults.every((r) => r.pass)) {
-                console.log(`  PASS: ${test.name}`);
-            } else {
-                console.error(`  FAIL: ${test.name}`);
-            }
+            if (assert.failed) { failed++; } else { passed++; console.log(`  PASS: ${test.name}`); }
         }
     }
 
-    // Count per test (not per assertion)
-    const testNames = new Set(results.map((r) => r.testName));
-    let totalPass = 0;
-    let totalFail = 0;
-    for (const name of testNames) {
-        const testResults = results.filter((r) => r.testName === name);
-        if (testResults.every((r) => r.pass)) totalPass++;
-        else totalFail++;
-    }
-
-    console.log(`\n=== Results: ${totalPass} passed, ${totalFail} failed (${results.length} assertions) ===`);
-    if (totalFail === 0) console.log("ALL TESTS PASSED");
+    console.log(`\n=== Results: ${passed} passed, ${failed} failed ===`);
+    if (failed === 0) console.log("ALL TESTS PASSED");
 }
