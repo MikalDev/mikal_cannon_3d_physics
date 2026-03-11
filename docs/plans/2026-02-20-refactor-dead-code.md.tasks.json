@@ -1,0 +1,10 @@
+{
+  "planPath": "docs/plans/2026-02-20-refactor-dead-code.md",
+  "tasks": [
+    {"id": 7, "subject": "Task 1: Remove dead code from instance.js", "status": "pending"},
+    {"id": 8, "subject": "Task 2: Fix three bugs (cmdTickCount, no-op division, CommandType)", "status": "pending", "blockedBy": [7]},
+    {"id": 9, "subject": "Task 3: Extract _buildBodyCommand helper in instance.js", "status": "pending", "blockedBy": [7]},
+    {"id": 10, "subject": "Task 4: Fix deprecated field names in behaviorConfig.js", "status": "pending", "blockedBy": [7]}
+  ],
+  "lastUpdated": "2026-02-20T00:00:00Z"
+}

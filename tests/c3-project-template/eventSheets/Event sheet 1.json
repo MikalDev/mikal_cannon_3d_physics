@@ -33,7 +33,9 @@
 					"type": "script",
 					"language": "typescript",
 					"script": [
-						"Tests.runAllTests(runtime)"
+						"Tests.runAllTests(runtime)",
+						"const inst = runtime.objects.Ground.getFirstInstance()",
+						"console.log('3D Model object', inst)"
 					]
 				}
 			],
