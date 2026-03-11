@@ -13,7 +13,8 @@
   "scripts": {
     "build": "node build.js",
     "dev": "node dev.js",
-    "doc": "node doc.js"
+    "doc": "node doc.js",
+    "test:build": "node tests/buildTestProject.js"
   },
   "repository": {
     "type": "git",

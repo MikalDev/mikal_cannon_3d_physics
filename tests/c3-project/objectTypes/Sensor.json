@@ -1,0 +1,16 @@
+{
+	"name": "Sensor",
+	"plugin-id": "Model3D",
+	"sid": 557512659605752,
+	"isGlobal": false,
+	"editorNewInstanceIsReplica": true,
+	"instanceVariables": [],
+	"behaviorTypes": [
+		{
+			"behaviorId": "mikal_cannon_3d_physics",
+			"name": "Rapier3DPhysics",
+			"sid": 210159657187181
+		}
+	],
+	"effectTypes": []
+}

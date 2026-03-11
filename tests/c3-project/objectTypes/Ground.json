@@ -1,0 +1,16 @@
+{
+	"name": "Ground",
+	"plugin-id": "Model3D",
+	"sid": 828948794660436,
+	"isGlobal": false,
+	"editorNewInstanceIsReplica": true,
+	"instanceVariables": [],
+	"behaviorTypes": [
+		{
+			"behaviorId": "mikal_cannon_3d_physics",
+			"name": "Rapier3DPhysics",
+			"sid": 409984409977622
+		}
+	],
+	"effectTypes": []
+}

@@ -13,6 +13,7 @@ let timestepMode = 0;
 let timestepValue = 1 / 60;
 let collisionEvents = [];
 let characterControllerCollisionEvents = [];
+let ccResults = new Map(); // Map<uid, {grounded, movementX, movementY, movementZ}>
 let postDefineCommands = new Map();
 let castRayResults = [];
 let castShapeResults = [];
@@ -65,6 +66,16 @@ const CommandType = {
     SetBodyType: 41,
     SetNextKinematicTranslation: 42,
     SetNextKinematicRotation: 43,
+    SetCCSlope: 44,
+    SetCCAutostep: 45,
+    SetCCSnapToGround: 46,
+    SetCCSlide: 47,
+    SetCCMass: 48,
+    SetCCPushDynamicBodies: 49,
+    SetCCOffset: 50,
+    SetCCUp: 51,
+    RemoveCharacterController: 52,
+    SetCCNormalNudgeFactor: 53,
 };
 
 const BodyType = {
@@ -714,12 +725,15 @@ function stepWorld(dt, frame) {
     const castShapeResultsCopy = castShapeResults.slice();
     castRayResults = [];
     castShapeResults = [];
+    const ccResultsCopy = Object.fromEntries(ccResults);
+    ccResults.clear();
     const worldData = {
         bodiesData,
         collisionEvents,
         frame,
         castRayResults: castRayResultsCopy,
         castShapeResults: castShapeResultsCopy,
+        ccResults: ccResultsCopy,
     };
     return { data: worldData, transfer: [worldData.bodiesData.buffer] };
 }
@@ -1089,10 +1103,11 @@ function createCharacterController(config) {
         autostepMaxHeight,
         enableSnapToGround,
         snapToGroundMaxDistance,
+        autostepIncludeDynamicBodies,
     } = config;
     if (characterControllers.has(tag)) {
-        console.warn("Character controller already exists");
-        return;
+        rapierWorld.removeCharacterController(characterControllers.get(tag));
+        characterControllers.delete(tag);
     }
     /*
             if (this.bodyType !== RAPIER.RigidBodyType.KinematicPositionBased) {
@@ -1110,12 +1125,11 @@ function createCharacterController(config) {
     characterController.setMinSlopeSlideAngle(
         (minSlopeSlideAngle * Math.PI) / 180
     );
-    // Also autostep over dynamic bodies
     if (enableAutostep) {
         characterController.enableAutostep(
             autostepMaxHeight,
             autostepMinWidth,
-            true
+            autostepIncludeDynamicBodies ?? true
         );
     }
     if (enableSnapToGround) {
@@ -1132,7 +1146,7 @@ function createCharacterController(config) {
 }
 
 function translateCharacterController(config) {
-    const { uid, tag, translation } = config;
+    const { uid, tag, translation, filterGroups: filterGroupsRaw } = config;
     const handle = uidHandle.get(uid);
     if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
@@ -1148,43 +1162,42 @@ function translateCharacterController(config) {
         console.warn("Character controller not found", tag);
         return;
     }
-    characterController.computeColliderMovement(
-        body.collider(),
-        translation,
-        RAPIER.QueryFilterFlags["EXCLUDE_SENSORS"]
-    );
-    // (optional) Check collisions
-    for (let i = 0; i < characterController.numComputedCollisions(); i++) {
-        // Do something with the collision
-        let collision = characterController.computedCollision(i);
-        processCharacterControllerCollision(uid, collision);
+    let filterGroups = null;
+    if (filterGroupsRaw != null) {
+        filterGroups = parseInt(filterGroupsRaw, 16);
+        filterGroups = 0xffff0000 | filterGroups;
     }
-
-    // Pass 1: Compute movement excluding sensors
+    // Single pass: compute movement (sensors included for collision events)
     characterController.computeColliderMovement(
-        body.collider(),
+        body.collider(0),
         translation,
-        RAPIER.QueryFilterFlags.EXCLUDE_SENSORS
+        RAPIER.QueryFilterFlags.EXCLUDE_SENSORS,
+        filterGroups
     );
 
-    // Store the computed movement from the first pass
+    // Store grounded state and computed movement for main thread
     const correctedMovement = characterController.computedMovement();
+    const grounded = characterController.computedGrounded();
+    ccResults.set(uid, {
+        grounded,
+        movementX: correctedMovement.x,
+        movementY: correctedMovement.y,
+        movementZ: correctedMovement.z,
+    });
 
-    // Pass 2: Gather collision data only (without affecting movement)
-    characterController.computeColliderMovement(body.collider(), translation);
-
-    // Check and process collisions
+    // Process collision events
     for (let i = 0; i < characterController.numComputedCollisions(); i++) {
         let collision = characterController.computedCollision(i);
         processCharacterControllerCollision(uid, collision);
     }
 
-    // Apply the computed movement from Pass 1
+    // Apply corrected movement
     const t = body.translation();
-    correctedMovement.x = correctedMovement.x + t.x;
-    correctedMovement.y = correctedMovement.y + t.y;
-    correctedMovement.z = correctedMovement.z + t.z;
-    body.setNextKinematicTranslation(correctedMovement);
+    body.setNextKinematicTranslation({
+        x: correctedMovement.x + t.x,
+        y: correctedMovement.y + t.y,
+        z: correctedMovement.z + t.z,
+    });
 }
 
 function processCharacterControllerCollision(uid, collision) {
@@ -1211,6 +1224,80 @@ function processCharacterControllerCollision(uid, collision) {
         witness2,
     };
     characterControllerCollisionEvents.push(msg);
+}
+
+function setCCSlope(config) {
+    const { tag, maxSlopeClimbAngle, minSlopeSlideAngle } = config;
+    const cc = characterControllers.get(tag);
+    if (!cc) return;
+    cc.setMaxSlopeClimbAngle((maxSlopeClimbAngle * Math.PI) / 180);
+    cc.setMinSlopeSlideAngle((minSlopeSlideAngle * Math.PI) / 180);
+}
+
+function setCCAutostep(config) {
+    const { tag, enabled, maxHeight, minWidth, includeDynamicBodies } = config;
+    const cc = characterControllers.get(tag);
+    if (!cc) return;
+    if (enabled) {
+        cc.enableAutostep(maxHeight, minWidth, includeDynamicBodies);
+    } else {
+        cc.disableAutostep();
+    }
+}
+
+function setCCSnapToGround(config) {
+    const { tag, enabled, distance } = config;
+    const cc = characterControllers.get(tag);
+    if (!cc) return;
+    if (enabled) {
+        cc.enableSnapToGround(distance);
+    } else {
+        cc.disableSnapToGround();
+    }
+}
+
+function setCCSlide(config) {
+    const cc = characterControllers.get(config.tag);
+    if (!cc) return;
+    cc.setSlideEnabled(config.enabled);
+}
+
+function setCCMass(config) {
+    const cc = characterControllers.get(config.tag);
+    if (!cc) return;
+    cc.setCharacterMass(config.mass);
+}
+
+function setCCPushDynamicBodies(config) {
+    const cc = characterControllers.get(config.tag);
+    if (!cc) return;
+    cc.setApplyImpulsesToDynamicBodies(config.enabled);
+}
+
+function setCCOffset(config) {
+    const cc = characterControllers.get(config.tag);
+    if (!cc) return;
+    cc.setOffset(config.offset);
+}
+
+function setCCUp(config) {
+    const cc = characterControllers.get(config.tag);
+    if (!cc) return;
+    cc.setUp(config.up);
+}
+
+function setCCNormalNudgeFactor(config) {
+    const cc = characterControllers.get(config.tag);
+    if (!cc) return;
+    cc.setNormalNudgeFactor(config.value);
+}
+
+function removeCharacterController(config) {
+    const { tag } = config;
+    const cc = characterControllers.get(tag);
+    if (!cc) return;
+    rapierWorld.removeCharacterController(cc);
+    characterControllers.delete(tag);
 }
 
 function setVelocity(config) {
@@ -1405,6 +1492,16 @@ const commandFunctions = {
     [CommandType.SetBodyType]: setBodyType,
     [CommandType.SetNextKinematicTranslation]: setNextKinematicTranslation,
     [CommandType.SetNextKinematicRotation]: setNextKinematicRotation,
+    [CommandType.SetCCSlope]: setCCSlope,
+    [CommandType.SetCCAutostep]: setCCAutostep,
+    [CommandType.SetCCSnapToGround]: setCCSnapToGround,
+    [CommandType.SetCCSlide]: setCCSlide,
+    [CommandType.SetCCMass]: setCCMass,
+    [CommandType.SetCCPushDynamicBodies]: setCCPushDynamicBodies,
+    [CommandType.SetCCOffset]: setCCOffset,
+    [CommandType.SetCCUp]: setCCUp,
+    [CommandType.RemoveCharacterController]: removeCharacterController,
+    [CommandType.SetCCNormalNudgeFactor]: setCCNormalNudgeFactor,
 };
 
 function runCommands(commands) {

@@ -514,19 +514,6 @@
         "isInvertible": false,
         "isCompatibleWithTriggers": false,
         "params": []
-      },
-      {
-        "id": "OnCharacterControllerCollision",
-        "scriptName": "OnCharacterControllerCollision",
-        "highlight": false,
-        "deprecated": false,
-        "isTrigger": true,
-        "isFakeTrigger": false,
-        "isStatic": false,
-        "isLooping": false,
-        "isInvertible": false,
-        "isCompatibleWithTriggers": false,
-        "params": []
       }
     ],
     "actions": [
@@ -1120,80 +1107,6 @@
         "params": []
       },
       {
-        "id": "CreateCharacterController",
-        "scriptName": "CreateCharacterController",
-        "highlight": false,
-        "deprecated": false,
-        "isAsync": false,
-        "params": [
-          {
-            "id": "tag",
-            "type": "string",
-            "initialValue": ""
-          },
-          {
-            "id": "offset",
-            "type": "number",
-            "initialValue": "0.01"
-          },
-          {
-            "id": "upX",
-            "type": "number",
-            "initialValue": "0"
-          },
-          {
-            "id": "upY",
-            "type": "number",
-            "initialValue": "0"
-          },
-          {
-            "id": "upZ",
-            "type": "number",
-            "initialValue": "1"
-          },
-          {
-            "id": "maxSlopeClimbAngle",
-            "type": "number",
-            "initialValue": "60"
-          },
-          {
-            "id": "minSlopeSlideAngle",
-            "type": "number",
-            "initialValue": "60"
-          },
-          {
-            "id": "applyImpulsesToDynamicBodies",
-            "type": "boolean",
-            "initialValue": "false"
-          },
-          {
-            "id": "enableAutostep",
-            "type": "boolean",
-            "initialValue": "true"
-          },
-          {
-            "id": "autostepMinWidth",
-            "type": "number",
-            "initialValue": "20"
-          },
-          {
-            "id": "autostepMaxHeight",
-            "type": "number",
-            "initialValue": "20"
-          },
-          {
-            "id": "enableSnapToGround",
-            "type": "boolean",
-            "initialValue": "true"
-          },
-          {
-            "id": "snapToGroundMaxDistance",
-            "type": "number",
-            "initialValue": "1"
-          }
-        ]
-      },
-      {
         "id": "Translate",
         "scriptName": "Translate",
         "highlight": false,
@@ -1224,35 +1137,6 @@
         "deprecated": false,
         "isAsync": false,
         "params": [
-          {
-            "id": "x",
-            "type": "number",
-            "initialValue": "0"
-          },
-          {
-            "id": "y",
-            "type": "number",
-            "initialValue": "0"
-          },
-          {
-            "id": "z",
-            "type": "number",
-            "initialValue": "0"
-          }
-        ]
-      },
-      {
-        "id": "TranslateCharacterController",
-        "scriptName": "TranslateCharacterController",
-        "highlight": false,
-        "deprecated": false,
-        "isAsync": false,
-        "params": [
-          {
-            "id": "tag",
-            "type": "string",
-            "initialValue": ""
-          },
           {
             "id": "x",
             "type": "number",
@@ -1571,16 +1455,6 @@
         "params": []
       },
       {
-        "id": "CharacterCollisionData",
-        "scriptName": "CharacterCollisionData",
-        "expressionName": "CharacterCollisionData",
-        "highlight": false,
-        "deprecated": false,
-        "returnType": "string",
-        "isVariadicParameters": false,
-        "params": []
-      },
-      {
         "id": "VelocityX",
         "scriptName": "VelocityX",
         "expressionName": "VelocityX",
@@ -1664,6 +1538,468 @@
         "id": "Mass",
         "scriptName": "Mass",
         "expressionName": "Mass",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      }
+    ]
+  },
+  "characterController": {
+    "conditions": [
+      {
+        "id": "CCIsGrounded",
+        "scriptName": "CCIsGrounded",
+        "highlight": false,
+        "deprecated": false,
+        "isTrigger": false,
+        "isFakeTrigger": false,
+        "isStatic": false,
+        "isLooping": false,
+        "isInvertible": true,
+        "isCompatibleWithTriggers": true,
+        "params": []
+      },
+      {
+        "id": "OnCharacterControllerCollision",
+        "scriptName": "OnCharacterControllerCollision",
+        "highlight": false,
+        "deprecated": false,
+        "isTrigger": true,
+        "isFakeTrigger": false,
+        "isStatic": false,
+        "isLooping": false,
+        "isInvertible": false,
+        "isCompatibleWithTriggers": false,
+        "params": []
+      }
+    ],
+    "actions": [
+      {
+        "id": "CreateCharacterController",
+        "scriptName": "CreateCharacterController",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "offset",
+            "type": "number",
+            "initialValue": "0.01"
+          },
+          {
+            "id": "upX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "upY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "upZ",
+            "type": "number",
+            "initialValue": "1"
+          },
+          {
+            "id": "maxSlopeClimbAngle",
+            "type": "number",
+            "initialValue": "60"
+          },
+          {
+            "id": "minSlopeSlideAngle",
+            "type": "number",
+            "initialValue": "60"
+          },
+          {
+            "id": "applyImpulsesToDynamicBodies",
+            "type": "boolean",
+            "initialValue": "false"
+          },
+          {
+            "id": "enableAutostep",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "autostepMinWidth",
+            "type": "number",
+            "initialValue": "20"
+          },
+          {
+            "id": "autostepMaxHeight",
+            "type": "number",
+            "initialValue": "20"
+          },
+          {
+            "id": "enableSnapToGround",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "snapToGroundMaxDistance",
+            "type": "number",
+            "initialValue": "1"
+          },
+          {
+            "id": "autostepIncludeDynamicBodies",
+            "type": "boolean",
+            "initialValue": "true"
+          }
+        ]
+      },
+      {
+        "id": "TranslateCharacterController",
+        "scriptName": "TranslateCharacterController",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "SetCCSlope",
+        "scriptName": "SetCCSlope",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "maxSlopeClimbAngle",
+            "type": "number",
+            "initialValue": "60"
+          },
+          {
+            "id": "minSlopeSlideAngle",
+            "type": "number",
+            "initialValue": "60"
+          }
+        ]
+      },
+      {
+        "id": "SetCCAutostep",
+        "scriptName": "SetCCAutostep",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "enabled",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "maxHeight",
+            "type": "number",
+            "initialValue": "20"
+          },
+          {
+            "id": "minWidth",
+            "type": "number",
+            "initialValue": "20"
+          },
+          {
+            "id": "includeDynamicBodies",
+            "type": "boolean",
+            "initialValue": "true"
+          }
+        ]
+      },
+      {
+        "id": "SetCCSnapToGround",
+        "scriptName": "SetCCSnapToGround",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "enabled",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "distance",
+            "type": "number",
+            "initialValue": "1"
+          }
+        ]
+      },
+      {
+        "id": "SetCCSlide",
+        "scriptName": "SetCCSlide",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "enabled",
+            "type": "boolean",
+            "initialValue": "true"
+          }
+        ]
+      },
+      {
+        "id": "SetCCMass",
+        "scriptName": "SetCCMass",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "mass",
+            "type": "number",
+            "initialValue": "1"
+          }
+        ]
+      },
+      {
+        "id": "SetCCPushDynamicBodies",
+        "scriptName": "SetCCPushDynamicBodies",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "enabled",
+            "type": "boolean",
+            "initialValue": "false"
+          }
+        ]
+      },
+      {
+        "id": "SetCCOffset",
+        "scriptName": "SetCCOffset",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "offset",
+            "type": "number",
+            "initialValue": "0.01"
+          }
+        ]
+      },
+      {
+        "id": "SetCCUp",
+        "scriptName": "SetCCUp",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": "1"
+          }
+        ]
+      },
+      {
+        "id": "SetCCNormalNudgeFactor",
+        "scriptName": "SetCCNormalNudgeFactor",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "value",
+            "type": "number",
+            "initialValue": "1e-4"
+          }
+        ]
+      },
+      {
+        "id": "RemoveCharacterController",
+        "scriptName": "RemoveCharacterController",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      }
+    ],
+    "expressions": [
+      {
+        "id": "CharacterCollisionData",
+        "scriptName": "CharacterCollisionData",
+        "expressionName": "CharacterCollisionData",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "string",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CCGrounded",
+        "scriptName": "CCGrounded",
+        "expressionName": "CCGrounded",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CCComputedMovementX",
+        "scriptName": "CCComputedMovementX",
+        "expressionName": "CCComputedMovementX",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CCComputedMovementY",
+        "scriptName": "CCComputedMovementY",
+        "expressionName": "CCComputedMovementY",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CCComputedMovementZ",
+        "scriptName": "CCComputedMovementZ",
+        "expressionName": "CCComputedMovementZ",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CCCollisionNormalX",
+        "scriptName": "CCCollisionNormalX",
+        "expressionName": "CCCollisionNormalX",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CCCollisionNormalY",
+        "scriptName": "CCCollisionNormalY",
+        "expressionName": "CCCollisionNormalY",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CCCollisionNormalZ",
+        "scriptName": "CCCollisionNormalZ",
+        "expressionName": "CCCollisionNormalZ",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CCCollisionTargetUID",
+        "scriptName": "CCCollisionTargetUID",
+        "expressionName": "CCCollisionTargetUID",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": []
+      },
+      {
+        "id": "CCCollisionTOI",
+        "scriptName": "CCCollisionTOI",
+        "expressionName": "CCCollisionTOI",
         "highlight": false,
         "deprecated": false,
         "returnType": "number",

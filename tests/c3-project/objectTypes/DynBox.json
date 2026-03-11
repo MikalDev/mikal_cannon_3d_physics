@@ -1,0 +1,16 @@
+{
+	"name": "DynBox",
+	"plugin-id": "Model3D",
+	"sid": 921738792935561,
+	"isGlobal": false,
+	"editorNewInstanceIsReplica": true,
+	"instanceVariables": [],
+	"behaviorTypes": [
+		{
+			"behaviorId": "mikal_cannon_3d_physics",
+			"name": "Rapier3DPhysics",
+			"sid": 221161442592613
+		}
+	],
+	"effectTypes": []
+}

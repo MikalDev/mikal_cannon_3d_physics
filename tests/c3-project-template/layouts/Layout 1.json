@@ -1,0 +1,352 @@
+{
+	"name": "Layout 1",
+	"layers": [
+		{
+			"name": "Layer 0",
+			"overriden": 0,
+			"subLayers": [],
+			"instances": [
+				{
+					"type": "Ground",
+					"properties": {
+						"3d-model-object": "crate",
+						"initially-visible": true,
+						"x-position": 0,
+						"y-position": 0,
+						"z-position": 0,
+						"x-rotation": 0,
+						"y-rotation": 0,
+						"z-rotation": 0,
+						"x-scale": 10,
+						"y-scale": 10,
+						"z-scale": 1,
+						"mesh": "",
+						"animation": "",
+						"mesh-render-mode": "hierarchy",
+						"initially-playing": true,
+						"initial-animation-progress": 0,
+						"enable-collisions": true,
+						"bounding-box": false,
+						"bounding-box-color": [
+							1,
+							0,
+							0,
+							1
+						],
+						"live-preview": false
+					},
+					"uid": 2,
+					"sid": 445658591818088,
+					"tags": "",
+					"instanceVariables": {},
+					"behaviors": {
+						"Rapier3DPhysics": {
+							"properties": {
+								"enable": true,
+								"immovable": true,
+								"shape": "box",
+								"bodyType": "fixed",
+								"colliderType": "solid",
+								"mass": 1,
+								"size-override": false,
+								"body-size-height": -1,
+								"body-size-width": -1,
+								"body-size-depth": -1,
+								"lightOccluder": false
+							}
+						}
+					},
+					"instanceFolderItem": {
+						"sid": 445658591818088,
+						"expanded": true
+					},
+					"showing": true,
+					"locked": false,
+					"world": {
+						"x": 360,
+						"y": 291,
+						"width": 100,
+						"height": 100,
+						"originX": 0.5,
+						"originY": 0.5,
+						"color": [
+							1,
+							1,
+							1,
+							1
+						],
+						"z": -100,
+						"depth": 100,
+						"angle": 0
+					}
+				},
+				{
+					"type": "CCBox",
+					"properties": {
+						"3d-model-object": "crate",
+						"initially-visible": true,
+						"x-position": 0,
+						"y-position": 0,
+						"z-position": 0,
+						"x-rotation": 0,
+						"y-rotation": 0,
+						"z-rotation": 0,
+						"x-scale": 1,
+						"y-scale": 1,
+						"z-scale": 1,
+						"mesh": "",
+						"animation": "",
+						"mesh-render-mode": "hierarchy",
+						"initially-playing": true,
+						"initial-animation-progress": 0,
+						"enable-collisions": true,
+						"bounding-box": false,
+						"bounding-box-color": [
+							1,
+							0,
+							0,
+							1
+						],
+						"live-preview": false
+					},
+					"uid": 3,
+					"sid": 699355624037398,
+					"tags": "",
+					"instanceVariables": {},
+					"behaviors": {
+						"Rapier3DPhysics": {
+							"properties": {
+								"enable": true,
+								"immovable": false,
+								"shape": "box",
+								"bodyType": "kinematic-position",
+								"colliderType": "solid",
+								"mass": 1,
+								"size-override": false,
+								"body-size-height": -1,
+								"body-size-width": -1,
+								"body-size-depth": -1,
+								"lightOccluder": false
+							}
+						}
+					},
+					"instanceFolderItem": {
+						"sid": 699355624037398,
+						"expanded": true
+					},
+					"showing": true,
+					"locked": false,
+					"world": {
+						"x": 615,
+						"y": 140,
+						"width": 30,
+						"height": 30,
+						"originX": 0.5,
+						"originY": 0.5,
+						"color": [
+							1,
+							0,
+							0,
+							1
+						],
+						"z": 100,
+						"depth": 30,
+						"angle": 0
+					}
+				},
+				{
+					"type": "DynBox",
+					"properties": {
+						"3d-model-object": "crate",
+						"initially-visible": true,
+						"x-position": 0,
+						"y-position": 0,
+						"z-position": 0,
+						"x-rotation": 0,
+						"y-rotation": 0,
+						"z-rotation": 0,
+						"x-scale": 1,
+						"y-scale": 1,
+						"z-scale": 1,
+						"mesh": "",
+						"animation": "",
+						"mesh-render-mode": "hierarchy",
+						"initially-playing": true,
+						"initial-animation-progress": 0,
+						"enable-collisions": true,
+						"bounding-box": false,
+						"bounding-box-color": [
+							1,
+							0,
+							0,
+							1
+						],
+						"live-preview": false
+					},
+					"uid": 4,
+					"sid": 940246750026624,
+					"tags": "",
+					"instanceVariables": {},
+					"behaviors": {
+						"Rapier3DPhysics": {
+							"properties": {
+								"enable": true,
+								"immovable": false,
+								"shape": "box",
+								"bodyType": "dynamic",
+								"colliderType": "solid",
+								"mass": 1,
+								"size-override": false,
+								"body-size-height": -1,
+								"body-size-width": -1,
+								"body-size-depth": -1,
+								"lightOccluder": false
+							}
+						}
+					},
+					"instanceFolderItem": {
+						"sid": 940246750026624,
+						"expanded": true
+					},
+					"showing": true,
+					"locked": false,
+					"world": {
+						"x": 140,
+						"y": 49,
+						"width": 30,
+						"height": 30,
+						"originX": 0.5,
+						"originY": 0.5,
+						"color": [
+							0,
+							1,
+							0.16470588235294117,
+							1
+						],
+						"z": 100,
+						"depth": 30,
+						"angle": 0
+					}
+				},
+				{
+					"type": "Sensor",
+					"properties": {
+						"3d-model-object": "crate",
+						"initially-visible": true,
+						"x-position": 0,
+						"y-position": 0,
+						"z-position": 0,
+						"x-rotation": 0,
+						"y-rotation": 0,
+						"z-rotation": 0,
+						"x-scale": 1,
+						"y-scale": 1,
+						"z-scale": 1,
+						"mesh": "",
+						"animation": "",
+						"mesh-render-mode": "hierarchy",
+						"initially-playing": true,
+						"initial-animation-progress": 0,
+						"enable-collisions": true,
+						"bounding-box": false,
+						"bounding-box-color": [
+							1,
+							0,
+							0,
+							1
+						],
+						"live-preview": false
+					},
+					"uid": 5,
+					"sid": 229092806713890,
+					"tags": "",
+					"instanceVariables": {},
+					"behaviors": {
+						"Rapier3DPhysics": {
+							"properties": {
+								"enable": true,
+								"immovable": false,
+								"shape": "box",
+								"bodyType": "fixed",
+								"colliderType": "sensor",
+								"mass": 1,
+								"size-override": false,
+								"body-size-height": -1,
+								"body-size-width": -1,
+								"body-size-depth": -1,
+								"lightOccluder": false
+							}
+						}
+					},
+					"instanceFolderItem": {
+						"sid": 229092806713890,
+						"expanded": true
+					},
+					"showing": true,
+					"locked": false,
+					"world": {
+						"x": 305,
+						"y": 293,
+						"width": 50,
+						"height": 50,
+						"originX": 0.5,
+						"originY": 0.5,
+						"color": [
+							0.16862745098039217,
+							0,
+							1,
+							1
+						],
+						"z": 100,
+						"depth": 50,
+						"angle": 0
+					}
+				}
+			],
+			"sid": 950606631929596,
+			"effectTypes": [],
+			"isInitiallyVisible": true,
+			"isInitiallyInteractive": true,
+			"isHTMLElementsLayer": false,
+			"color": [
+				1,
+				1,
+				1,
+				1
+			],
+			"backgroundColor": [
+				0.3686274509803922,
+				0.3686274509803922,
+				0.3686274509803922,
+				1
+			],
+			"isTransparent": false,
+			"sampling": "auto",
+			"parallaxX": 1,
+			"parallaxY": 1,
+			"scaleRate": 1,
+			"forceOwnTexture": false,
+			"renderingMode": "3d",
+			"drawOrder": "z-order",
+			"useRenderCells": false,
+			"blendMode": "normal",
+			"zElevation": 0,
+			"global": false
+		}
+	],
+	"scene-graphs-folder-root": {
+		"items": [],
+		"subfolders": []
+	},
+	"sid": 699259099282563,
+	"nonworld-instances": [],
+	"effectTypes": [],
+	"width": 1708,
+	"height": 960,
+	"unboundedScrolling": false,
+	"sampling": "auto",
+	"vpX": 0.5,
+	"vpY": 0.5,
+	"projection": "perspective",
+	"eventSheet": "Event sheet 1"
+}

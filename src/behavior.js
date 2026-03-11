@@ -380,7 +380,19 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
         if (worldData.castShapeResults?.length > 0) {
             this.handleCastShapeResults(worldData.castShapeResults);
         }
+        if (worldData.ccResults) {
+            this.handleCCResults(worldData.ccResults);
+        }
         // UpdateRender removed - SDK v2 handles rendering automatically
+    }
+
+    handleCCResults(ccResults) {
+        for (const uid in ccResults) {
+            const behInst = this.getBehaviorInstanceByUid(Number(uid));
+            if (behInst) {
+                behInst._ccResults = ccResults[uid];
+            }
+        }
     }
 
     handleCharacterControllerCollisionEvent(collisionEvent) {

@@ -10,7 +10,8 @@
         "aceCategories": {
           "general": "General",
           "world": "World",
-          "body": "Body"
+          "body": "Body",
+          "characterController": "Character Controller"
         },
         "properties": {
           "enable": {
@@ -755,7 +756,7 @@
           },
           "CreateCharacterController": {
             "list-name": "Create character controller",
-            "display-text": "{my} create character controller {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11} {12}",
+            "display-text": "{my} create character controller {0}, offset {1}, up ({2},{3},{4}), slope {5}/{6}, impulses {7}, autostep {8} (w:{9} h:{10}), snap {11} (d:{12}), dynStep {13}",
             "description": "Create character controller.",
             "params": {
               "tag": {
@@ -809,6 +810,10 @@
               "snapToGroundMaxDistance": {
                 "name": "Snap to ground max distance",
                 "desc": "Snap to ground max distance."
+              },
+              "autostepIncludeDynamicBodies": {
+                "name": "Autostep include dynamic bodies",
+                "desc": "Allow autostep over dynamic bodies."
               }
             }
           },
@@ -870,6 +875,180 @@
               "z": {
                 "name": "Z",
                 "desc": "Z."
+              }
+            }
+          },
+          "SetCCSlope": {
+            "list-name": "Set CC slope angles",
+            "display-text": "{my} set CC {0} max climb {1}° min slide {2}°",
+            "description": "Set character controller slope climb and slide angles.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Character controller tag."
+              },
+              "maxSlopeClimbAngle": {
+                "name": "Max climb angle",
+                "desc": "Maximum slope climb angle (degrees)."
+              },
+              "minSlopeSlideAngle": {
+                "name": "Min slide angle",
+                "desc": "Minimum slope slide angle (degrees)."
+              }
+            }
+          },
+          "SetCCAutostep": {
+            "list-name": "Set CC autostep",
+            "display-text": "{my} set CC {0} autostep {1} (height {2}, width {3}, dynamic {4})",
+            "description": "Enable or disable character controller autostep at runtime.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Character controller tag."
+              },
+              "enabled": {
+                "name": "Enabled",
+                "desc": "Enable or disable autostep."
+              },
+              "maxHeight": {
+                "name": "Max height",
+                "desc": "Maximum step height."
+              },
+              "minWidth": {
+                "name": "Min width",
+                "desc": "Minimum free width after stepping."
+              },
+              "includeDynamicBodies": {
+                "name": "Include dynamic bodies",
+                "desc": "Allow stepping over dynamic bodies."
+              }
+            }
+          },
+          "SetCCSnapToGround": {
+            "list-name": "Set CC snap to ground",
+            "display-text": "{my} set CC {0} snap to ground {1} (distance {2})",
+            "description": "Enable or disable character controller snap to ground at runtime.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Character controller tag."
+              },
+              "enabled": {
+                "name": "Enabled",
+                "desc": "Enable or disable snap to ground."
+              },
+              "distance": {
+                "name": "Distance",
+                "desc": "Maximum snap-to-ground distance."
+              }
+            }
+          },
+          "SetCCSlide": {
+            "list-name": "Set CC slide enabled",
+            "display-text": "{my} set CC {0} slide {1}",
+            "description": "Enable or disable character controller sliding against obstacles.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Character controller tag."
+              },
+              "enabled": {
+                "name": "Enabled",
+                "desc": "Enable or disable sliding against obstacles."
+              }
+            }
+          },
+          "SetCCMass": {
+            "list-name": "Set CC mass",
+            "display-text": "{my} set CC {0} mass {1}",
+            "description": "Set character controller mass for pushing dynamic bodies.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Character controller tag."
+              },
+              "mass": {
+                "name": "Mass",
+                "desc": "Character mass for impulse resolution against dynamic bodies."
+              }
+            }
+          },
+          "SetCCPushDynamicBodies": {
+            "list-name": "Set CC push dynamic bodies",
+            "display-text": "{my} set CC {0} push dynamic bodies {1}",
+            "description": "Enable or disable character controller pushing dynamic bodies.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Character controller tag."
+              },
+              "enabled": {
+                "name": "Enabled",
+                "desc": "Apply impulses to dynamic bodies on contact."
+              }
+            }
+          },
+          "SetCCOffset": {
+            "list-name": "Set CC offset",
+            "display-text": "{my} set CC {0} offset {1}",
+            "description": "Set character controller skin width / gap offset.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Character controller tag."
+              },
+              "offset": {
+                "name": "Offset",
+                "desc": "Small gap between character and surroundings (skin width)."
+              }
+            }
+          },
+          "SetCCUp": {
+            "list-name": "Set CC up direction",
+            "display-text": "{my} set CC {0} up direction ({1}, {2}, {3})",
+            "description": "Set the character controller up direction for floor detection.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Character controller tag."
+              },
+              "x": {
+                "name": "X",
+                "desc": "Up vector X."
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Up vector Y."
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Up vector Z."
+              }
+            }
+          },
+          "SetCCNormalNudgeFactor": {
+            "list-name": "Set CC normal nudge factor",
+            "display-text": "{my} set CC {0} normal nudge factor {1}",
+            "description": "Set character controller normal nudge factor for penetration recovery.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Character controller tag."
+              },
+              "value": {
+                "name": "Value",
+                "desc": "Normal nudge factor. Controls how aggressively the character is pushed out of penetrations."
+              }
+            }
+          },
+          "RemoveCharacterController": {
+            "list-name": "Remove character controller",
+            "display-text": "{my} remove character controller {0}",
+            "description": "Remove and free a character controller.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Character controller tag to remove."
               }
             }
           },
@@ -1067,6 +1246,12 @@
             "description": "On body physics collision.",
             "params": {}
           },
+          "CCIsGrounded": {
+            "list-name": "Is grounded",
+            "display-text": "{my}: is grounded",
+            "description": "True if the character controller is touching the ground (from last move).",
+            "params": {}
+          },
           "OnCharacterControllerCollision": {
             "list-name": "On character controller collision",
             "display-text": "{my}: On character controller collision",
@@ -1230,6 +1415,51 @@
           "CharacterCollisionData": {
             "translated-name": "CharacterCollisionData",
             "description": "Character collision data as JSON string.",
+            "params": {}
+          },
+          "CCGrounded": {
+            "translated-name": "CCGrounded",
+            "description": "1 if the character controller is grounded, 0 otherwise.",
+            "params": {}
+          },
+          "CCComputedMovementX": {
+            "translated-name": "CCComputedMovementX",
+            "description": "X component of the corrected movement from last character controller move.",
+            "params": {}
+          },
+          "CCComputedMovementY": {
+            "translated-name": "CCComputedMovementY",
+            "description": "Y component of the corrected movement from last character controller move.",
+            "params": {}
+          },
+          "CCComputedMovementZ": {
+            "translated-name": "CCComputedMovementZ",
+            "description": "Z component of the corrected movement from last character controller move.",
+            "params": {}
+          },
+          "CCCollisionNormalX": {
+            "translated-name": "CCCollisionNormalX",
+            "description": "X component of the collision normal from last character controller collision.",
+            "params": {}
+          },
+          "CCCollisionNormalY": {
+            "translated-name": "CCCollisionNormalY",
+            "description": "Y component of the collision normal from last character controller collision.",
+            "params": {}
+          },
+          "CCCollisionNormalZ": {
+            "translated-name": "CCCollisionNormalZ",
+            "description": "Z component of the collision normal from last character controller collision.",
+            "params": {}
+          },
+          "CCCollisionTargetUID": {
+            "translated-name": "CCCollisionTargetUID",
+            "description": "UID of the object hit in the last character controller collision.",
+            "params": {}
+          },
+          "CCCollisionTOI": {
+            "translated-name": "CCCollisionTOI",
+            "description": "Time of impact from the last character controller collision.",
             "params": {}
           },
           "VelocityX": {

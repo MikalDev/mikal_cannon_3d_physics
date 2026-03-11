@@ -1,0 +1,44 @@
+{
+	"name": "Event sheet 1",
+	"events": [
+		{
+			"eventType": "block",
+			"conditions": [
+				{
+					"id": "on-start-of-layout",
+					"objectClass": "System",
+					"sid": 397914185055089
+				}
+			],
+			"actions": [
+				{
+					"id": "log",
+					"objectClass": "Browser",
+					"sid": 449395492513350,
+					"parameters": {
+						"type": "log",
+						"message": "\"[eventsheet] === Layout started ===\""
+					}
+				},
+				{
+					"id": "wait",
+					"objectClass": "System",
+					"sid": 272998304811382,
+					"parameters": {
+						"seconds": "1",
+						"use-timescale": true
+					}
+				},
+				{
+					"type": "script",
+					"language": "typescript",
+					"script": [
+						"Tests.runAllTests(runtime)"
+					]
+				}
+			],
+			"sid": 552532099596465
+		}
+	],
+	"sid": 597026246195411
+}

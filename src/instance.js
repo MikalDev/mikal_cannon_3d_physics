@@ -56,6 +56,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             this._collisionMembership = this.lightOccluder ? 0xFFFF : 0x7FFF;
             this._collisionFilter = 0xFFFF;
             this._prevPhysicsQuat = null; // Track previous physics quaternion for delta rotation (Model3D)
+            this._ccResults = null; // {grounded, movementX, movementY, movementZ} from worker
             this.CommandType = {
                 AddBody: 0,
                 StepWorld: 1,
@@ -101,6 +102,16 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 SetBodyType: 41,
                 SetNextKinematicTranslation: 42,
                 SetNextKinematicRotation: 43,
+                SetCCSlope: 44,
+                SetCCAutostep: 45,
+                SetCCSnapToGround: 46,
+                SetCCSlide: 47,
+                SetCCMass: 48,
+                SetCCPushDynamicBodies: 49,
+                SetCCOffset: 50,
+                SetCCUp: 51,
+                RemoveCharacterController: 52,
+                SetCCNormalNudgeFactor: 53,
             };
             this._setTicking(true);
             this._setTicking2(true);
@@ -998,7 +1009,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             autostepMinWidth,
             autostepMaxHeight,
             enableSnapToGround,
-            snapToGroundMaxDistance
+            snapToGroundMaxDistance,
+            autostepIncludeDynamicBodies
         ) {
             const command = {
                 type: this.CommandType.CreateCharacterController,
@@ -1014,18 +1026,106 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 autostepMaxHeight: this._toPhysics(autostepMaxHeight),
                 enableSnapToGround,
                 snapToGroundMaxDistance: this._toPhysics(snapToGroundMaxDistance),
+                autostepIncludeDynamicBodies,
             };
             this.PhysicsType.commands.push(command);
         }
 
         _TranslateCharacterController(tag, x, y, z) {
+            if (!this.bodyDefined) return;
             const command = {
                 type: this.CommandType.TranslateCharacterController,
                 uid: this.uid,
                 tag,
                 translation: this._vecToPhysics(x, y, z),
+                filterGroups: this._collisionGroupsForCommand().filter,
             };
             this.PhysicsType.commands.push(command);
+        }
+
+        _SetCCSlope(tag, maxSlopeClimbAngle, minSlopeSlideAngle) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetCCSlope,
+                tag,
+                maxSlopeClimbAngle,
+                minSlopeSlideAngle,
+            });
+        }
+
+        _SetCCAutostep(tag, enabled, maxHeight, minWidth, includeDynamicBodies) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetCCAutostep,
+                tag,
+                enabled,
+                maxHeight: this._toPhysics(maxHeight),
+                minWidth: this._toPhysics(minWidth),
+                includeDynamicBodies,
+            });
+        }
+
+        _SetCCSnapToGround(tag, enabled, distance) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetCCSnapToGround,
+                tag,
+                enabled,
+                distance: this._toPhysics(distance),
+            });
+        }
+
+        _SetCCSlide(tag, enabled) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetCCSlide,
+                tag,
+                enabled,
+            });
+        }
+
+        _SetCCMass(tag, mass) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetCCMass,
+                tag,
+                mass,
+            });
+        }
+
+        _SetCCPushDynamicBodies(tag, enabled) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetCCPushDynamicBodies,
+                tag,
+                enabled,
+            });
+        }
+
+        _SetCCOffset(tag, offset) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetCCOffset,
+                tag,
+                offset: this._toPhysics(offset),
+            });
+        }
+
+        _SetCCUp(tag, x, y, z) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetCCUp,
+                tag,
+                up: { x, y, z },
+            });
+        }
+
+        _SetCCNormalNudgeFactor(tag, value) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetCCNormalNudgeFactor,
+                tag,
+                value,
+            });
+        }
+
+        _RemoveCharacterController(tag) {
+            this._ccResults = null;
+            this.PhysicsType.commands.push({
+                type: this.CommandType.RemoveCharacterController,
+                tag,
+            });
         }
 
         _Translate(x, y, z) {
@@ -1199,6 +1299,49 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             const collisionData = this.characterCollisionData;
             if (!collisionData) return "{}";
             return JSON.stringify(collisionData);
+        }
+
+        _CCGrounded() {
+            const cc = this._ccResults;
+            return cc?.grounded ? 1 : 0;
+        }
+
+        _CCComputedMovementX() {
+            const cc = this._ccResults;
+            if (!cc) return 0;
+            return cc.movementX * (this.PhysicsType?.scale ?? 1);
+        }
+
+        _CCComputedMovementY() {
+            const cc = this._ccResults;
+            if (!cc) return 0;
+            return cc.movementY * (this.PhysicsType?.scale ?? 1);
+        }
+
+        _CCComputedMovementZ() {
+            const cc = this._ccResults;
+            if (!cc) return 0;
+            return cc.movementZ * (this.PhysicsType?.scale ?? 1);
+        }
+
+        _CCCollisionNormalX() {
+            return this.characterCollisionData?.event?.normal1?.x ?? 0;
+        }
+
+        _CCCollisionNormalY() {
+            return this.characterCollisionData?.event?.normal1?.y ?? 0;
+        }
+
+        _CCCollisionNormalZ() {
+            return this.characterCollisionData?.event?.normal1?.z ?? 0;
+        }
+
+        _CCCollisionTargetUID() {
+            return this.characterCollisionData?.target?.uid ?? -1;
+        }
+
+        _CCCollisionTOI() {
+            return this.characterCollisionData?.event?.toi ?? 0;
         }
 
         _ApplyImpulse(x, y, z) {
