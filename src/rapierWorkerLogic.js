@@ -21,7 +21,6 @@ let castRayResults = [];
 let castShapeResults = [];
 let isPaused = false;
 const jointMap = new Map(); // Map<uid, Map<targetUID, joint>>
-const bodyEverMoved = new Set(); // handles that have had velocity above sleep threshold
 
 const CommandType = {
     AddBody: 0,
@@ -700,22 +699,6 @@ function stepWorld(dt, frame) {
             }
         }
 
-        // Force-sleep dynamic bodies whose velocity is already below Rapier's sleep
-        // threshold. Rapier normally requires 2 seconds below threshold before sleeping;
-        // ghost contact impulses keep resetting that timer, causing persistent jitter.
-        // Only applies to bodies that have been in motion (prevents sleeping newly created bodies).
-        rapierWorld.bodies.forEach((body) => {
-            if (!body.isDynamic() || body.isSleeping()) return;
-            const lv = body.linvel();
-            const av = body.angvel();
-            const linSq = lv.x * lv.x + lv.y * lv.y + lv.z * lv.z;
-            const angSq = av.x * av.x + av.y * av.y + av.z * av.z;
-            if (linSq > 0.08 || angSq > 0.125) {
-                bodyEverMoved.add(body.handle);
-            } else if (bodyEverMoved.has(body.handle)) {
-                body.sleep();
-            }
-        });
     }
 
     // Collect and return bodies' data...
