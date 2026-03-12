@@ -32,6 +32,8 @@
               "sphere": "Sphere",
               "cylinder": "Cylinder",
               "capsule": "Capsule",
+              "cone": "Cone",
+              "ramp": "Ramp",
               "convexHulls": "Convex Hulls"
             }
           },
@@ -180,7 +182,8 @@
                 "items": {
                   "box": "Box",
                   "sphere": "Sphere",
-                  "capsule": "Capsule"
+                  "capsule": "Capsule",
+                  "cone": "Cone"
                 }
               },
               "height": {

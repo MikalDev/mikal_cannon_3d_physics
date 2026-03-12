@@ -8280,7 +8280,9 @@ const ShapeTypeProperty = {
     Sphere: 3,
     Cylinder: 4,
     Capsule: 5,
-    ConvexHulls: 6,
+    Cone: 6,
+    Ramp: 7,
+    ConvexHulls: 8,
 };
 
 const ColliderType = {
@@ -8317,6 +8319,21 @@ function createDefaultCollider(config) {
                 config.width / 2
             );
             break;
+        case ShapeTypeProperty.Cone:
+            colliderDesc = RAPIER.ColliderDesc.cone(
+                config.depth / 2,
+                config.width / 2
+            );
+            break;
+        case ShapeTypeProperty.Ramp: {
+            const rampPoints = new Float32Array([
+                0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
+                -0.5, 0.5, -0.5, 0.5, 0.5, -0.5,
+            ]);
+            const rampScaled = scalePoints(rampPoints, config.height, config.width, config.depth);
+            colliderDesc = RAPIER.ColliderDesc.convexHull(rampScaled);
+            break;
+        }
         default:
             console.warn("Unrecognized default collider", shapeType);
             colliderDesc = RAPIER.ColliderDesc.ball(
@@ -8475,7 +8492,6 @@ function updateBody(config) {
     // Remove the body if it exists
     if (body) {
         rapierWorld.removeRigidBody(body);
-        bodyEverMoved.delete(handle);
     }
     uidHandle.delete(uid);
     addBody(config);
@@ -8895,7 +8911,6 @@ function setSizeOverride(config) {
     // Remove the body if it exists
     if (body) {
         rapierWorld.removeRigidBody(body);
-        bodyEverMoved.delete(handle);
     }
     uidHandle.delete(uid);
     addBody(config);
@@ -9073,8 +9088,9 @@ function getShapeFromConfig(shapeConfig) {
         case "box":
             return new RAPIER.Cuboid(width / 2, height / 2, depth / 2); // Dividing by 2 for half extents
         case "capsule":
-            return new RAPIER.Capsule(height / 2, width / 2); // Assuming height is the total height, width is the radius
-        // Add more shapes as needed
+            return new RAPIER.Capsule(height / 2, width / 2);
+        case "cone":
+            return new RAPIER.Cone(height / 2, width / 2);
         default:
             throw new Error("Unknown shape type: " + shapeConfig.type);
     }
@@ -9588,7 +9604,6 @@ function removeBody(config) {
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         rapierWorld.removeRigidBody(body);
-        bodyEverMoved.delete(handle);
     }
     // Prune stale revolute joint entries for this uid
     jointMap.delete(uid);

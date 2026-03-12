@@ -3,7 +3,7 @@ const SDK = self.SDK;
 const BEHAVIOR_INFO = {
     ...{
   "id": "mikal_cannon_3d_physics",
-  "version": "2.33.1",
+  "version": "2.34.0",
   "category": "movements",
   "author": "Mikal",
   "addonType": "behavior",
@@ -63,6 +63,8 @@ const BEHAVIOR_INFO = {
   "sphere",
   "cylinder",
   "capsule",
+  "cone",
+  "ramp",
   "convexHulls"
 ],
             },

@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.33.1",
+    version: "2.34.0",
     category:
         // "attributes",
         "movements",
@@ -122,6 +122,8 @@ module.exports = {
                     { sphere: "Sphere" },
                     { cylinder: "Cylinder" },
                     { capsule: "Capsule" },
+                    { cone: "Cone" },
+                    { ramp: "Ramp" },
                     { convexHulls: "Convex Hulls" },
                 ],
             },
@@ -403,7 +405,7 @@ module.exports = {
                         { box: "Box" },
                         { sphere: "Sphere" },
                         { capsule: "Capsule" },
-                        // Add any additional shape types here
+                        { cone: "Cone" },
                     ],
                 },
                 {

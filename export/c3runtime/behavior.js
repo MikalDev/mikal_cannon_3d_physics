@@ -1747,9 +1747,9 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             }
 
             // Convert mesh-based shapes to Box for GltfStatic/Model3D
-            // Shape types: 0=Auto, 1=ModelMesh, 2=Box, 3=Sphere, 4=Cylinder, 5=Capsule, 6=ConvexHulls
+            // Shape types: 0=Auto, 1=ModelMesh, 2=Box, 3=Sphere, 4=Cylinder, 5=Capsule, 6=Cone, 7=Ramp, 8=ConvexHulls
             let actualShapeType = shapeProperty;
-            if (shapeProperty === 1 || shapeProperty === 6) { // ModelMesh or ConvexHulls
+            if (shapeProperty === 1 || shapeProperty === 8) { // ModelMesh or ConvexHulls
                 actualShapeType = 2; // Box
             }
 
@@ -2725,7 +2725,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 0: "box",
                 1: "sphere",
                 2: "capsule",
-                // Add more mappings if there are more shape types
+                3: "cone",
             };
 
             const shapeTypeString =
