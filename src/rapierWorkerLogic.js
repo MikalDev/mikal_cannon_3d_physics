@@ -259,7 +259,8 @@ const ShapeTypeProperty = {
     Capsule: 5,
     Cone: 6,
     Ramp: 7,
-    ConvexHulls: 8,
+    Plane: 8,
+    ConvexHulls: 9,
 };
 
 const ColliderType = {
@@ -311,6 +312,13 @@ function createDefaultCollider(config) {
             colliderDesc = RAPIER.ColliderDesc.convexHull(rampScaled);
             break;
         }
+        case ShapeTypeProperty.Plane:
+            colliderDesc = RAPIER.ColliderDesc.cuboid(
+                config.width / 2,
+                1,
+                config.depth / 2
+            );
+            break;
         default:
             console.warn("Unrecognized default collider", shapeType);
             colliderDesc = RAPIER.ColliderDesc.ball(

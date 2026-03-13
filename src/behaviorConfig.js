@@ -124,6 +124,7 @@ module.exports = {
                     { capsule: "Capsule" },
                     { cone: "Cone" },
                     { ramp: "Ramp" },
+                    { plane: "Plane" },
                     { convexHulls: "Convex Hulls" },
                 ],
             },
