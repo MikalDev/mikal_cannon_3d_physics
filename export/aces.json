@@ -1390,6 +1390,32 @@
             "initialValue": 1
           }
         ]
+      },
+      {
+        "id": "SetShape",
+        "scriptName": "SetShape",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "shapeType",
+            "type": "combo",
+            "initialValue": "box",
+            "items": [
+              "auto",
+              "modelMesh",
+              "box",
+              "sphere",
+              "cylinder",
+              "capsule",
+              "cone",
+              "ramp",
+              "plane",
+              "convexHulls"
+            ]
+          }
+        ]
       }
     ],
     "expressions": [

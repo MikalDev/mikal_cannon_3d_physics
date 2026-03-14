@@ -1268,6 +1268,29 @@
                 "desc": "Override depth."
               }
             }
+          },
+          "SetShape": {
+            "list-name": "Set shape",
+            "display-text": "Set {my} shape to {0}",
+            "description": "Change the collider shape at runtime. Rebuilds the physics body.",
+            "params": {
+              "shapeType": {
+                "name": "Shape",
+                "desc": "Collider shape type.",
+                "items": {
+                  "auto": "Auto",
+                  "modelMesh": "Model Mesh",
+                  "box": "Box",
+                  "sphere": "Sphere",
+                  "cylinder": "Cylinder",
+                  "capsule": "Capsule",
+                  "cone": "Cone",
+                  "ramp": "Ramp",
+                  "plane": "Plane",
+                  "convexHulls": "Convex Hulls"
+                }
+              }
+            }
           }
         },
         "conditions": {

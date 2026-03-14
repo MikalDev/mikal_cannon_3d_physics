@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.34.0",
+    version: "2.35.0",
     category:
         // "attributes",
         "movements",
@@ -2443,6 +2443,39 @@ module.exports = {
             displayText:
                 "{my} enable {0} set size override to height {1}, width {2}, depth {3}",
             description: "Set size override for height, width, and depth.",
+        },
+
+        SetShape: {
+            category: "body",
+            forward: "_SetShape",
+            autoScriptInterface: true,
+            highlight: false,
+            deprecated: false,
+            isAsync: false,
+            params: [
+                {
+                    id: "shapeType",
+                    name: "Shape",
+                    desc: "Collider shape type.",
+                    type: "combo",
+                    initialValue: "box",
+                    items: [
+                        { auto: "Auto" },
+                        { modelMesh: "Model Mesh" },
+                        { box: "Box" },
+                        { sphere: "Sphere" },
+                        { cylinder: "Cylinder" },
+                        { capsule: "Capsule" },
+                        { cone: "Cone" },
+                        { ramp: "Ramp" },
+                        { plane: "Plane" },
+                        { convexHulls: "Convex Hulls" },
+                    ],
+                },
+            ],
+            listName: "Set shape",
+            displayText: "Set {my} shape to {0}",
+            description: "Change the collider shape at runtime. Rebuilds the physics body.",
         },
 
         /*

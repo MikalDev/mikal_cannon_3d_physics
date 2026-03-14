@@ -441,6 +441,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             this.PhysicsType.commands.push(command);
         }
 
+        _SetShape(shapeType) {
+            this.shapeProperty = shapeType;
+            this._UpdateBody();
+        }
+
         _UpdateBody() {
             let command = null;
 
@@ -452,6 +457,14 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     shape: null,
                     meshPoints: this._getMeshPoints(),
                 });
+            } else if (this.pluginType === "GltfStaticPlugin" || this.pluginType === "Model3DPlugin") {
+                this._create3DObjectShape(
+                    this.shapeProperty,
+                    this.bodyType,
+                    this.colliderType,
+                    this.sizeOverride
+                );
+                return;
             } else {
                 console.error("invalid pluginType", this.pluginType);
                 return;
