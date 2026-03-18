@@ -812,7 +812,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         // Scripting-only: raycast from this instance's center to toX,toY,toZ.
         // Tag is auto-suffixed with this uid. No trigger fired.
         // Read result next tick: _RaycastResultAsJSON(`${tag}_${uid}`)
-        _RaycastFromSelf(tag, toX, toY, toZ, filterGroups = "0x8000", solid = false) {
+        _RaycastFromSelf(tag, toX, toY, toZ, filterGroups = "0x8000", offsetX = 0, offsetY = 0, offsetZ = 0) {
             const fullTag = `${tag}_${this.uid}`;
             if (!this.PhysicsType.worldReady) {
                 this.raycastResults.set(fullTag, { hasHit: false, tag: fullTag });
@@ -821,14 +821,14 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             const bodyData = globalThis.Mikal_Rapier_Bodies?.get(this.uid);
             let fromX, fromY, fromZ;
             if (bodyData) {
-                fromX = bodyData.translation.x;
-                fromY = bodyData.translation.y;
-                fromZ = bodyData.translation.z;
+                fromX = bodyData.translation.x + offsetX;
+                fromY = bodyData.translation.y + offsetY;
+                fromZ = bodyData.translation.z + offsetZ;
             } else {
                 const inst = this.instance;
-                fromX = inst.x;
-                fromY = inst.y;
-                fromZ = inst.z ?? inst.zElevation ?? 0;
+                fromX = inst.x + offsetX;
+                fromY = inst.y + offsetY;
+                fromZ = (inst.z ?? inst.zElevation ?? 0) + offsetZ;
             }
             const vec3 = globalThis.glMatrix.vec3;
             const origin = vec3.fromValues(
@@ -850,7 +850,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 dir: { x: to[0], y: to[1], z: to[2] },
                 maxToI,
                 filterGroups,
-                solid,
+                solid: false,
                 uid: this.uid,
                 tag: fullTag,
                 noTrigger: true,

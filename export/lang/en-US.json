@@ -168,6 +168,45 @@
               }
             }
           },
+          "RaycastFromSelf": {
+            "list-name": "Raycast from self",
+            "display-text": "{my}: Raycast from self, tag {0}, to [i]{1},{2},{3}[/i], filter {4}, offset [i]{5},{6},{7}[/i]",
+            "description": "Cast ray from this object's position (plus optional offset) to a target point. Excludes self. Result tag has UID appended.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag for request (UID is appended automatically)."
+              },
+              "toX": {
+                "name": "To X",
+                "desc": "Target X."
+              },
+              "toY": {
+                "name": "To Y",
+                "desc": "Target Y."
+              },
+              "toZ": {
+                "name": "To Z",
+                "desc": "Target Z."
+              },
+              "filterGroups": {
+                "name": "Filter Groups",
+                "desc": "Collision filter groups (hex string)."
+              },
+              "offsetX": {
+                "name": "Offset X",
+                "desc": "Offset X from object position."
+              },
+              "offsetY": {
+                "name": "Offset Y",
+                "desc": "Offset Y from object position."
+              },
+              "offsetZ": {
+                "name": "Offset Z",
+                "desc": "Offset Z from object position."
+              }
+            }
+          },
           "CastShape": {
             "list-name": "Cast Shape",
             "display-text": "{my}: Cast shape, tag {0}, shape {1} (H:{2}, W:{3}, D:{4}) from [i]{5},{6},{7}[/i] to [i]{8},{9},{10}[/i], rotation [i]{11}°X, {12}°Y, {13}°Z[/i], max ToI {14}, hit margin {15}, filter groups {16}, exclude UID {17}, skip backfaces {18}",

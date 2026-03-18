@@ -135,6 +135,55 @@
         ]
       },
       {
+        "id": "RaycastFromSelf",
+        "scriptName": "RaycastFromSelf",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "toX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "toY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "toZ",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "filterGroups",
+            "type": "string",
+            "initialValue": "\"0x8000\""
+          },
+          {
+            "id": "offsetX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "offsetY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "offsetZ",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
         "id": "CastShape",
         "scriptName": "CastShape",
         "highlight": false,
