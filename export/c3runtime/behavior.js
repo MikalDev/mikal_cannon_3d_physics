@@ -1153,7 +1153,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             // unless explicitly marked as light occluders.
             this._collisionMembership = this.lightOccluder ? 0xFFFF : 0x7FFF;
             this._collisionFilter = 0xFFFF;
-            this._prevPhysicsQuat = null; // Track previous physics quaternion for delta rotation (Model3D)
             this._ccResults = null; // {grounded, movementX, movementY, movementZ} from worker
             this.CommandType = {
                 AddBody: 0,
@@ -1216,6 +1215,13 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             };
             this._setTicking(true);
             this._setTicking2(true);
+
+            // Model3D 90° Y-axis correction quaternions (physics space → model space)
+            const quat = globalThis.glMatrix.quat;
+            this._model3DQuatCorrection = quat.create();
+            quat.fromEuler(this._model3DQuatCorrection, 0, 0, -90);
+            this._model3DQuatCorrectionInv = quat.create();
+            quat.invert(this._model3DQuatCorrectionInv, this._model3DQuatCorrection);
         }
 
         _release() {
@@ -1364,42 +1370,17 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 inst.quaternion = quatRot;
 
             } else if (this.pluginType === "Model3DPlugin") {
-                // Set Model3D world position (base position, keep offsets at 0)
-                // Model3D Z position is at the bottom, so subtract depth/2 from physics center
-                const zDepth = inst.depth || 0;
+                // Set Model3D world position (origin is at center)
                 inst.x = position.x;
                 inst.y = position.y;
-                inst.z = position.z - zDepth / 2;
+                inst.z = position.z;
 
+                // Model3D has a 90° Y-axis offset from physics space — apply correction
                 const quat = globalThis.glMatrix.quat;
-                const currentQuat = quat.fromValues(quatRot.x, quatRot.y, quatRot.z, quatRot.w);
-
-                if (!this._prevPhysicsQuat) {
-                    // First frame: set absolute rotation directly
-                    const eulerAngles = this._quaternionToEuler(currentQuat);
-                    inst.rotationX = eulerAngles[0];
-                    inst.rotationY = eulerAngles[1];
-                    inst.rotationZ = eulerAngles[2];
-                    this._prevPhysicsQuat = quat.clone(currentQuat);
-                } else {
-                    // Subsequent frames: compute delta rotation to avoid gimbal lock
-                    // Delta = inverse(previous) * current (local frame delta)
-                    const prevInverse = quat.create();
-                    quat.invert(prevInverse, this._prevPhysicsQuat);
-
-                    const deltaQuat = quat.create();
-                    quat.multiply(deltaQuat, prevInverse, currentQuat);
-                    quat.normalize(deltaQuat, deltaQuat);
-
-                    // Convert delta quaternion to Euler angles
-                    const deltaEuler = this._quaternionToEuler(deltaQuat);
-
-                    // Apply delta rotation using addTransform (adds to current rotation)
-                    inst.addTransform(deltaEuler[0], deltaEuler[1], deltaEuler[2], "rotation");
-
-                    // Update previous quaternion for next frame
-                    quat.copy(this._prevPhysicsQuat, currentQuat);
-                }
+                const physQuat = quat.fromValues(quatRot.x, quatRot.y, quatRot.z, quatRot.w);
+                const corrected = quat.create();
+                quat.multiply(corrected, physQuat, this._model3DQuatCorrection);
+                inst.setQuaternion(corrected[0], corrected[1], corrected[2], corrected[3]);
             } else {
                 const zElevation = position.z - zHeight / 2;
                 inst.z = zElevation;
@@ -1641,27 +1622,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             return [pitch, yaw, roll]; // Returns Euler angles in radians
         }
 
-        _eulerToQuaternion(eulerX, eulerY, eulerZ) {
-            // Input: Euler angles in radians (XYZ order - pitch, yaw, roll)
-            // Output: Quaternion {x, y, z, w}
-            const quat = globalThis.glMatrix.quat;
-            const result = quat.create();
-
-            // glMatrix.quat.fromEuler expects degrees, convert from radians
-            const degX = eulerX * (180 / Math.PI);
-            const degY = eulerY * (180 / Math.PI);
-            const degZ = eulerZ * (180 / Math.PI);
-
-            quat.fromEuler(result, degX, degY, degZ);
-
-            return {
-                x: result[0],
-                y: result[1],
-                z: result[2],
-                w: result[3]
-            };
-        }
-
         // GltfStatic and Model3D use primitive shape colliders (box, capsule, sphere, etc.)
         // Can auto-create from bounding box or use manual dimensions via SetSizeOverride
         _create3DObjectShape(shapeProperty, bodyType, colliderType, overrideSize) {
@@ -1679,21 +1639,23 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 initialQuat = quatToObject(inst.quaternion);
 
             } else if (this.pluginType === "Model3DPlugin") {
-                // Model3D has base position (x, y, z) plus offsets
-                // Note: Model3D Z position is at the bottom of the model, so add depth/2 for physics center
+                // Model3D has base position (x, y, z) plus offsets (origin is at center)
                 posX = inst.x + (inst.offsetX || 0);
                 posY = inst.y + (inst.offsetY || 0);
-                // depth will be determined later, so we'll adjust posZ after getting dimensions
                 posZ = inst.z + (inst.offsetZ || 0);
 
-                // Convert Euler (radians) to quaternion
-                initialQuat = this._eulerToQuaternion(
-                    inst.rotationX || 0,
-                    inst.rotationY || 0,
-                    inst.rotationZ || 0
-                );
-
-                // Model3D rotation configured
+                // Get rotation as quaternion and remove Model3D's Z-axis offset
+                try {
+                    const q = inst.getQuaternion();
+                    const quat = globalThis.glMatrix.quat;
+                    const modelQuat = quat.fromValues(q.x, q.y, q.z, q.w);
+                    const physQuat = quat.create();
+                    quat.multiply(physQuat, modelQuat, this._model3DQuatCorrectionInv);
+                    initialQuat = { x: physQuat[0], y: physQuat[1], z: physQuat[2], w: physQuat[3] };
+                } catch (e) {
+                    // Quaternion not initialized yet — use identity
+                    initialQuat = { x: 0, y: 0, z: 0, w: 1 };
+                }
             }
 
             // Determine dimensions: from extracted bounding box, bounding box, or manual override
@@ -1764,10 +1726,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 depth *= scaleZ;
             }
 
-            // Model3D Z position is at the bottom of the model, adjust to physics center
-            if (this.pluginType === "Model3DPlugin") {
-                posZ += depth / 2;
-            }
+
 
             // Convert mesh-based shapes to Box for GltfStatic/Model3D
             // Shape types: 0=Auto, 1=ModelMesh, 2=Box, 3=Sphere, 4=Cylinder, 5=Capsule, 6=Cone, 7=Ramp, 8=Plane, 9=ConvexHulls
