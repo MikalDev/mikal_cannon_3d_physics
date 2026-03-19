@@ -118,12 +118,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             this._setTicking(true);
             this._setTicking2(true);
 
-            // Model3D 90° Y-axis correction quaternions (physics space → model space)
-            const quat = globalThis.glMatrix.quat;
-            this._model3DQuatCorrection = quat.create();
-            quat.fromEuler(this._model3DQuatCorrection, 0, 0, -90);
-            this._model3DQuatCorrectionInv = quat.create();
-            quat.invert(this._model3DQuatCorrectionInv, this._model3DQuatCorrection);
         }
 
         _release() {
@@ -277,12 +271,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 inst.y = position.y;
                 inst.z = position.z;
 
-                // Model3D has a 90° Y-axis offset from physics space — apply correction
-                const quat = globalThis.glMatrix.quat;
-                const physQuat = quat.fromValues(quatRot.x, quatRot.y, quatRot.z, quatRot.w);
-                const corrected = quat.create();
-                quat.multiply(corrected, physQuat, this._model3DQuatCorrection);
-                inst.setQuaternion(corrected[0], corrected[1], corrected[2], corrected[3]);
+                inst.setQuaternion(quatRot.x, quatRot.y, quatRot.z, quatRot.w);
             } else {
                 const zElevation = position.z - zHeight / 2;
                 inst.z = zElevation;
@@ -546,18 +535,15 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 posY = inst.y + (inst.offsetY || 0);
                 posZ = inst.z + (inst.offsetZ || 0);
 
-                // Get rotation as quaternion and remove Model3D's Z-axis offset
-                try {
-                    const q = inst.getQuaternion();
-                    const quat = globalThis.glMatrix.quat;
-                    const modelQuat = quat.fromValues(q.x, q.y, q.z, q.w);
-                    const physQuat = quat.create();
-                    quat.multiply(physQuat, modelQuat, this._model3DQuatCorrectionInv);
-                    initialQuat = { x: physQuat[0], y: physQuat[1], z: physQuat[2], w: physQuat[3] };
-                } catch (e) {
-                    // Quaternion not initialized yet — use identity
-                    initialQuat = { x: 0, y: 0, z: 0, w: 1 };
-                }
+                // C3 SDK bug: getQuaternion() broken (_GetQuaternion missing return statement),
+                // so build quaternion from Euler angles (radians) using ZYX order
+                const q = globalThis.glMatrix.quat.create();
+                globalThis.glMatrix.quat.fromEuler(q,
+                    (inst.rotationX || 0) * (180 / Math.PI),
+                    (inst.rotationY || 0) * (180 / Math.PI),
+                    (inst.rotationZ || 0) * (180 / Math.PI)
+                );
+                initialQuat = { x: q[0], y: q[1], z: q[2], w: q[3] };
             }
 
             // Determine dimensions: from extracted bounding box, bounding box, or manual override
