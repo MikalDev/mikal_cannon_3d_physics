@@ -1194,7 +1194,7 @@
           },
           "AddRevoluteJoint": {
             "list-name": "Add revolute joint",
-            "display-text": "Add {my} revolute joint to uid {6} at {0}, {1}, {2} to {3}, {4}, {5} with axis {7}, {8}, {9}",
+            "display-text": "Add {my} revolute joint to uid {9} at {0}, {1}, {2} to {3}, {4}, {5} with axis {6}, {7}, {8}",
             "description": "Add revolute joint between self and target.",
             "params": {
               "anchorX": {

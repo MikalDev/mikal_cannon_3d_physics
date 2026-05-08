@@ -779,8 +779,12 @@ function handleCollisionEvents(eventQueue) {
     eventQueue.drainCollisionEvents((handle1, handle2, started) => {
         const collider1 = rapierWorld.getCollider(handle1);
         const collider2 = rapierWorld.getCollider(handle2);
+        // A body removed earlier this frame can produce a STOPPED event with
+        // stale handles. Skip — without a parent body we have no UID to dispatch on.
+        if (!collider1 || !collider2) return;
         const body1 = collider1.parent();
         const body2 = collider2.parent();
+        if (!body1 || !body2) return;
 
         // Extract contact data (outward normal for body1 = pointing from body2 toward body1)
         let contactNormalX = 0, contactNormalY = 0, contactNormalZ = 0;

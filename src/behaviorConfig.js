@@ -3,7 +3,7 @@ module.exports = {
     addonType: "behavior",
     id: "mikal_cannon_3d_physics",
     name: "Rapier 3D Physics",
-    version: "2.35.2",
+    version: "2.35.3",
     category:
         // "attributes",
         "movements",
@@ -2390,7 +2390,7 @@ module.exports = {
             ],
             listName: "Add revolute joint",
             displayText:
-                "Add {my} revolute joint to uid {6} at {0}, {1}, {2} to {3}, {4}, {5} with axis {7}, {8}, {9}",
+                "Add {my} revolute joint to uid {9} at {0}, {1}, {2} to {3}, {4}, {5} with axis {6}, {7}, {8}",
             description: "Add revolute joint between self and target.",
         },
 

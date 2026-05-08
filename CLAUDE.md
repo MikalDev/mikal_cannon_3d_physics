@@ -87,7 +87,7 @@ The physics behavior supports the following Construct 3 object types:
 ### 3D Objects
 - **3D Shape** (Shape3D plugin) - Limited to Z-axis rotation only
 - **GltfStatic** - Full 3D rotation with quaternions, auto-detects bounding box
-- **Model3D** - Full 3D rotation with Euler angles (radians), requires manual size override or bounding box extraction
+- **Model3D** - Full 3D rotation with quaternions via `getQuaternion()`/`setQuaternion()`, requires manual size override or bounding box extraction
 
 ### 2D Objects
 - **Sprite** - 2D physics with mesh collision support
@@ -95,15 +95,12 @@ The physics behavior supports the following Construct 3 object types:
 ### Model3D Integration Details
 
 **Rotation Format:**
-- Model3D uses Euler angles (X, Y, Z in radians) for rotation
-- Physics engine uses quaternions internally
-- Automatic bidirectional conversion at each sync point:
-  - Model3D → Physics: `_eulerToQuaternion()` converts radians to quaternion
-  - Physics → Model3D: `_quaternionToEuler()` converts quaternion to radians
+- Model3D uses quaternions via `getQuaternion()` and `setQuaternion()` methods
+- Same pattern as GltfStatic for consistent handling
 
 **Position Properties:**
-- Model3D: `offsetX`, `offsetY`, `offsetZ`
-- GltfStatic: `x`, `y`, `zElevation`
+- Model3D: `x`, `y`, `z` (world position)
+- GltfStatic: `x`, `y`, `z`
 
 **Scale Handling:**
 - Model3D scale (`scaleX`, `scaleY`, `scaleZ`) is automatically applied to physics body dimensions

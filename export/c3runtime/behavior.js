@@ -1633,15 +1633,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 posY = inst.y + (inst.offsetY || 0);
                 posZ = inst.z + (inst.offsetZ || 0);
 
-                // C3 SDK bug: getQuaternion() broken (_GetQuaternion missing return statement),
-                // so build quaternion from Euler angles (radians) using ZYX order
-                const q = globalThis.glMatrix.quat.create();
-                globalThis.glMatrix.quat.fromEuler(q,
-                    (inst.rotationX || 0) * (180 / Math.PI),
-                    (inst.rotationY || 0) * (180 / Math.PI),
-                    (inst.rotationZ || 0) * (180 / Math.PI)
-                );
-                initialQuat = { x: q[0], y: q[1], z: q[2], w: q[3] };
+                initialQuat = quatToObject(inst.getQuaternion());
             }
 
             // Determine dimensions: from extracted bounding box, bounding box, or manual override

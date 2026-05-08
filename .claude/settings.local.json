@@ -9,7 +9,28 @@
       "Bash(npm run:*)",
       "Bash(ls:*)",
       "Bash(git commit:*)",
-      "Bash(gh release create:*)"
+      "Bash(gh release create:*)",
+      "Bash(git checkout:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(git config:*)",
+      "Bash(python3:*)",
+      "Bash(cat:*)",
+      "Bash(echo EXIT:$?:*)",
+      "Bash(cd:*)",
+      "Bash(while read ts name)",
+      "Bash(do date -d @$ts '+%Y-%m-%d %H:%M')",
+      "Bash(done)",
+      "Bash(node:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:rapier.rs)",
+      "WebFetch(domain:docs.rs)",
+      "Bash(echo exit: $?:*)",
+      "Bash(cp:*)",
+      "Bash(git status:*)",
+      "Bash(gh release:*)",
+      "WebFetch(domain:cdn.discordapp.com)",
+      "Bash(git check-ignore *)"
     ]
   }
 }
