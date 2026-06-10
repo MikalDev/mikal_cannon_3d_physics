@@ -161,12 +161,13 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
         for (const result of castShapeResults) {
             const uid = result.uid;
             const tag = result.tag;
-            const origin = result.origin;
-            const direction = result.direction;
+            const origin = result.origin ?? [0, 0, 0];
+            const direction = result.direction ?? [0, 0, 0];
             // SDK v2: Use registered behavior instance map
             const behInst = this.getBehaviorInstanceByUid(uid);
             if (!behInst) continue;
             if (result.hasHit) {
+                const timeOfImpact = Number(result.timeOfImpact ?? result.time_of_impact ?? 0);
                 const hitPointWorld = vec3.create();
                 vec3.add(
                     hitPointWorld,
@@ -175,45 +176,61 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                         direction,
                         direction,
                         vec3.fromValues(
-                            result.time_of_impact,
-                            result.time_of_impact,
-                            result.time_of_impact
+                            timeOfImpact,
+                            timeOfImpact,
+                            timeOfImpact
                         )
                     )
                 );
+                const hitPointX = Number.isFinite(hitPointWorld[0]) ? hitPointWorld[0] * scale : 0;
+                const hitPointY = Number.isFinite(hitPointWorld[1]) ? hitPointWorld[1] * scale : 0;
+                const hitPointZ = Number.isFinite(hitPointWorld[2]) ? hitPointWorld[2] * scale : 0;
+                const distance = Number.isFinite(timeOfImpact) ? timeOfImpact * scale : 0;
                 behInst.castShapeResults.set(tag, {
                     hasHit: true,
-                    hitPointWorld: [
-                        hitPointWorld[0] * scale,
-                        hitPointWorld[1] * scale,
-                        hitPointWorld[2] * scale,
-                    ],
+                    hitPointWorld: [hitPointX, hitPointY, hitPointZ],
+                    hitPointX,
+                    hitPointY,
+                    hitPointZ,
+                    hitPointWorldX: hitPointX,
+                    hitPointWorldY: hitPointY,
+                    hitPointWorldZ: hitPointZ,
                     witness1: [
-                        result.witness1.x,
-                        result.witness1.y,
-                        result.witness1.z,
+                        result.witness1.x * scale,
+                        result.witness1.y * scale,
+                        result.witness1.z * scale,
                     ],
+                    witness1X: result.witness1.x * scale,
+                    witness1Y: result.witness1.y * scale,
+                    witness1Z: result.witness1.z * scale,
                     witness2: [
-                        result.witness2.x,
-                        result.witness2.y,
-                        result.witness2.z,
+                        result.witness2.x * scale,
+                        result.witness2.y * scale,
+                        result.witness2.z * scale,
                     ],
+                    witness2X: result.witness2.x * scale,
+                    witness2Y: result.witness2.y * scale,
+                    witness2Z: result.witness2.z * scale,
                     normal1: [
                         result.normal1.x,
                         result.normal1.y,
                         result.normal1.z,
                     ],
+                    normal1X: result.normal1.x,
+                    normal1Y: result.normal1.y,
+                    normal1Z: result.normal1.z,
                     normal2: [
                         result.normal2.x,
                         result.normal2.y,
                         result.normal2.z,
                     ],
-                    distance:
-                        vec3.distance(origin, [
-                            hitPointWorld[0],
-                            hitPointWorld[1],
-                            hitPointWorld[2],
-                        ]) * scale,
+                    normal2X: result.normal2.x,
+                    normal2Y: result.normal2.y,
+                    normal2Z: result.normal2.z,
+                    distance,
+                    timeOfImpact,
+                    maxToI: result.maxToI,
+                    sequence: result.sequence,
                     hitUID: result.hitUID,
                     tag,
                 });
@@ -221,23 +238,46 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                 behInst.castShapeResults.set(tag, {
                     hasHit: false,
                     hitPointWorld: [0, 0, 0],
+                    hitPointX: 0,
+                    hitPointY: 0,
+                    hitPointZ: 0,
+                    hitPointWorldX: 0,
+                    hitPointWorldY: 0,
+                    hitPointWorldZ: 0,
                     witness1: [0, 0, 0],
+                    witness1X: 0,
+                    witness1Y: 0,
+                    witness1Z: 0,
                     witness2: [0, 0, 0],
+                    witness2X: 0,
+                    witness2Y: 0,
+                    witness2Z: 0,
                     normal1: [0, 0, 0],
+                    normal1X: 0,
+                    normal1Y: 0,
+                    normal1Z: 0,
                     normal2: [0, 0, 0],
+                    normal2X: 0,
+                    normal2Y: 0,
+                    normal2Z: 0,
                     distance: 0,
+                    timeOfImpact: -1,
+                    maxToI: result.maxToI ?? 0,
+                    sequence: result.sequence,
                     hitUID: -1,
                     tag,
                 });
             }
 
-            behInst._currentCastShapeTag = tag;
-            behInst._trigger(
-                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyCastShapeResult
-            );
-            behInst._trigger(
-                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCastShapeResult
-            );
+            if (!result.noTrigger) {
+                behInst._currentCastShapeTag = tag;
+                behInst._trigger(
+                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyCastShapeResult
+                );
+                behInst._trigger(
+                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCastShapeResult
+                );
+            }
         }
     }
 
@@ -278,25 +318,39 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                         )
                     )
                 );
+                const hitPointX = hitPointWorld[0] * scale;
+                const hitPointY = hitPointWorld[1] * scale;
+                const hitPointZ = hitPointWorld[2] * scale;
                 behInst.raycastResults.set(tag, {
                     hasHit: true,
                     hitFaceIndex: 0,
                     hitPointWorld: [
-                        hitPointWorld[0] * scale,
-                        hitPointWorld[1] * scale,
-                        hitPointWorld[2] * scale,
+                        hitPointX,
+                        hitPointY,
+                        hitPointZ,
                     ],
+                    hitPointX,
+                    hitPointY,
+                    hitPointZ,
+                    hitPointWorldX: hitPointX,
+                    hitPointWorldY: hitPointY,
+                    hitPointWorldZ: hitPointZ,
                     hitNormalWorld: [
                         result.normal.x,
                         result.normal.y,
                         result.normal.z,
                     ],
-                    distance:
-                        vec3.distance(origin, [
-                            hitPointWorld[0],
-                            hitPointWorld[1],
-                            hitPointWorld[2],
-                        ]) * scale,
+                    hitNormalX: result.normal.x,
+                    hitNormalY: result.normal.y,
+                    hitNormalZ: result.normal.z,
+                    hitNormalWorldX: result.normal.x,
+                    hitNormalWorldY: result.normal.y,
+                    hitNormalWorldZ: result.normal.z,
+                    // dir is normalized, so timeOfImpact is the physics-unit distance
+                    distance: result.timeOfImpact * scale,
+                    timeOfImpact: result.timeOfImpact,
+                    maxDistance: result.maxToI * scale,
+                    sequence: result.sequence,
                     hitUID: result.hitUID,
                     tag,
                 });
@@ -305,8 +359,23 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                     hasHit: false,
                     hitFaceIndex: -1,
                     hitPointWorld: [0, 0, 0],
+                    hitPointX: 0,
+                    hitPointY: 0,
+                    hitPointZ: 0,
+                    hitPointWorldX: 0,
+                    hitPointWorldY: 0,
+                    hitPointWorldZ: 0,
                     hitNormalWorld: [0, 0, 0],
+                    hitNormalX: 0,
+                    hitNormalY: 0,
+                    hitNormalZ: 0,
+                    hitNormalWorldX: 0,
+                    hitNormalWorldY: 0,
+                    hitNormalWorldZ: 0,
                     distance: 0,
+                    timeOfImpact: -1,
+                    maxDistance: (result.maxToI ?? 0) * scale,
+                    sequence: result.sequence,
                     hitUID: -1,
                     tag,
                 });

@@ -744,7 +744,78 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
         _RaycastResultAsJSON(tag) {
             const result = this.raycastResults.get(tag);
-            return JSON.stringify(result ?? { hasHit: false, hitUID: -1 });
+            return JSON.stringify(result ?? this._emptyRaycastResult(tag));
+        }
+
+        _emptyRaycastResult(tag = "") {
+            return {
+                hasHit: false,
+                hitFaceIndex: -1,
+                hitPointWorld: [0, 0, 0],
+                hitPointX: 0,
+                hitPointY: 0,
+                hitPointZ: 0,
+                hitPointWorldX: 0,
+                hitPointWorldY: 0,
+                hitPointWorldZ: 0,
+                hitNormalWorld: [0, 0, 0],
+                hitNormalX: 0,
+                hitNormalY: 0,
+                hitNormalZ: 0,
+                hitNormalWorldX: 0,
+                hitNormalWorldY: 0,
+                hitNormalWorldZ: 0,
+                distance: 0,
+                timeOfImpact: -1,
+                maxDistance: 0,
+                sequence: 0,
+                hitUID: -1,
+                tag,
+            };
+        }
+
+        _RaycastResult(tag) {
+            return this.raycastResults.get(tag) ?? this._emptyRaycastResult(tag);
+        }
+
+        _RaycastHasHit(tag) {
+            return this._RaycastResult(tag).hasHit ? 1 : 0;
+        }
+
+        _RaycastHitUID(tag) {
+            return this._RaycastResult(tag).hitUID ?? -1;
+        }
+
+        _RaycastDistance(tag) {
+            return this._RaycastResult(tag).distance ?? 0;
+        }
+
+        _RaycastHitPointX(tag) {
+            return this._RaycastResult(tag).hitPointX ?? 0;
+        }
+
+        _RaycastHitPointY(tag) {
+            return this._RaycastResult(tag).hitPointY ?? 0;
+        }
+
+        _RaycastHitPointZ(tag) {
+            return this._RaycastResult(tag).hitPointZ ?? 0;
+        }
+
+        _RaycastHitNormalX(tag) {
+            return this._RaycastResult(tag).hitNormalX ?? 0;
+        }
+
+        _RaycastHitNormalY(tag) {
+            return this._RaycastResult(tag).hitNormalY ?? 0;
+        }
+
+        _RaycastHitNormalZ(tag) {
+            return this._RaycastResult(tag).hitNormalZ ?? 0;
+        }
+
+        _RaycastSequence(tag) {
+            return this._RaycastResult(tag).sequence ?? 0;
         }
 
         // Scripting-only: raycast from this instance's center to toX,toY,toZ.
@@ -1562,7 +1633,17 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             // Calculate direction
             let direction = vec3.create();
             vec3.sub(direction, to, origin);
-            // vec3.normalize(direction, direction); // Normalize the direction vector (Foozle: I don't believe it should be normalized.)
+            const castDistance = vec3.distance(origin, to);
+            if (castDistance <= 0) {
+                this.castShapeResults.set(tag, this._emptyCastShapeResult(tag));
+                return;
+            }
+            vec3.normalize(direction, direction);
+            // With a normalized direction, maxToI acts as a multiplier of the
+            // origin->endpoint distance (1 = cast exactly to the endpoint)
+            const castDistanceMultiplier = Number(maxToI ?? 1);
+            const castMaxToI = castDistance * (Number.isFinite(castDistanceMultiplier) ? castDistanceMultiplier : 1);
+            const normalizedExcludeUID = excludeUID === -1 ? this.uid : excludeUID;
 
             // Map shapeType to string if necessary
             const shapeTypeMap = {
@@ -1596,13 +1677,13 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     y: rotY,
                     z: rotZ,
                 },
-                maxToI,
+                maxToI: castMaxToI,
                 targetDistance: this._toPhysics(targetDistance),
                 filterGroups,
-                excludeUID,
+                excludeUID: normalizedExcludeUID,
                 solid,
                 tag,
-                uid: this.instance.uid,
+                uid: this.uid,
             };
 
             this.PhysicsType.commands.push(command);
@@ -1614,7 +1695,42 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
         _CastShapeResultAsJSON(tag) {
             const result = this.castShapeResults.get(tag);
-            return JSON.stringify(result ?? { hasHit: false, hitUID: -1 });
+            return JSON.stringify(result ?? this._emptyCastShapeResult(tag));
+        }
+
+        _emptyCastShapeResult(tag = "") {
+            return {
+                hasHit: false,
+                hitPointWorld: [0, 0, 0],
+                hitPointX: 0,
+                hitPointY: 0,
+                hitPointZ: 0,
+                hitPointWorldX: 0,
+                hitPointWorldY: 0,
+                hitPointWorldZ: 0,
+                witness1: [0, 0, 0],
+                witness1X: 0,
+                witness1Y: 0,
+                witness1Z: 0,
+                witness2: [0, 0, 0],
+                witness2X: 0,
+                witness2Y: 0,
+                witness2Z: 0,
+                normal1: [0, 0, 0],
+                normal1X: 0,
+                normal1Y: 0,
+                normal1Z: 0,
+                normal2: [0, 0, 0],
+                normal2X: 0,
+                normal2Y: 0,
+                normal2Z: 0,
+                distance: 0,
+                timeOfImpact: -1,
+                maxToI: 0,
+                sequence: 0,
+                hitUID: -1,
+                tag,
+            };
         }
 
         _OnAnyCastShapeResult() {

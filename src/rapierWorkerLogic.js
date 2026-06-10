@@ -18,6 +18,8 @@ let characterControllerCollisionEvents = [];
 let ccResults = new Map(); // Map<uid, {grounded, movementX, movementY, movementZ}>
 let postDefineCommands = new Map();
 let castRayResults = [];
+let raycastSequence = 0;
+let castShapeSequence = 0;
 let castShapeResults = [];
 let isPaused = false;
 const jointMap = new Map(); // Map<uid, Map<targetUID, joint>>
@@ -932,7 +934,7 @@ function raycast(config) {
     const dir = config.dir;
     const ray = new RAPIER.Ray(origin, dir);
     const maxToI = config.maxToI;
-    const solid = config.solid;
+    const solid = boolParam(config.solid);
     const uid = config.uid;
     let filterGroups = parseInt(config.filterGroups, 16);
     filterGroups = 0xffff0000 | filterGroups;
@@ -961,7 +963,9 @@ function raycast(config) {
         result.origin = { x: origin.x, y: origin.y, z: origin.z };
         result.tag = config.tag;
         result.noTrigger = config.noTrigger;
+        result.sequence = ++raycastSequence;
         result.timeOfImpact = resultRaw.timeOfImpact;
+        result.maxToI = maxToI;
         result.normal = {
             x: resultRaw.normal.x,
             y: resultRaw.normal.y,
@@ -969,7 +973,18 @@ function raycast(config) {
         };
     } else {
         // @ts-ignore
-        result = { hasHit: false, hitUID: -1, uid, tag: config.tag, noTrigger: config.noTrigger };
+        result = {
+            hasHit: false,
+            hitUID: -1,
+            uid,
+            dir: { x: dir.x, y: dir.y, z: dir.z },
+            origin: { x: origin.x, y: origin.y, z: origin.z },
+            tag: config.tag,
+            noTrigger: config.noTrigger,
+            sequence: ++raycastSequence,
+            timeOfImpact: -1,
+            maxToI,
+        };
     }
     castRayResults.push(result);
     return result;
@@ -1013,10 +1028,11 @@ function castShape(config) {
             config.dir.z
         );
         let shape2 = getShapeFromConfig(config.shape); // A function to get the shape based on config
-        const maxToI = config.maxToI;
+        const maxToI = Number(config.maxToI ?? 1);
         const targetDistance = config.targetDistance || 1; // Use the targetDistance from the config, default to 1 if not provided
-        const stopAtPenetration = config.solid;
+        const stopAtPenetration = boolParam(config.solid);
         let filterGroups = parseInt(config.filterGroups, 16);
+        if (!Number.isFinite(filterGroups)) filterGroups = 0xffff;
         filterGroups = 0xffff0000 | filterGroups;
 
         // Find the body with the given UID
@@ -1047,10 +1063,19 @@ function castShape(config) {
         const hitUID = parent?.uid;
         let returnResult = {};
         if (result !== null) {
+            // Rapier API versions differ on snake_case vs camelCase here
+            const timeOfImpact = result.time_of_impact ?? result.timeOfImpact ?? 0;
+            const witness1 = result.witness1 ?? { x: 0, y: 0, z: 0 };
+            const witness2 = result.witness2 ?? { x: 0, y: 0, z: 0 };
+            const normal1 = result.normal1 ?? { x: 0, y: 0, z: 0 };
+            const normal2 = result.normal2 ?? { x: 0, y: 0, z: 0 };
             returnResult.uid = config.uid;
-            returnResult.hitUID = hitUID;
+            returnResult.hitUID = hitUID ?? -1;
             returnResult.hasHit = true;
-            returnResult.time_of_impact = result.time_of_impact;
+            returnResult.timeOfImpact = timeOfImpact;
+            returnResult.maxToI = maxToI;
+            returnResult.noTrigger = config.noTrigger;
+            returnResult.sequence = ++castShapeSequence;
             returnResult.direction = [config.dir.x, config.dir.y, config.dir.z];
             returnResult.origin = [
                 config.origin.x,
@@ -1058,34 +1083,57 @@ function castShape(config) {
                 config.origin.z,
             ];
             returnResult.witness1 = {
-                x: result.witness1.x,
-                y: result.witness1.y,
-                z: result.witness1.z,
+                x: witness1.x,
+                y: witness1.y,
+                z: witness1.z,
             };
             returnResult.witness2 = {
-                x: result.witness2.x,
-                y: result.witness2.y,
-                z: result.witness2.z,
+                x: witness2.x,
+                y: witness2.y,
+                z: witness2.z,
             };
             returnResult.normal1 = {
-                x: result.normal1.x,
-                y: result.normal1.y,
-                z: result.normal1.z,
+                x: normal1.x,
+                y: normal1.y,
+                z: normal1.z,
             };
             returnResult.normal2 = {
-                x: result.normal2.x,
-                y: result.normal2.y,
-                z: result.normal2.z,
+                x: normal2.x,
+                y: normal2.y,
+                z: normal2.z,
             };
             returnResult.tag = config.tag;
         } else {
-            returnResult = { hasHit: false, hitUID: -1, tag:config.tag, uid:config.uid };
+            returnResult = {
+                hasHit: false,
+                hitUID: -1,
+                tag: config.tag,
+                uid: config.uid,
+                direction: [config.dir.x, config.dir.y, config.dir.z],
+                origin: [config.origin.x, config.origin.y, config.origin.z],
+                maxToI,
+                noTrigger: config.noTrigger,
+                sequence: ++castShapeSequence,
+            };
         }
         castShapeResults.push(returnResult);
         return returnResult;
     } catch (error) {
         console.error("Error in castShape:", error);
-        throw error;
+        const returnResult = {
+            hasHit: false,
+            hitUID: -1,
+            tag: config.tag,
+            uid: config.uid,
+            error: String(error?.message ?? error),
+            direction: [config.dir?.x ?? 0, config.dir?.y ?? 0, config.dir?.z ?? 0],
+            origin: [config.origin?.x ?? 0, config.origin?.y ?? 0, config.origin?.z ?? 0],
+            maxToI: Number(config.maxToI ?? 0),
+            noTrigger: config.noTrigger,
+            sequence: ++castShapeSequence,
+        };
+        castShapeResults.push(returnResult);
+        return returnResult;
     }
 }
 
