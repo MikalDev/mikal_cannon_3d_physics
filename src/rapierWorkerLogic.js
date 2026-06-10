@@ -22,7 +22,8 @@ let raycastSequence = 0;
 let castShapeSequence = 0;
 let castShapeResults = [];
 let isPaused = false;
-const jointMap = new Map(); // Map<uid, Map<targetUID, joint>>
+const jointMap = new Map(); // Map<uid, Map<targetUID, joint>>, registered both directions
+const pendingJointCommands = new Map(); // Map<pairKey, command[]> — joint commands waiting for the joint to exist
 
 const CommandType = {
     AddBody: 0,
@@ -82,6 +83,13 @@ const CommandType = {
     SetSolverIterations: 54,
     SetRestitutionCombineRule: 55,
     SetSleepThreshold: 56,
+    SetRevoluteContactsEnabled: 57,
+    AttachSpring: 58,
+    AddFixedJoint: 59,
+    AddPrismaticJoint: 60,
+    SetPrismaticLimits: 61,
+    SetPrismaticMotor: 62,
+    AddRopeJoint: 63,
 };
 
 const BodyType = {
@@ -1008,6 +1016,76 @@ function createQuaternionFromEuler(roll, pitch, yaw) {
     return new RAPIER.Quaternion(x, y, z, w);
 }
 
+// --- Quaternion/vector math helpers (plain objects with x/y/z[/w]) ---------
+
+function quatInverse(q) {
+    const lenSq = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w || 1;
+    return {
+        x: -q.x / lenSq,
+        y: -q.y / lenSq,
+        z: -q.z / lenSq,
+        w: q.w / lenSq,
+    };
+}
+
+function quatMultiply(a, b) {
+    const x = a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y;
+    const y = a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x;
+    const z = a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w;
+    const w = a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z;
+    const len = Math.hypot(x, y, z, w) || 1;
+    return new RAPIER.Quaternion(x / len, y / len, z / len, w / len);
+}
+
+function quatRotateVector(q, v) {
+    const vx = v.x, vy = v.y, vz = v.z;
+    const qx = q.x, qy = q.y, qz = q.z, qw = q.w;
+    const tx = 2 * (qy * vz - qz * vy);
+    const ty = 2 * (qz * vx - qx * vz);
+    const tz = 2 * (qx * vy - qy * vx);
+    return {
+        x: vx + qw * tx + (qy * tz - qz * ty),
+        y: vy + qw * ty + (qz * tx - qx * tz),
+        z: vz + qw * tz + (qx * ty - qy * tx),
+    };
+}
+
+function vecAdd(a, b) {
+    return { x: a.x + b.x, y: a.y + b.y, z: a.z + b.z };
+}
+
+function vecSub(a, b) {
+    return { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
+}
+
+function vecLength(v) {
+    return Math.hypot(v.x, v.y, v.z);
+}
+
+function worldPointFromLocalAnchor(body, anchor) {
+    return vecAdd(body.translation(), quatRotateVector(body.rotation(), anchor));
+}
+
+function localPointFromWorldPoint(body, point) {
+    return quatRotateVector(
+        quatInverse(body.rotation()),
+        vecSub(point, body.translation())
+    );
+}
+
+// Where the source body's local anchor currently sits, expressed in the
+// target body's local frame — used to preserve the bodies' relative pose at
+// joint creation time
+function targetAnchorAtSourceAnchor(body, targetBody, anchor) {
+    return quatRotateVector(
+        quatInverse(targetBody.rotation()),
+        vecSub(
+            worldPointFromLocalAnchor(body, anchor),
+            targetBody.translation()
+        )
+    );
+}
+
 // Add function to do a shape cast
 function castShape(config) {
     try {
@@ -1476,33 +1554,156 @@ function setNextKinematicRotation(config) {
     }
 }
 
-function addSphericalJoint(config) {
-    const { uid, targetUID, anchor, targetAnchor } = config;
-    const handle = uidHandle.get(uid);
-    if (bufferIfNoHandle(handle, config)) return;
-    const targetHandle = uidHandle.get(targetUID);
-    if (!handle || !targetHandle) return;
+// --- Joint registry -------------------------------------------------------
+// Joints are registered under both (uid, targetUID) and (targetUID, uid) so
+// joint commands work regardless of which body issues them. Commands that
+// arrive before the joint exists are queued per body pair and replayed when
+// the joint is created. Joint creation commands that arrive before the
+// *target* body exists are buffered via addPostDefineCommandsForUid.
+
+function registerJoint(uid, targetUID, joint) {
+    let targets = jointMap.get(uid);
+    if (!targets) jointMap.set(uid, targets = new Map());
+    targets.set(targetUID, joint);
+
+    let reverseTargets = jointMap.get(targetUID);
+    if (!reverseTargets) jointMap.set(targetUID, reverseTargets = new Map());
+    reverseTargets.set(uid, joint);
+}
+
+function getJoint(uid, targetUID) {
+    return jointMap.get(uid)?.get(targetUID) || jointMap.get(targetUID)?.get(uid) || null;
+}
+
+function jointPairKey(uid, targetUID) {
+    const a = Number(uid);
+    const b = Number(targetUID);
+    return a < b ? `${a}:${b}` : `${b}:${a}`;
+}
+
+function queueJointCommand(config) {
+    const key = jointPairKey(config.uid, config.targetUID);
+    const configCopy = JSON.parse(JSON.stringify(config));
+    let commands = pendingJointCommands.get(key);
+    if (!commands) pendingJointCommands.set(key, commands = []);
+    commands.push(configCopy);
+}
+
+function runPendingJointCommands(uid, targetUID) {
+    const key = jointPairKey(uid, targetUID);
+    const commands = pendingJointCommands.get(key);
+    if (!commands) return;
+    pendingJointCommands.delete(key);
+    runCommands(commands);
+}
+
+// Resolve both joint bodies, buffering the command if either is not yet
+// defined. Returns null if the command was buffered or a body is gone.
+function getJointBodies(config) {
+    const handle = uidHandle.get(config.uid);
+    if (bufferIfNoHandle(handle, config)) return null;
+    const targetHandle = uidHandle.get(config.targetUID);
+    if (targetHandle === undefined) {
+        addPostDefineCommandsForUid(config.targetUID, JSON.parse(JSON.stringify(config)));
+        return null;
+    }
     const body = rapierWorld.bodies.get(handle);
     const targetBody = rapierWorld.bodies.get(targetHandle);
-    if (!body || !targetBody) return;
-    const params = RAPIER.JointData.spherical(anchor, targetAnchor);
+    if (!body || !targetBody) return null;
+    return { body, targetBody };
+}
+
+function addSphericalJoint(config) {
+    const { uid, targetUID, anchor, targetAnchor } = config;
+    const preserveRelativePosition = config.preserveRelativePosition ?? true;
+    const bodies = getJointBodies(config);
+    if (!bodies) return;
+    const { body, targetBody } = bodies;
+    const effectiveTargetAnchor = preserveRelativePosition
+        ? targetAnchorAtSourceAnchor(body, targetBody, anchor)
+        : targetAnchor;
+    const params = RAPIER.JointData.spherical(anchor, effectiveTargetAnchor);
     const joint = rapierWorld.createImpulseJoint(
         params,
         body,
         targetBody,
         true
     );
+    registerJoint(uid, targetUID, joint);
+    runPendingJointCommands(uid, targetUID);
+}
+
+function addFixedJoint(config) {
+    const { uid, targetUID, anchor, targetAnchor } = config;
+    const contactsEnabled = config.contactsEnabled ?? true;
+    const preserveRelativeRotation = config.preserveRelativeRotation ?? true;
+    const preserveRelativePosition = config.preserveRelativePosition ?? true;
+    const bodies = getJointBodies(config);
+    if (!bodies) return;
+    const { body, targetBody } = bodies;
+    const frame1 = RAPIER.RotationOps.identity();
+    const frame2 = preserveRelativeRotation
+        ? quatMultiply(quatInverse(targetBody.rotation()), body.rotation())
+        : RAPIER.RotationOps.identity();
+    const effectiveTargetAnchor = preserveRelativePosition
+        ? targetAnchorAtSourceAnchor(body, targetBody, anchor)
+        : targetAnchor;
+    const params = RAPIER.JointData.fixed(anchor, frame1, effectiveTargetAnchor, frame2);
+    const joint = rapierWorld.createImpulseJoint(params, body, targetBody, true);
+    joint.setContactsEnabled(boolParam(contactsEnabled));
+    registerJoint(uid, targetUID, joint);
+    runPendingJointCommands(uid, targetUID);
+}
+
+function attachSpring(config) {
+    const { uid, targetUID, restLength, stiffness, damping, anchor, targetAnchor } = config;
+    const bodies = getJointBodies(config);
+    if (!bodies) return;
+    const { body, targetBody } = bodies;
+    const params = RAPIER.JointData.spring(
+        restLength,
+        stiffness,
+        damping,
+        anchor,
+        targetAnchor
+    );
+    const joint = rapierWorld.createImpulseJoint(
+        params,
+        body,
+        targetBody,
+        true
+    );
+    registerJoint(uid, targetUID, joint);
+    runPendingJointCommands(uid, targetUID);
+}
+
+function addRopeJoint(config) {
+    const { uid, targetUID, length, anchor, targetAnchor } = config;
+    const contactsEnabled = config.contactsEnabled ?? true;
+    const preserveRelativePosition = config.preserveRelativePosition ?? true;
+    const bodies = getJointBodies(config);
+    if (!bodies) return;
+    const { body, targetBody } = bodies;
+    const currentAnchorDistance = vecLength(vecSub(
+        worldPointFromLocalAnchor(body, anchor),
+        worldPointFromLocalAnchor(targetBody, targetAnchor)
+    ));
+    const effectiveLength = preserveRelativePosition
+        ? Math.max(Number(length) || 0, currentAnchorDistance)
+        : length;
+    const params = RAPIER.JointData.rope(effectiveLength, anchor, targetAnchor);
+    const joint = rapierWorld.createImpulseJoint(params, body, targetBody, true);
+    joint.setContactsEnabled(boolParam(contactsEnabled));
+    registerJoint(uid, targetUID, joint);
+    runPendingJointCommands(uid, targetUID);
 }
 
 function addRevoluteJoint(config) {
     const { uid, targetUID, anchor, targetAnchor, axis } = config;
-    const handle = uidHandle.get(uid);
-    if (bufferIfNoHandle(handle, config)) return;
-    const targetHandle = uidHandle.get(targetUID);
-    if (!handle || !targetHandle) return;
-    const body = rapierWorld.bodies.get(handle);
-    const targetBody = rapierWorld.bodies.get(targetHandle);
-    if (!body || !targetBody) return;
+    const contactsEnabled = config.contactsEnabled ?? true;
+    const bodies = getJointBodies(config);
+    if (!bodies) return;
+    const { body, targetBody } = bodies;
     const params = RAPIER.JointData.revolute(anchor, targetAnchor, axis);
     const joint = rapierWorld.createImpulseJoint(
         params,
@@ -1510,27 +1711,50 @@ function addRevoluteJoint(config) {
         targetBody,
         true
     );
-    let _targets = jointMap.get(uid);
-    if (!_targets) jointMap.set(uid, _targets = new Map());
-    _targets.set(targetUID, joint);
+    joint.setContactsEnabled(boolParam(contactsEnabled));
+    registerJoint(uid, targetUID, joint);
+    runPendingJointCommands(uid, targetUID);
+}
+
+function addPrismaticJoint(config) {
+    const { uid, targetUID, anchor, targetAnchor, axis } = config;
+    const contactsEnabled = config.contactsEnabled ?? true;
+    const bodies = getJointBodies(config);
+    if (!bodies) return;
+    const { body, targetBody } = bodies;
+    const params = RAPIER.JointData.prismatic(anchor, targetAnchor, axis);
+    const joint = rapierWorld.createImpulseJoint(params, body, targetBody, true);
+    joint.setContactsEnabled(boolParam(contactsEnabled));
+    registerJoint(uid, targetUID, joint);
+    runPendingJointCommands(uid, targetUID);
 }
 
 function setRevoluteMotor(config) {
     const { uid, targetUID, targetVelocity, maxForce } = config;
-    const joint = jointMap.get(uid)?.get(targetUID);
+    const joint = getJoint(uid, targetUID);
     if (!joint) {
-        console.warn(`[rapierWorker] setRevoluteMotor: no joint found for uid=${uid} targetUID=${targetUID}`);
+        queueJointCommand(config);
         return;
     }
     // configureMotorVelocity(targetVel, dampingCoeff) — dampingCoeff=0 disables motor force
     joint.configureMotorVelocity(targetVelocity, maxForce);
 }
 
+function setPrismaticMotor(config) {
+    const { uid, targetUID, targetVelocity, maxForce } = config;
+    const joint = getJoint(uid, targetUID);
+    if (!joint) {
+        queueJointCommand(config);
+        return;
+    }
+    joint.configureMotorVelocity(targetVelocity, maxForce);
+}
+
 function setRevoluteLimits(config) {
     const { uid, targetUID, minAngle, maxAngle, enabled } = config;
-    const joint = jointMap.get(uid)?.get(targetUID);
+    const joint = getJoint(uid, targetUID);
     if (!joint) {
-        console.warn(`[rapierWorker] setRevoluteLimits: no joint found for uid=${uid} targetUID=${targetUID}`);
+        queueJointCommand(config);
         return;
     }
     if (enabled) {
@@ -1539,6 +1763,30 @@ function setRevoluteLimits(config) {
         // Rapier has no setLimitsEnabled toggle; use full range to effectively free the joint
         joint.setLimits(-Math.PI * 10000, Math.PI * 10000);
     }
+}
+
+function setPrismaticLimits(config) {
+    const { uid, targetUID, minDistance, maxDistance, enabled } = config;
+    const joint = getJoint(uid, targetUID);
+    if (!joint) {
+        queueJointCommand(config);
+        return;
+    }
+    if (enabled) {
+        joint.setLimits(minDistance, maxDistance);
+    } else {
+        joint.setLimits(-Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+    }
+}
+
+function setRevoluteContactsEnabled(config) {
+    const { uid, targetUID, contactsEnabled } = config;
+    const joint = getJoint(uid, targetUID);
+    if (!joint) {
+        queueJointCommand(config);
+        return;
+    }
+    joint.setContactsEnabled(boolParam(contactsEnabled));
 }
 
 function createTrimeshCollider(meshPoints) {
@@ -1600,6 +1848,12 @@ const commandFunctions = {
     [CommandType.SetTimestep]: setTimestep,
     [CommandType.RemoveBody]: removeBody,
     [CommandType.AddSphericalJoint]: addSphericalJoint,
+    [CommandType.AttachSpring]: attachSpring,
+    [CommandType.AddFixedJoint]: addFixedJoint,
+    [CommandType.AddPrismaticJoint]: addPrismaticJoint,
+    [CommandType.SetPrismaticLimits]: setPrismaticLimits,
+    [CommandType.SetPrismaticMotor]: setPrismaticMotor,
+    [CommandType.AddRopeJoint]: addRopeJoint,
     [CommandType.SetPositionOffset]: setPositionOffset,
     [CommandType.AddRevoluteJoint]: addRevoluteJoint,
     [CommandType.SetCCD]: setCCD,
@@ -1617,6 +1871,7 @@ const commandFunctions = {
     [CommandType.ResumeWorld]: resumeWorld,
     [CommandType.SetRevoluteMotor]: setRevoluteMotor,
     [CommandType.SetRevoluteLimits]: setRevoluteLimits,
+    [CommandType.SetRevoluteContactsEnabled]: setRevoluteContactsEnabled,
     [CommandType.SetAngularVelocity]: setAngularVelocity,
     [CommandType.SetBodyType]: setBodyType,
     [CommandType.SetNextKinematicTranslation]: setNextKinematicTranslation,
@@ -1659,9 +1914,13 @@ function removeBody(config) {
     if (body) {
         rapierWorld.removeRigidBody(body);
     }
-    // Prune stale revolute joint entries for this uid
+    // Prune stale joint entries and pending joint commands for this uid
     jointMap.delete(uid);
     for (const targets of jointMap.values()) targets.delete(uid);
+    for (const key of pendingJointCommands.keys()) {
+        const [uidA, uidB] = key.split(":").map(Number);
+        if (uidA === uid || uidB === uid) pendingJointCommands.delete(key);
+    }
 }
 
 function bufferIfNoHandle(handle, config) {

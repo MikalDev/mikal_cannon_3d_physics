@@ -47,6 +47,9 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             this.bodyDefined = false;
             this.raycastResults = new Map();
             this.castShapeResults = new Map();
+            // Joint types recorded at command-push time, keyed by target UID.
+            // Optimistic: reflects requested joints, not worker-confirmed state.
+            this._knownJointTypes = new Map();
             this._currentRaycastTag = null;
             this._currentCastShapeTag = null;
             // Collision group tracking (16-bit each, mirrors worker state).
@@ -114,6 +117,13 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 SetSolverIterations: 54,
                 SetRestitutionCombineRule: 55,
                 SetSleepThreshold: 56,
+                SetRevoluteContactsEnabled: 57,
+                AttachSpring: 58,
+                AddFixedJoint: 59,
+                AddPrismaticJoint: 60,
+                SetPrismaticLimits: 61,
+                SetPrismaticMotor: 62,
+                AddRopeJoint: 63,
             };
             this._setTicking(true);
             this._setTicking2(true);
@@ -124,6 +134,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             super._release();
             this.raycastResults.clear();
             this.castShapeResults.clear();
+            this._knownJointTypes.clear();
             // SDK v2: Unregister from behavior instance map
             if (this.PhysicsType) {
                 this.PhysicsType.unregisterBehaviorInstance(this.uid);
@@ -1490,7 +1501,18 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             otherY,
             otherZ
         ) {
-            console.warn("AttachSpring is deprecated, not implemented");
+            this._recordJointType(otherUID, "spring");
+            this.PhysicsType.commands.push({
+                type: this.CommandType.AttachSpring,
+                uid: this.uid,
+                tag,
+                targetUID: otherUID,
+                restLength: this._toPhysics(restLength),
+                stiffness,
+                damping,
+                anchor: this._vecToPhysics(x, y, z),
+                targetAnchor: this._vecToPhysics(otherX, otherY, otherZ),
+            });
         }
 
         _VelocityX() {
@@ -1530,16 +1552,44 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             targetAnchorX,
             targetAnchorY,
             targetAnchorZ,
-            targetUID
+            targetUID,
+            preserveRelativePosition = true
         ) {
+            this._recordJointType(targetUID, "spherical");
             const command = {
                 type: this.CommandType.AddSphericalJoint,
                 uid: this.uid,
                 anchor: this._vecToPhysics(anchorX, anchorY, anchorZ),
                 targetAnchor: this._vecToPhysics(targetAnchorX, targetAnchorY, targetAnchorZ),
                 targetUID,
+                preserveRelativePosition,
             };
             this.PhysicsType.commands.push(command);
+        }
+
+        _AddFixedJoint(
+            anchorX,
+            anchorY,
+            anchorZ,
+            targetAnchorX,
+            targetAnchorY,
+            targetAnchorZ,
+            targetUID,
+            contactsEnabled = true,
+            preserveRelativeRotation = true,
+            preserveRelativePosition = true
+        ) {
+            this._recordJointType(targetUID, "fixed");
+            this.PhysicsType.commands.push({
+                type: this.CommandType.AddFixedJoint,
+                uid: this.uid,
+                anchor: this._vecToPhysics(anchorX, anchorY, anchorZ),
+                targetAnchor: this._vecToPhysics(targetAnchorX, targetAnchorY, targetAnchorZ),
+                targetUID,
+                contactsEnabled,
+                preserveRelativeRotation,
+                preserveRelativePosition,
+            });
         }
 
         _AddRevoluteJoint(
@@ -1552,8 +1602,10 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             axisX,
             axisY,
             axisZ,
-            targetUID
+            targetUID,
+            contactsEnabled = true
         ) {
+            this._recordJointType(targetUID, "revolute");
             const command = {
                 type: this.CommandType.AddRevoluteJoint,
                 uid: this.uid,
@@ -1561,8 +1613,59 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 targetAnchor: this._vecToPhysics(targetAnchorX, targetAnchorY, targetAnchorZ),
                 targetUID,
                 axis: { x: axisX, y: axisY, z: axisZ },
+                contactsEnabled,
             };
             this.PhysicsType.commands.push(command);
+        }
+
+        _AddPrismaticJoint(
+            anchorX,
+            anchorY,
+            anchorZ,
+            targetAnchorX,
+            targetAnchorY,
+            targetAnchorZ,
+            axisX,
+            axisY,
+            axisZ,
+            targetUID,
+            contactsEnabled = true
+        ) {
+            this._recordJointType(targetUID, "prismatic");
+            this.PhysicsType.commands.push({
+                type: this.CommandType.AddPrismaticJoint,
+                uid: this.uid,
+                anchor: this._vecToPhysics(anchorX, anchorY, anchorZ),
+                targetAnchor: this._vecToPhysics(targetAnchorX, targetAnchorY, targetAnchorZ),
+                targetUID,
+                axis: { x: axisX, y: axisY, z: axisZ },
+                contactsEnabled,
+            });
+        }
+
+        _AddRopeJoint(
+            length,
+            anchorX,
+            anchorY,
+            anchorZ,
+            targetAnchorX,
+            targetAnchorY,
+            targetAnchorZ,
+            targetUID,
+            contactsEnabled = true,
+            preserveRelativePosition = true
+        ) {
+            this._recordJointType(targetUID, "rope");
+            this.PhysicsType.commands.push({
+                type: this.CommandType.AddRopeJoint,
+                uid: this.uid,
+                length: this._toPhysics(length),
+                anchor: this._vecToPhysics(anchorX, anchorY, anchorZ),
+                targetAnchor: this._vecToPhysics(targetAnchorX, targetAnchorY, targetAnchorZ),
+                targetUID,
+                contactsEnabled,
+                preserveRelativePosition,
+            });
         }
 
         _SetRevoluteMotor(targetUID, targetVelocity, maxForce) {
@@ -1575,8 +1678,20 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             });
         }
 
+        _SetPrismaticMotor(targetUID, targetVelocity, maxForce) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetPrismaticMotor,
+                uid: this.uid,
+                targetUID,
+                targetVelocity: this._toPhysics(targetVelocity),
+                maxForce,
+            });
+        }
+
         _SetRevoluteLimits(targetUID, minAngle, maxAngle, enabledStr) {
-            const enabled = enabledStr === "yes";
+            // Combo params arrive as the item index (0 = "Enable"); accept
+            // boolean/string forms for scripting callers
+            const enabled = enabledStr === true || enabledStr === "yes" || enabledStr === 0 || enabledStr === "0";
             this.PhysicsType.commands.push({
                 type: this.CommandType.SetRevoluteLimits,
                 uid: this.uid,
@@ -1585,6 +1700,40 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 maxAngle: maxAngle * Math.PI / 180,
                 enabled,
             });
+        }
+
+        _SetPrismaticLimits(targetUID, minDistance, maxDistance, enabled) {
+            // Boolean param (not a combo): accept boolean-ish truthy forms
+            enabled = enabled === true || enabled === 1 || enabled === "1" || enabled === "true";
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetPrismaticLimits,
+                uid: this.uid,
+                targetUID,
+                minDistance: this._toPhysics(minDistance),
+                maxDistance: this._toPhysics(maxDistance),
+                enabled,
+            });
+        }
+
+        _SetRevoluteContactsEnabled(targetUID, contactsEnabled) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetRevoluteContactsEnabled,
+                uid: this.uid,
+                targetUID,
+                contactsEnabled,
+            });
+        }
+
+        _recordJointType(targetUID, type) {
+            this._knownJointTypes.set(Number(targetUID), type);
+        }
+
+        _JointExists(targetUID) {
+            return this._knownJointTypes.has(Number(targetUID)) ? 1 : 0;
+        }
+
+        _JointType(targetUID) {
+            return this._knownJointTypes.get(Number(targetUID)) ?? "";
         }
 
         _SetPositionOffset(x, y, z) {
