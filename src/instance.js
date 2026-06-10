@@ -732,6 +732,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 filterGroups,
                 solid,
                 uid: this.uid,
+                excludeUID: this.uid,
                 tag,
             };
             this.PhysicsType.commands.push(command);
@@ -858,7 +859,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetEnabledRotations(x, y, z) {
-            if (!this.bodyDefined) return;
             const command = {
                 uid: this.uid,
                 type: this.CommandType.SetEnabledRotations,
@@ -870,7 +870,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetEnabledTranslations(x, y, z) {
-            if (!this.bodyDefined) return;
             const command = {
                 uid: this.uid,
                 type: this.CommandType.SetEnabledTranslations,
@@ -882,7 +881,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetGravityScale(scale) {
-            if (!this.bodyDefined) return;
             const command = {
                 uid: this.uid,
                 type: this.CommandType.SetGravityScale,
@@ -892,7 +890,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _ApplyAngularImpulse(x, y, z) {
-            if (!this.bodyDefined) return;
             const command = {
                 uid: this.uid,
                 type: this.CommandType.ApplyAngularImpulse,
@@ -904,12 +901,10 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _WakeUp() {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({ uid: this.uid, type: this.CommandType.WakeUp });
         }
 
         _Sleep() {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({ uid: this.uid, type: this.CommandType.Sleep });
         }
 
@@ -985,7 +980,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _TranslateCharacterController(tag, x, y, z) {
-            if (!this.bodyDefined) return;
             const command = {
                 type: this.CommandType.TranslateCharacterController,
                 uid: this.uid,
@@ -1089,7 +1083,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetRestitutionCombineRule(rule) {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({
                 type: this.CommandType.SetRestitutionCombineRule,
                 uid: this.uid,
@@ -1098,7 +1091,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetSleepThreshold(threshold) {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({
                 type: this.CommandType.SetSleepThreshold,
                 uid: this.uid,
@@ -1179,7 +1171,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetAngularVelocity(x, y, z) {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({
                 type: this.CommandType.SetAngularVelocity,
                 uid: this.uid,
@@ -1188,7 +1179,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetBodyType(bodyType) {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({
                 type: this.CommandType.SetBodyType,
                 uid: this.uid,
@@ -1197,7 +1187,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetNextKinematicTranslation(x, y, z) {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({
                 type: this.CommandType.SetNextKinematicTranslation,
                 uid: this.uid,
@@ -1206,7 +1195,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetNextKinematicRotation(x, y, z) {
-            if (!this.bodyDefined) return;
             const quat = globalThis.glMatrix.quat;
             const rotation = quat.create();
             quat.fromEuler(rotation, x, y, z);
@@ -1323,7 +1311,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _ApplyImpulse(x, y, z) {
-            if (!this.bodyDefined) return;
             const impulse = { x: x, y: y, z: z };
             const command = {
                 type: this.CommandType.ApplyImpulse,
@@ -1334,7 +1321,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _ApplyImpulseAtPoint(x, y, z, pointX, pointY, pointZ) {
-            if (!this.bodyDefined) return;
             const impulse = { x: x, y: y, z: z };
             const point = { x: pointX, y: pointY, z: pointZ };
             const command = {
@@ -1347,7 +1333,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetMass(mass) {
-            if (!this.bodyDefined) return;
             const command = {
                 type: this.CommandType.SetMass,
                 uid: this.uid,
@@ -1369,7 +1354,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetCollisionGroups(membership, filter) {
-            if (!this.bodyDefined) return;
             this._collisionMembership = parseInt(membership, 16);
             this._collisionFilter = parseInt(filter, 16);
             this.PhysicsType.commands.push({
@@ -1381,8 +1365,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetLightOccluder(enable) {
-            if (!this.bodyDefined) return;
             const LIGHT_OCCLUDER_BIT = 0x8000; // bit 15, reserved for light occlusion
+            enable = enable === true || enable === 1 || enable === "1" || enable === "true";
             if (enable) {
                 this._collisionMembership |= LIGHT_OCCLUDER_BIT;
             } else {
@@ -1398,7 +1382,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _ApplyForce(x, y, z, pointX, pointY, pointZ) {
-            if (!this.bodyDefined) return;
             const force = { x: x, y: y, z: z };
             const point = { x: pointX, y: pointY, z: pointZ };
             const command = {
@@ -1411,7 +1394,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _ApplyTorque(x, y, z) {
-            if (!this.bodyDefined) return;
             const command = {
                 type: this.CommandType.ApplyTorque,
                 uid: this.uid,

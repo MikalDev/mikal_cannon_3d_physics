@@ -73,7 +73,6 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
         this.rapierWorker = null;
         this.initWorker(this.runtime);
         this.commands = [];
-        this.cmdTickCount = 0;
         this.tickCount = 0;
         this.worldReady = false;
         this.scale = 100;
@@ -326,15 +325,12 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
     }
 
     async sendCommandsToWorker() {
-        // Run only once per tick
         if (!this.worldReady || !this.commands || this.commands.length === 0)
             return;
 
-        const tickCount = this.runtime.tickCount;
-        if (tickCount === this.cmdTickCount) return;
-        this.cmdTickCount = tickCount;
-        WorkerRPC.send("runCommands", [this.commands]);
+        const commands = this.commands;
         this.commands = [];
+        WorkerRPC.send("runCommands", [commands]);
     }
 
     async Tick() {

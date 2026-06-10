@@ -137,17 +137,27 @@ function setTimestep(config) {
     }
 }
 
+// Apply a callback to every collider of a body (bodies may have multiple
+// colliders, e.g. compound shapes)
+function applyToBodyColliders(body, callback) {
+    if (!body) return;
+    for (let i = 0; i < body.numColliders(); i++) {
+        const collider = body.collider(i);
+        if (collider) callback(collider);
+    }
+}
+
+// Coerce boolean-ish ACE/script param values (true, 1, "1", "true") to boolean
+function boolParam(value) {
+    return value === true || value === 1 || value === "1" || value === "true";
+}
+
 function setRestitution(config) {
     const uid = config.uid;
     const handle = uidHandle.get(uid);
     if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
-    if (body) {
-        const collider = body.collider(0);  // Get the first collider of the body
-        if (collider) {
-            collider.setRestitution(config.restitution);
-        }
-    }
+    applyToBodyColliders(body, (collider) => collider.setRestitution(config.restitution));
 }
 
 function setFriction(config) {
@@ -155,12 +165,7 @@ function setFriction(config) {
     const handle = uidHandle.get(uid);
     if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
-    if (body) {
-        const collider = body.collider(0);  // Get the first collider of the body
-        if (collider) {
-            collider.setFriction(config.friction);
-        }
-    }
+    applyToBodyColliders(body, (collider) => collider.setFriction(config.friction));
 }
 
 function setEnabledRotations(config) {
@@ -169,7 +174,12 @@ function setEnabledRotations(config) {
     if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
-        body.setEnabledRotations(config.enableX, config.enableY, config.enableZ, true);
+        body.setEnabledRotations(
+            boolParam(config.enableX),
+            boolParam(config.enableY),
+            boolParam(config.enableZ),
+            true
+        );
     }
 }
 
@@ -179,7 +189,12 @@ function setEnabledTranslations(config) {
     if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
-        body.setEnabledTranslations(config.enableX, config.enableY, config.enableZ, true);
+        body.setEnabledTranslations(
+            boolParam(config.enableX),
+            boolParam(config.enableY),
+            boolParam(config.enableZ),
+            true
+        );
     }
 }
 
@@ -673,7 +688,13 @@ function rotate(config) {
 }
 
 function addPostDefineCommands(config) {
-    const uid = config.uid;
+    addPostDefineCommandsForUid(config.uid, config);
+}
+
+// Buffer a command until the body with the given uid is defined. Used both for
+// a command's own body (via bufferIfNoHandle) and for joint commands waiting on
+// the target body.
+function addPostDefineCommandsForUid(uid, config) {
     if (!postDefineCommands.has(uid)) {
         postDefineCommands.set(uid, []);
     }
@@ -968,7 +989,8 @@ function createQuaternionFromEuler(roll, pitch, yaw) {
     const y = cy * cr * sp + sy * sr * cp;
     const z = sy * cr * cp - cy * sr * sp;
 
-    return new RAPIER.Quaternion(w, x, y, z);
+    // RAPIER.Quaternion constructor is (x, y, z, w)
+    return new RAPIER.Quaternion(x, y, z, w);
 }
 
 // Add function to do a shape cast
@@ -1345,13 +1367,8 @@ function setRestitutionCombineRule(config) {
     const handle = uidHandle.get(uid);
     if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
-    if (body) {
-        const collider = body.collider(0);
-        if (collider) {
-            // Combo index maps directly: 0=Average, 1=Min, 2=Multiply, 3=Max
-            collider.setRestitutionCombineRule(config.rule);
-        }
-    }
+    // Combo index maps directly: 0=Average, 1=Min, 2=Multiply, 3=Max
+    applyToBodyColliders(body, (collider) => collider.setRestitutionCombineRule(config.rule));
 }
 
 function setSleepThreshold(config) {
@@ -1589,7 +1606,7 @@ function removeBody(config) {
     const uid = config.uid;
     const handle = uidHandle.get(uid);
     uidHandle.delete(uid);
-    if (!handle) return;
+    if (handle === undefined) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         rapierWorld.removeRigidBody(body);
