@@ -208,6 +208,15 @@ module.exports = {
                 initialValue: false,
             },
         },
+        {
+            type: "text",
+            id: "compound-collider-tag",
+            name: "Compound group tag",
+            desc: "Optional group tag. Revolute joints can combine matching helper objects into this body's compound collider group.",
+            options: {
+                initialValue: "",
+            },
+        },
     ],
     aceCategories: {
         // follows the format id: langName
@@ -2401,10 +2410,17 @@ module.exports = {
                     type: "boolean",
                     initialValue: "true",
                 },
+                {
+                    id: "compoundColliderTag",
+                    name: "Compound group tag",
+                    desc: "Optional group tag. Matching helper objects with this behavior become compound colliders on this body and keep following it visually.",
+                    type: "string",
+                    initialValue: '""',
+                },
             ],
             listName: "Add revolute joint",
             displayText:
-                "Add {my} revolute joint to uid {9} at {0}, {1}, {2} to {3}, {4}, {5} with axis {6}, {7}, {8}, connected collisions {10}",
+                "Add {my} revolute joint to uid {9} at {0}, {1}, {2} to {3}, {4}, {5} with axis {6}, {7}, {8}, connected collisions {10}, compound group tag {11}",
             description: "Add revolute joint between self and target.",
         },
 

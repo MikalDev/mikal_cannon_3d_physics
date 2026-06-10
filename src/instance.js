@@ -39,6 +39,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 this.bodySizeWidth = properties[8];
                 this.bodySizeDepth = properties[9];
                 this.lightOccluder = properties[10] ?? false;
+                this.compoundColliderTag = properties[11] ?? "";
             }
             // In SDK v2, this.instance and this.behavior are not available in constructor
             // They will be initialized in _postCreate()
@@ -182,6 +183,222 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             return { x: x / s, y: y / s, z: z / s };
         }
 
+        // --- Compound collider helpers ---------------------------------
+        // A "compound helper" is an instance whose compound group tag matches
+        // the tag given to AddRevoluteJoint. Its shape is merged into the
+        // joint body's colliders; its own physics body is removed and it
+        // visually follows the joint body from then on.
+
+        _quatToPhysicsObject(q) {
+            const quatObj = quatToObject(q);
+            return {
+                x: quatObj.x ?? 0,
+                y: quatObj.y ?? 0,
+                z: quatObj.z ?? 0,
+                w: quatObj.w ?? 1,
+            };
+        }
+
+        _getWorldQuaternion() {
+            const inst = this.instance;
+            if (this.pluginType === "GltfStaticPlugin") {
+                return this._quatToPhysicsObject(inst.quaternion);
+            }
+            if (this.pluginType === "Model3DPlugin" && typeof inst.getQuaternion === "function") {
+                return this._quatToPhysicsObject(inst.getQuaternion());
+            }
+            const quat = globalThis.glMatrix.quat;
+            const q = quat.create();
+            quat.fromEuler(q, 0, 0, ((inst.angle ?? 0) * 180) / Math.PI);
+            return { x: q[0], y: q[1], z: q[2], w: q[3] };
+        }
+
+        // Physics-body world position using the same per-plugin origin
+        // conventions as _buildBodyCommand/_create3DObjectShape
+        _getBodyWorldPosition() {
+            const inst = this.instance;
+            if (this.pluginType === "GltfStaticPlugin") {
+                return { x: inst.x, y: inst.y, z: inst.z };
+            }
+            if (this.pluginType === "Model3DPlugin") {
+                return {
+                    x: inst.x + (inst.offsetX || 0),
+                    y: inst.y + (inst.offsetY || 0),
+                    z: inst.z + (inst.offsetZ || 0),
+                };
+            }
+            return {
+                x: this.pluginType === "SpritePlugin" ? inst.x - inst.width / 2 : inst.x,
+                y: this.pluginType === "SpritePlugin" ? inst.y - inst.height / 2 : inst.y,
+                z: inst.z + (this.pluginType === "Shape3DPlugin" ? (inst.depth || 0) / 2 : 0),
+            };
+        }
+
+        // Inverse of _getBodyWorldPosition: apply a physics-body world pose to
+        // the C3 instance
+        _setBodyWorldTransform(position, rotation) {
+            const inst = this.instance;
+            const rot = this._quatToPhysicsObject(rotation);
+            if (this.pluginType === "GltfStaticPlugin") {
+                inst.x = position.x;
+                inst.y = position.y;
+                inst.z = position.z;
+                inst.quaternion = rot;
+                return;
+            }
+            if (this.pluginType === "Model3DPlugin") {
+                inst.x = position.x - (inst.offsetX || 0);
+                inst.y = position.y - (inst.offsetY || 0);
+                inst.z = position.z - (inst.offsetZ || 0);
+                if (typeof inst.setQuaternion === "function") {
+                    inst.setQuaternion(rot.x, rot.y, rot.z, rot.w);
+                }
+                return;
+            }
+            if (this.pluginType === "SpritePlugin") {
+                inst.x = position.x + (inst.width || 0) / 2;
+                inst.y = position.y + (inst.height || 0) / 2;
+            } else {
+                inst.x = position.x;
+                inst.y = position.y;
+            }
+            inst.z = position.z - (this.pluginType === "Shape3DPlugin" ? (inst.depth || 0) / 2 : 0);
+            const q = globalThis.glMatrix.quat.fromValues(rot.x, rot.y, rot.z, rot.w);
+            const angles = this._quaternionToEuler(q);
+            inst.angle = angles[2];
+        }
+
+        _worldToLocalPoint(parent, position) {
+            const vec3 = globalThis.glMatrix.vec3;
+            const quat = globalThis.glMatrix.quat;
+            const parentPos = parent._getBodyWorldPosition();
+            const parentRot = parent._getWorldQuaternion();
+            const inv = quat.create();
+            quat.invert(inv, quat.fromValues(parentRot.x, parentRot.y, parentRot.z, parentRot.w));
+            const local = vec3.fromValues(
+                position.x - parentPos.x,
+                position.y - parentPos.y,
+                position.z - parentPos.z
+            );
+            vec3.transformQuat(local, local, inv);
+            return { x: local[0], y: local[1], z: local[2] };
+        }
+
+        _worldToLocalRotation(parent, rotation) {
+            const quat = globalThis.glMatrix.quat;
+            const parentRot = parent._getWorldQuaternion();
+            const inv = quat.create();
+            quat.invert(inv, quat.fromValues(parentRot.x, parentRot.y, parentRot.z, parentRot.w));
+            const local = quat.create();
+            const rot = this._quatToPhysicsObject(rotation);
+            quat.multiply(local, inv, quat.fromValues(rot.x, rot.y, rot.z, rot.w));
+            return { x: local[0], y: local[1], z: local[2], w: local[3] };
+        }
+
+        _attachAsCompoundVisual(parent) {
+            this._compoundParentUid = parent.uid;
+            this._compoundLocalPosition = this._worldToLocalPoint(parent, this._getBodyWorldPosition());
+            this._compoundLocalRotation = this._worldToLocalRotation(parent, this._getWorldQuaternion());
+            this._disableOwnBodyForCompoundHelper();
+        }
+
+        _updateCompoundHelperVisual() {
+            if (!this._compoundParentUid || !this._compoundLocalPosition || !this._compoundLocalRotation) return;
+            const parentBody = globalThis.Mikal_Rapier_Bodies?.get(this._compoundParentUid);
+            if (!parentBody) return;
+            const vec3 = globalThis.glMatrix.vec3;
+            const quat = globalThis.glMatrix.quat;
+            const parentRot = quat.fromValues(
+                parentBody.rotation.x,
+                parentBody.rotation.y,
+                parentBody.rotation.z,
+                parentBody.rotation.w
+            );
+            const offset = vec3.fromValues(
+                this._compoundLocalPosition.x,
+                this._compoundLocalPosition.y,
+                this._compoundLocalPosition.z
+            );
+            vec3.transformQuat(offset, offset, parentRot);
+            const worldPosition = {
+                x: parentBody.translation.x + offset[0],
+                y: parentBody.translation.y + offset[1],
+                z: parentBody.translation.z + offset[2],
+            };
+            const localRot = this._compoundLocalRotation;
+            const worldRot = quat.create();
+            quat.multiply(worldRot, parentRot, quat.fromValues(localRot.x, localRot.y, localRot.z, localRot.w));
+            this._setBodyWorldTransform(worldPosition, {
+                x: worldRot[0],
+                y: worldRot[1],
+                z: worldRot[2],
+                w: worldRot[3],
+            });
+        }
+
+        _getBodyWorldDimensions() {
+            const inst = this.instance;
+            return {
+                width: inst.width || this.bodySizeWidth || 1,
+                height: inst.height || this.bodySizeHeight || 1,
+                depth: inst.depth || this.bodySizeDepth || 1,
+            };
+        }
+
+        // Match against this instance's compound group tag property
+        // (comma-separated values supported)
+        _hasCompoundColliderTag(tag) {
+            const wanted = String(tag ?? "").trim();
+            if (!wanted) return false;
+            return String(this.compoundColliderTag ?? "")
+                .split(",")
+                .map((part) => part.trim())
+                .includes(wanted);
+        }
+
+        _disableOwnBodyForCompoundHelper() {
+            if (this._compoundHelperDisabled) return;
+            this._compoundHelperDisabled = true;
+            if (!this.bodyDefined) return;
+            this.PhysicsType.commands.push({
+                type: this.CommandType.RemoveBody,
+                uid: this.uid,
+            });
+            this.bodyDefined = false;
+        }
+
+        _compoundColliderDescriptor() {
+            const position = this._getBodyWorldPosition();
+            const size = this._getBodyWorldDimensions();
+            const shape = this.pluginType === "Shape3DPlugin"
+                ? mapShapeToNumber(this.instance.shape)
+                : null;
+            return {
+                uid: this.uid,
+                position: this._vecToPhysics(position.x, position.y, position.z),
+                rotation: this._getWorldQuaternion(),
+                width: this._toPhysics(size.width),
+                height: this._toPhysics(size.height),
+                depth: this._toPhysics(size.depth),
+                mass: this.mass,
+                shapeType: this.shapeProperty,
+                shape,
+            };
+        }
+
+        _collectCompoundCollidersByTag(tag) {
+            const wanted = String(tag ?? "").trim();
+            if (!wanted || !this.PhysicsType?.behaviorInstancesByUid) return [];
+            const colliders = [];
+            for (const helper of this.PhysicsType.behaviorInstancesByUid.values()) {
+                if (!helper || helper === this) continue;
+                if (!helper._hasCompoundColliderTag?.(wanted)) continue;
+                colliders.push(helper._compoundColliderDescriptor());
+                helper._attachAsCompoundVisual(this);
+            }
+            return colliders;
+        }
+
         // Normalize bounding box from {x,y,z} or [x,y,z] format
         _normalizeBBox(min, max) {
             const getCoord = (v, i) => v[['x', 'y', 'z'][i]] ?? v[i] ?? 0;
@@ -202,6 +419,12 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             const inst = this.instance;
             const zHeight = inst.depth || 0;
             const bodyDefined = this.bodyDefined;
+            // Compound helpers have no body of their own; they follow their
+            // parent body visually
+            if (this._compoundHelperDisabled) {
+                this._updateCompoundHelperVisual();
+                return;
+            }
 
             // GltfStatic - auto-create body after model loads
             if (this.pluginType === "GltfStaticPlugin" && !bodyDefined) {
@@ -1603,7 +1826,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             axisY,
             axisZ,
             targetUID,
-            contactsEnabled = true
+            contactsEnabled = true,
+            compoundColliderTag = ""
         ) {
             this._recordJointType(targetUID, "revolute");
             const command = {
@@ -1614,6 +1838,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 targetUID,
                 axis: { x: axisX, y: axisY, z: axisZ },
                 contactsEnabled,
+                compoundColliderTag,
+                compoundColliders: this._collectCompoundCollidersByTag(compoundColliderTag),
             };
             this.PhysicsType.commands.push(command);
         }

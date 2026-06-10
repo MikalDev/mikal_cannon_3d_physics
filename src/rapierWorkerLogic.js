@@ -1073,6 +1073,43 @@ function localPointFromWorldPoint(body, point) {
     );
 }
 
+// Build a collider descriptor for one compound collider entry. Entries from
+// Shape3D objects carry a `shape` number (createCollider); other plugins use
+// shapeType (createDefaultCollider).
+function createCompoundColliderDesc(config) {
+    if (config.shape !== null && config.shape !== undefined) {
+        return createCollider(config);
+    }
+    return createDefaultCollider(config);
+}
+
+// Attach helper-object colliders to a body, converting each world pose to the
+// body's local frame. Deduped per tag so re-creating a joint with the same
+// compound tag doesn't stack colliders.
+function addCompoundCollidersToBody(body, colliders, tag = "") {
+    if (!body || !Array.isArray(colliders) || colliders.length === 0) return;
+    const tagKey = String(tag ?? "").trim();
+    if (tagKey) {
+        if (!body._compoundColliderTags) body._compoundColliderTags = new Set();
+        if (body._compoundColliderTags.has(tagKey)) return;
+    }
+    const bodyRotationInverse = quatInverse(body.rotation());
+    for (const compound of colliders) {
+        const colliderDesc = createCompoundColliderDesc(compound);
+        if (!colliderDesc) continue;
+        const localTranslation = localPointFromWorldPoint(body, compound.position);
+        const localRotation = quatMultiply(bodyRotationInverse, compound.rotation ?? { x: 0, y: 0, z: 0, w: 1 });
+        colliderDesc.setTranslation(localTranslation.x, localTranslation.y, localTranslation.z);
+        colliderDesc.setRotation(localRotation);
+        colliderDesc.setContactSkin(defaultContactSkin);
+        colliderDesc.setMass(Number(compound.mass) || 1);
+        const collider = rapierWorld.createCollider(colliderDesc, body);
+        collider.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
+    }
+    if (tagKey) body._compoundColliderTags.add(tagKey);
+    body.recomputeMassPropertiesFromColliders();
+}
+
 // Where the source body's local anchor currently sits, expressed in the
 // target body's local frame — used to preserve the bodies' relative pose at
 // joint creation time
@@ -1704,6 +1741,7 @@ function addRevoluteJoint(config) {
     const bodies = getJointBodies(config);
     if (!bodies) return;
     const { body, targetBody } = bodies;
+    addCompoundCollidersToBody(body, config.compoundColliders, config.compoundColliderTag);
     const params = RAPIER.JointData.revolute(anchor, targetAnchor, axis);
     const joint = rapierWorld.createImpulseJoint(
         params,
