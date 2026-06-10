@@ -3,7 +3,7 @@ const SDK = self.SDK;
 const BEHAVIOR_INFO = {
     ...{
   "id": "mikal_cannon_3d_physics",
-  "version": "2.35.3",
+  "version": "2.36.0",
   "category": "movements",
   "author": "Mikal",
   "addonType": "behavior",
@@ -168,6 +168,18 @@ const BEHAVIOR_INFO = {
             options: {
               ...{
   "initialValue": false
+},
+              
+              
+              
+            },
+          },
+{
+            type: "text",
+            id: "compound-collider-tag",
+            options: {
+              ...{
+  "initialValue": ""
 },
               
               

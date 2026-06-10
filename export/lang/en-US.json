@@ -79,6 +79,10 @@
           "lightOccluder": {
             "name": "Light Occluder",
             "desc": "Mark as a light occluder (collision group bit 15, 0x8000). Raycast with filterGroups 0x8000 to test only against occluders."
+          },
+          "compound-collider-tag": {
+            "name": "Compound group tag",
+            "desc": "Optional group tag. Revolute joints can combine matching helper objects into this body's compound collider group."
           }
         },
         "actions": {
@@ -766,7 +770,7 @@
           },
           "AttachSpring": {
             "list-name": "Attach spring",
-            "display-text": "{my} Attach spring {0} to uid {1}, length {2}, stiffness {3}, damping {4}, {5}, {6}, {7}, {8}, {9}, {10}",
+            "display-text": "{my}: Attach spring {0} to uid {1}, rest length {2}, stiffness {3}, damping {4}, anchors ({5}, {6}, {7}) to ({8}, {9}, {10})",
             "description": "Attach spring from this body to another body.",
             "params": {
               "tag": {
@@ -779,7 +783,7 @@
               },
               "restLength": {
                 "name": "Rest length",
-                "desc": "Rest length."
+                "desc": "Spring length at rest."
               },
               "stiffness": {
                 "name": "Stiffness",
@@ -791,27 +795,27 @@
               },
               "localAnchorX": {
                 "name": "Local anchor x",
-                "desc": "Local anchor x."
+                "desc": "Anchor x on this body, relative to this body's origin."
               },
               "localAnchorY": {
                 "name": "Local anchor y",
-                "desc": "Local anchor y."
+                "desc": "Anchor y on this body, relative to this body's origin."
               },
               "localAnchorZ": {
                 "name": "Local anchor z",
-                "desc": "Local anchor z."
+                "desc": "Anchor z on this body, relative to this body's origin."
               },
               "otherLocalAnchorX": {
                 "name": "Other local anchor x",
-                "desc": "Other body local anchor x."
+                "desc": "Anchor x on the target body, relative to the target body's origin."
               },
               "otherLocalAnchorY": {
                 "name": "Other local anchor y",
-                "desc": "Other body local anchor y."
+                "desc": "Anchor y on the target body, relative to the target body's origin."
               },
               "otherLocalAnchorZ": {
                 "name": "Other local anchor z",
-                "desc": "Other body local anchor z."
+                "desc": "Anchor z on the target body, relative to the target body's origin."
               }
             }
           },
@@ -1159,67 +1163,71 @@
           },
           "AddSphericalJoint": {
             "list-name": "Add spherical joint",
-            "display-text": "Add {my} spherical joint to uid {6} at {0}, {1}, {2} to {3}, {4}, {5}",
+            "display-text": "Add {my} spherical joint to uid {6} at {0}, {1}, {2} to {3}, {4}, {5}, preserve relative position {7}",
             "description": "Add spherical joint between self and target.",
             "params": {
               "anchorX": {
-                "name": "Anchor x",
-                "desc": "Anchor x."
+                "name": "Object Anchor Offset X",
+                "desc": "Local X offset from this object's origin."
               },
               "anchorY": {
-                "name": "Anchor y",
-                "desc": "Anchor y."
+                "name": "Object Anchor Offset Y",
+                "desc": "Local Y offset from this object's origin."
               },
               "anchorZ": {
-                "name": "Anchor z",
-                "desc": "Anchor z."
+                "name": "Object Anchor Offset Z",
+                "desc": "Local Z offset from this object's origin."
               },
               "targetAnchorX": {
-                "name": "Target anchor x",
-                "desc": "Target anchor x."
+                "name": "Target Anchor Offset X",
+                "desc": "Local X offset from the target object's origin."
               },
               "targetAnchorY": {
-                "name": "Target anchor y",
-                "desc": "Target anchor y."
+                "name": "Target Anchor Offset Y",
+                "desc": "Local Y offset from the target object's origin."
               },
               "targetAnchorZ": {
-                "name": "Target anchor z",
-                "desc": "Target anchor z."
+                "name": "Target Anchor Offset Z",
+                "desc": "Local Z offset from the target object's origin."
               },
               "targetUID": {
                 "name": "Target UID",
                 "desc": "Target body UID"
+              },
+              "preserveRelativePosition": {
+                "name": "Preserve relative position",
+                "desc": "Keep the current position offset between the two bodies by computing the target anchor at creation time."
               }
             }
           },
           "AddRevoluteJoint": {
             "list-name": "Add revolute joint",
-            "display-text": "Add {my} revolute joint to uid {9} at {0}, {1}, {2} to {3}, {4}, {5} with axis {6}, {7}, {8}",
+            "display-text": "Add {my} revolute joint to uid {9} at {0}, {1}, {2} to {3}, {4}, {5} with axis {6}, {7}, {8}, connected collisions {10}, compound group tag {11}",
             "description": "Add revolute joint between self and target.",
             "params": {
               "anchorX": {
-                "name": "Anchor x",
-                "desc": "Anchor x."
+                "name": "Anchor Offset x",
+                "desc": "Local X offset from this object's origin."
               },
               "anchorY": {
-                "name": "Anchor y",
-                "desc": "Anchor y."
+                "name": "Anchor Offset y",
+                "desc": "Local Y offset from this object's origin."
               },
               "anchorZ": {
-                "name": "Anchor z",
-                "desc": "Anchor z."
+                "name": "Anchor Offset z",
+                "desc": "Local Z offset from this object's origin."
               },
               "targetAnchorX": {
-                "name": "Target anchor x",
-                "desc": "Target anchor x."
+                "name": "Target Anchor Offset x",
+                "desc": "Local X offset from the target object's origin."
               },
               "targetAnchorY": {
-                "name": "Target anchor y",
-                "desc": "Target anchor y."
+                "name": "Target Anchor Offset y",
+                "desc": "Local Y offset from the target object's origin."
               },
               "targetAnchorZ": {
-                "name": "Target anchor z",
-                "desc": "Target anchor z."
+                "name": "Target Anchor Offset z",
+                "desc": "Local Z offset from the target object's origin."
               },
               "axisX": {
                 "name": "Axis x",
@@ -1236,6 +1244,216 @@
               "targetUID": {
                 "name": "Target UID",
                 "desc": "Target body UID"
+              },
+              "contactsEnabled": {
+                "name": "Connected Collisions Enabled",
+                "desc": "Allow the two connected bodies to collide with each other."
+              },
+              "compoundColliderTag": {
+                "name": "Compound group tag",
+                "desc": "Optional group tag. Matching helper objects with this behavior become compound colliders on this body and keep following it visually."
+              }
+            }
+          },
+          "SetRevoluteContactsEnabled": {
+            "list-name": "Set connected-body contacts enabled",
+            "display-text": "{my}: Set connected-body contacts with uid {0} to {1}",
+            "description": "Enable or disable collisions between the two bodies connected by a revolute joint.",
+            "params": {
+              "targetUID": {
+                "name": "Target UID",
+                "desc": "Target body UID of the revolute joint."
+              },
+              "contactsEnabled": {
+                "name": "Connected Collisions Enabled",
+                "desc": "Allow the two connected bodies to collide with each other."
+              }
+            }
+          },
+          "AddFixedJoint": {
+            "list-name": "Add fixed joint",
+            "display-text": "Add {my} fixed joint to uid {6} at {0}, {1}, {2} to {3}, {4}, {5}, connected collisions {7}, preserve relative rotation {8}, preserve relative position {9}",
+            "description": "Add a fixed joint that locks this body to a target body.",
+            "params": {
+              "anchorX": {
+                "name": "Object Anchor Offset X",
+                "desc": "Local X offset from this object's origin."
+              },
+              "anchorY": {
+                "name": "Object Anchor Offset Y",
+                "desc": "Local Y offset from this object's origin."
+              },
+              "anchorZ": {
+                "name": "Object Anchor Offset Z",
+                "desc": "Local Z offset from this object's origin."
+              },
+              "targetAnchorX": {
+                "name": "Target Anchor Offset X",
+                "desc": "Local X offset from the target object's origin."
+              },
+              "targetAnchorY": {
+                "name": "Target Anchor Offset Y",
+                "desc": "Local Y offset from the target object's origin."
+              },
+              "targetAnchorZ": {
+                "name": "Target Anchor Offset Z",
+                "desc": "Local Z offset from the target object's origin."
+              },
+              "targetUID": {
+                "name": "Target UID",
+                "desc": "UID of the other body connected by the joint."
+              },
+              "contactsEnabled": {
+                "name": "Connected Collisions Enabled",
+                "desc": "Allow collisions between the connected bodies."
+              },
+              "preserveRelativeRotation": {
+                "name": "Preserve relative rotation",
+                "desc": "Keep the current rotation offset between the two bodies. Disable to align the target to this body's joint frame."
+              },
+              "preserveRelativePosition": {
+                "name": "Preserve relative position",
+                "desc": "Keep the current position offset between the two bodies. Disable to use the target anchor exactly as entered."
+              }
+            }
+          },
+          "AddPrismaticJoint": {
+            "list-name": "Add prismatic joint",
+            "display-text": "Add {my} prismatic joint to uid {9} at {0}, {1}, {2} to {3}, {4}, {5} with axis {6}, {7}, {8}, connected collisions {10}",
+            "description": "Add a prismatic slider joint between this body and a target body.",
+            "params": {
+              "anchorX": {
+                "name": "Anchor X",
+                "desc": "Local anchor X on this body."
+              },
+              "anchorY": {
+                "name": "Anchor Y",
+                "desc": "Local anchor Y on this body."
+              },
+              "anchorZ": {
+                "name": "Anchor Z",
+                "desc": "Local anchor Z on this body."
+              },
+              "targetAnchorX": {
+                "name": "Target anchor X",
+                "desc": "Local anchor X on the target body."
+              },
+              "targetAnchorY": {
+                "name": "Target anchor Y",
+                "desc": "Local anchor Y on the target body."
+              },
+              "targetAnchorZ": {
+                "name": "Target anchor Z",
+                "desc": "Local anchor Z on the target body."
+              },
+              "axisX": {
+                "name": "Axis X",
+                "desc": "Allowed sliding axis X."
+              },
+              "axisY": {
+                "name": "Axis Y",
+                "desc": "Allowed sliding axis Y."
+              },
+              "axisZ": {
+                "name": "Axis Z",
+                "desc": "Allowed sliding axis Z."
+              },
+              "targetUID": {
+                "name": "Target UID",
+                "desc": "UID of the other body connected by the joint."
+              },
+              "contactsEnabled": {
+                "name": "Connected Collisions Enabled",
+                "desc": "Allow collisions between the connected bodies."
+              }
+            }
+          },
+          "AddRopeJoint": {
+            "list-name": "Add rope joint",
+            "display-text": "Add {my} rope joint length {0} to uid {7} at {1}, {2}, {3} to {4}, {5}, {6}, connected collisions {8}, preserve relative position {9}",
+            "description": "Add a rope joint that prevents two anchors from separating beyond a maximum length.",
+            "params": {
+              "length": {
+                "name": "Length",
+                "desc": "Maximum rope length."
+              },
+              "anchorX": {
+                "name": "Object Anchor Offset X",
+                "desc": "Local X offset from this object's origin."
+              },
+              "anchorY": {
+                "name": "Object Anchor Offset Y",
+                "desc": "Local Y offset from this object's origin."
+              },
+              "anchorZ": {
+                "name": "Object Anchor Offset Z",
+                "desc": "Local Z offset from this object's origin."
+              },
+              "targetAnchorX": {
+                "name": "Target Anchor Offset X",
+                "desc": "Local X offset from the target object's origin."
+              },
+              "targetAnchorY": {
+                "name": "Target Anchor Offset Y",
+                "desc": "Local Y offset from the target object's origin."
+              },
+              "targetAnchorZ": {
+                "name": "Target Anchor Offset Z",
+                "desc": "Local Z offset from the target object's origin."
+              },
+              "targetUID": {
+                "name": "Target UID",
+                "desc": "UID of the other body connected by the joint."
+              },
+              "contactsEnabled": {
+                "name": "Connected Collisions Enabled",
+                "desc": "Allow collisions between the connected bodies."
+              },
+              "preserveRelativePosition": {
+                "name": "Preserve relative position",
+                "desc": "Keep the current anchor distance by using at least the current distance as the rope length at creation time."
+              }
+            }
+          },
+          "SetPrismaticLimits": {
+            "list-name": "Set prismatic limits",
+            "display-text": "{my}: Set prismatic limits to uid {0}, min {1}, max {2}, enabled {3}",
+            "description": "Set linear travel limits on a prismatic joint.",
+            "params": {
+              "targetUID": {
+                "name": "Target UID",
+                "desc": "UID of the other body connected by the joint."
+              },
+              "minDistance": {
+                "name": "Minimum distance",
+                "desc": "Minimum allowed travel along the joint axis."
+              },
+              "maxDistance": {
+                "name": "Maximum distance",
+                "desc": "Maximum allowed travel along the joint axis."
+              },
+              "enabled": {
+                "name": "Enabled",
+                "desc": "Enable or disable the travel limits."
+              }
+            }
+          },
+          "SetPrismaticMotor": {
+            "list-name": "Set prismatic motor",
+            "display-text": "{my}: Set prismatic motor to uid {0}, velocity {1}, force {2}",
+            "description": "Drive a prismatic joint along its axis at a target velocity.",
+            "params": {
+              "targetUID": {
+                "name": "Target UID",
+                "desc": "UID of the other body connected by the joint."
+              },
+              "targetVelocity": {
+                "name": "Target velocity",
+                "desc": "Target linear velocity along the slider axis."
+              },
+              "maxForce": {
+                "name": "Max force",
+                "desc": "Motor force coefficient. Set to 0 to disable."
               }
             }
           },
@@ -1429,6 +1647,126 @@
               "tag": {
                 "name": "Tag",
                 "desc": "Tag used when firing the raycast."
+              }
+            }
+          },
+          "RaycastHasHit": {
+            "translated-name": "RaycastHasHit",
+            "description": "1 if the raycast with the given tag hit something, otherwise 0.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag used when firing the raycast."
+              }
+            }
+          },
+          "RaycastHitUID": {
+            "translated-name": "RaycastHitUID",
+            "description": "UID of the object hit by the raycast, or -1 if it missed.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag used when firing the raycast."
+              }
+            }
+          },
+          "RaycastDistance": {
+            "translated-name": "RaycastDistance",
+            "description": "Distance from the ray origin to the hit point, or 0 if it missed.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag used when firing the raycast."
+              }
+            }
+          },
+          "RaycastHitPointX": {
+            "translated-name": "RaycastHitPointX",
+            "description": "World X coordinate of the raycast hit point, or 0 if it missed.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag used when firing the raycast."
+              }
+            }
+          },
+          "RaycastHitPointY": {
+            "translated-name": "RaycastHitPointY",
+            "description": "World Y coordinate of the raycast hit point, or 0 if it missed.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag used when firing the raycast."
+              }
+            }
+          },
+          "RaycastHitPointZ": {
+            "translated-name": "RaycastHitPointZ",
+            "description": "World Z coordinate of the raycast hit point, or 0 if it missed.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag used when firing the raycast."
+              }
+            }
+          },
+          "RaycastHitNormalX": {
+            "translated-name": "RaycastHitNormalX",
+            "description": "World X component of the raycast hit normal, or 0 if it missed.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag used when firing the raycast."
+              }
+            }
+          },
+          "RaycastHitNormalY": {
+            "translated-name": "RaycastHitNormalY",
+            "description": "World Y component of the raycast hit normal, or 0 if it missed.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag used when firing the raycast."
+              }
+            }
+          },
+          "RaycastHitNormalZ": {
+            "translated-name": "RaycastHitNormalZ",
+            "description": "World Z component of the raycast hit normal, or 0 if it missed.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag used when firing the raycast."
+              }
+            }
+          },
+          "RaycastSequence": {
+            "translated-name": "RaycastSequence",
+            "description": "Sequence number of the latest raycast result for the given tag.",
+            "params": {
+              "tag": {
+                "name": "Tag",
+                "desc": "Tag used when firing the raycast."
+              }
+            }
+          },
+          "JointExists": {
+            "translated-name": "JointExists",
+            "description": "1 if this body has a known joint connected to the given target UID, otherwise 0.",
+            "params": {
+              "targetUID": {
+                "name": "Target UID",
+                "desc": "UID of the other body connected by the joint."
+              }
+            }
+          },
+          "JointType": {
+            "translated-name": "JointType",
+            "description": "Type of the known joint connected to the given target UID, or an empty string.",
+            "params": {
+              "targetUID": {
+                "name": "Target UID",
+                "desc": "UID of the other body connected by the joint."
               }
             }
           },

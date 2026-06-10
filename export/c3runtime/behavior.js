@@ -324,6 +324,36 @@ const BEHAVIOR_INFO = {
             
             "autoScriptInterface": true,
             },
+"SetRevoluteContactsEnabled": {
+            "forward": (inst) => inst._SetRevoluteContactsEnabled,
+            
+            "autoScriptInterface": true,
+            },
+"AddFixedJoint": {
+            "forward": (inst) => inst._AddFixedJoint,
+            
+            "autoScriptInterface": true,
+            },
+"AddPrismaticJoint": {
+            "forward": (inst) => inst._AddPrismaticJoint,
+            
+            "autoScriptInterface": true,
+            },
+"AddRopeJoint": {
+            "forward": (inst) => inst._AddRopeJoint,
+            
+            "autoScriptInterface": true,
+            },
+"SetPrismaticLimits": {
+            "forward": (inst) => inst._SetPrismaticLimits,
+            
+            "autoScriptInterface": true,
+            },
+"SetPrismaticMotor": {
+            "forward": (inst) => inst._SetPrismaticMotor,
+            
+            "autoScriptInterface": true,
+            },
 "SetRevoluteMotor": {
             "forward": (inst) => inst._SetRevoluteMotor,
             
@@ -415,6 +445,66 @@ const BEHAVIOR_INFO = {
           },
 "RaycastResultAsJSON": {
             "forward": (inst) => inst._RaycastResultAsJSON,
+            
+            "autoScriptInterface": true,
+          },
+"RaycastHasHit": {
+            "forward": (inst) => inst._RaycastHasHit,
+            
+            "autoScriptInterface": true,
+          },
+"RaycastHitUID": {
+            "forward": (inst) => inst._RaycastHitUID,
+            
+            "autoScriptInterface": true,
+          },
+"RaycastDistance": {
+            "forward": (inst) => inst._RaycastDistance,
+            
+            "autoScriptInterface": true,
+          },
+"RaycastHitPointX": {
+            "forward": (inst) => inst._RaycastHitPointX,
+            
+            "autoScriptInterface": true,
+          },
+"RaycastHitPointY": {
+            "forward": (inst) => inst._RaycastHitPointY,
+            
+            "autoScriptInterface": true,
+          },
+"RaycastHitPointZ": {
+            "forward": (inst) => inst._RaycastHitPointZ,
+            
+            "autoScriptInterface": true,
+          },
+"RaycastHitNormalX": {
+            "forward": (inst) => inst._RaycastHitNormalX,
+            
+            "autoScriptInterface": true,
+          },
+"RaycastHitNormalY": {
+            "forward": (inst) => inst._RaycastHitNormalY,
+            
+            "autoScriptInterface": true,
+          },
+"RaycastHitNormalZ": {
+            "forward": (inst) => inst._RaycastHitNormalZ,
+            
+            "autoScriptInterface": true,
+          },
+"RaycastSequence": {
+            "forward": (inst) => inst._RaycastSequence,
+            
+            "autoScriptInterface": true,
+          },
+"JointExists": {
+            "forward": (inst) => inst._JointExists,
+            
+            "autoScriptInterface": true,
+          },
+"JointType": {
+            "forward": (inst) => inst._JointType,
             
             "autoScriptInterface": true,
           },
@@ -636,7 +726,6 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
         this.rapierWorker = null;
         this.initWorker(this.runtime);
         this.commands = [];
-        this.cmdTickCount = 0;
         this.tickCount = 0;
         this.worldReady = false;
         this.scale = 100;
@@ -725,12 +814,13 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
         for (const result of castShapeResults) {
             const uid = result.uid;
             const tag = result.tag;
-            const origin = result.origin;
-            const direction = result.direction;
+            const origin = result.origin ?? [0, 0, 0];
+            const direction = result.direction ?? [0, 0, 0];
             // SDK v2: Use registered behavior instance map
             const behInst = this.getBehaviorInstanceByUid(uid);
             if (!behInst) continue;
             if (result.hasHit) {
+                const timeOfImpact = Number(result.timeOfImpact ?? result.time_of_impact ?? 0);
                 const hitPointWorld = vec3.create();
                 vec3.add(
                     hitPointWorld,
@@ -739,45 +829,61 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                         direction,
                         direction,
                         vec3.fromValues(
-                            result.time_of_impact,
-                            result.time_of_impact,
-                            result.time_of_impact
+                            timeOfImpact,
+                            timeOfImpact,
+                            timeOfImpact
                         )
                     )
                 );
+                const hitPointX = Number.isFinite(hitPointWorld[0]) ? hitPointWorld[0] * scale : 0;
+                const hitPointY = Number.isFinite(hitPointWorld[1]) ? hitPointWorld[1] * scale : 0;
+                const hitPointZ = Number.isFinite(hitPointWorld[2]) ? hitPointWorld[2] * scale : 0;
+                const distance = Number.isFinite(timeOfImpact) ? timeOfImpact * scale : 0;
                 behInst.castShapeResults.set(tag, {
                     hasHit: true,
-                    hitPointWorld: [
-                        hitPointWorld[0] * scale,
-                        hitPointWorld[1] * scale,
-                        hitPointWorld[2] * scale,
-                    ],
+                    hitPointWorld: [hitPointX, hitPointY, hitPointZ],
+                    hitPointX,
+                    hitPointY,
+                    hitPointZ,
+                    hitPointWorldX: hitPointX,
+                    hitPointWorldY: hitPointY,
+                    hitPointWorldZ: hitPointZ,
                     witness1: [
-                        result.witness1.x,
-                        result.witness1.y,
-                        result.witness1.z,
+                        result.witness1.x * scale,
+                        result.witness1.y * scale,
+                        result.witness1.z * scale,
                     ],
+                    witness1X: result.witness1.x * scale,
+                    witness1Y: result.witness1.y * scale,
+                    witness1Z: result.witness1.z * scale,
                     witness2: [
-                        result.witness2.x,
-                        result.witness2.y,
-                        result.witness2.z,
+                        result.witness2.x * scale,
+                        result.witness2.y * scale,
+                        result.witness2.z * scale,
                     ],
+                    witness2X: result.witness2.x * scale,
+                    witness2Y: result.witness2.y * scale,
+                    witness2Z: result.witness2.z * scale,
                     normal1: [
                         result.normal1.x,
                         result.normal1.y,
                         result.normal1.z,
                     ],
+                    normal1X: result.normal1.x,
+                    normal1Y: result.normal1.y,
+                    normal1Z: result.normal1.z,
                     normal2: [
                         result.normal2.x,
                         result.normal2.y,
                         result.normal2.z,
                     ],
-                    distance:
-                        vec3.distance(origin, [
-                            hitPointWorld[0],
-                            hitPointWorld[1],
-                            hitPointWorld[2],
-                        ]) * scale,
+                    normal2X: result.normal2.x,
+                    normal2Y: result.normal2.y,
+                    normal2Z: result.normal2.z,
+                    distance,
+                    timeOfImpact,
+                    maxToI: result.maxToI,
+                    sequence: result.sequence,
                     hitUID: result.hitUID,
                     tag,
                 });
@@ -785,23 +891,46 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                 behInst.castShapeResults.set(tag, {
                     hasHit: false,
                     hitPointWorld: [0, 0, 0],
+                    hitPointX: 0,
+                    hitPointY: 0,
+                    hitPointZ: 0,
+                    hitPointWorldX: 0,
+                    hitPointWorldY: 0,
+                    hitPointWorldZ: 0,
                     witness1: [0, 0, 0],
+                    witness1X: 0,
+                    witness1Y: 0,
+                    witness1Z: 0,
                     witness2: [0, 0, 0],
+                    witness2X: 0,
+                    witness2Y: 0,
+                    witness2Z: 0,
                     normal1: [0, 0, 0],
+                    normal1X: 0,
+                    normal1Y: 0,
+                    normal1Z: 0,
                     normal2: [0, 0, 0],
+                    normal2X: 0,
+                    normal2Y: 0,
+                    normal2Z: 0,
                     distance: 0,
+                    timeOfImpact: -1,
+                    maxToI: result.maxToI ?? 0,
+                    sequence: result.sequence,
                     hitUID: -1,
                     tag,
                 });
             }
 
-            behInst._currentCastShapeTag = tag;
-            behInst._trigger(
-                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyCastShapeResult
-            );
-            behInst._trigger(
-                C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCastShapeResult
-            );
+            if (!result.noTrigger) {
+                behInst._currentCastShapeTag = tag;
+                behInst._trigger(
+                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnAnyCastShapeResult
+                );
+                behInst._trigger(
+                    C3.Behaviors.mikal_cannon_3d_physics.Cnds.OnCastShapeResult
+                );
+            }
         }
     }
 
@@ -842,25 +971,39 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                         )
                     )
                 );
+                const hitPointX = hitPointWorld[0] * scale;
+                const hitPointY = hitPointWorld[1] * scale;
+                const hitPointZ = hitPointWorld[2] * scale;
                 behInst.raycastResults.set(tag, {
                     hasHit: true,
                     hitFaceIndex: 0,
                     hitPointWorld: [
-                        hitPointWorld[0] * scale,
-                        hitPointWorld[1] * scale,
-                        hitPointWorld[2] * scale,
+                        hitPointX,
+                        hitPointY,
+                        hitPointZ,
                     ],
+                    hitPointX,
+                    hitPointY,
+                    hitPointZ,
+                    hitPointWorldX: hitPointX,
+                    hitPointWorldY: hitPointY,
+                    hitPointWorldZ: hitPointZ,
                     hitNormalWorld: [
                         result.normal.x,
                         result.normal.y,
                         result.normal.z,
                     ],
-                    distance:
-                        vec3.distance(origin, [
-                            hitPointWorld[0],
-                            hitPointWorld[1],
-                            hitPointWorld[2],
-                        ]) * scale,
+                    hitNormalX: result.normal.x,
+                    hitNormalY: result.normal.y,
+                    hitNormalZ: result.normal.z,
+                    hitNormalWorldX: result.normal.x,
+                    hitNormalWorldY: result.normal.y,
+                    hitNormalWorldZ: result.normal.z,
+                    // dir is normalized, so timeOfImpact is the physics-unit distance
+                    distance: result.timeOfImpact * scale,
+                    timeOfImpact: result.timeOfImpact,
+                    maxDistance: result.maxToI * scale,
+                    sequence: result.sequence,
                     hitUID: result.hitUID,
                     tag,
                 });
@@ -869,8 +1012,23 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
                     hasHit: false,
                     hitFaceIndex: -1,
                     hitPointWorld: [0, 0, 0],
+                    hitPointX: 0,
+                    hitPointY: 0,
+                    hitPointZ: 0,
+                    hitPointWorldX: 0,
+                    hitPointWorldY: 0,
+                    hitPointWorldZ: 0,
                     hitNormalWorld: [0, 0, 0],
+                    hitNormalX: 0,
+                    hitNormalY: 0,
+                    hitNormalZ: 0,
+                    hitNormalWorldX: 0,
+                    hitNormalWorldY: 0,
+                    hitNormalWorldZ: 0,
                     distance: 0,
+                    timeOfImpact: -1,
+                    maxDistance: (result.maxToI ?? 0) * scale,
+                    sequence: result.sequence,
                     hitUID: -1,
                     tag,
                 });
@@ -889,15 +1047,12 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
     }
 
     async sendCommandsToWorker() {
-        // Run only once per tick
         if (!this.worldReady || !this.commands || this.commands.length === 0)
             return;
 
-        const tickCount = this.runtime.tickCount;
-        if (tickCount === this.cmdTickCount) return;
-        this.cmdTickCount = tickCount;
-        WorkerRPC.send("runCommands", [this.commands]);
+        const commands = this.commands;
         this.commands = [];
+        WorkerRPC.send("runCommands", [commands]);
     }
 
     async Tick() {
@@ -1137,6 +1292,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 this.bodySizeWidth = properties[8];
                 this.bodySizeDepth = properties[9];
                 this.lightOccluder = properties[10] ?? false;
+                this.compoundColliderTag = properties[11] ?? "";
             }
             // In SDK v2, this.instance and this.behavior are not available in constructor
             // They will be initialized in _postCreate()
@@ -1145,6 +1301,9 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             this.bodyDefined = false;
             this.raycastResults = new Map();
             this.castShapeResults = new Map();
+            // Joint types recorded at command-push time, keyed by target UID.
+            // Optimistic: reflects requested joints, not worker-confirmed state.
+            this._knownJointTypes = new Map();
             this._currentRaycastTag = null;
             this._currentCastShapeTag = null;
             // Collision group tracking (16-bit each, mirrors worker state).
@@ -1212,6 +1371,13 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 SetSolverIterations: 54,
                 SetRestitutionCombineRule: 55,
                 SetSleepThreshold: 56,
+                SetRevoluteContactsEnabled: 57,
+                AttachSpring: 58,
+                AddFixedJoint: 59,
+                AddPrismaticJoint: 60,
+                SetPrismaticLimits: 61,
+                SetPrismaticMotor: 62,
+                AddRopeJoint: 63,
             };
             this._setTicking(true);
             this._setTicking2(true);
@@ -1222,6 +1388,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             super._release();
             this.raycastResults.clear();
             this.castShapeResults.clear();
+            this._knownJointTypes.clear();
             // SDK v2: Unregister from behavior instance map
             if (this.PhysicsType) {
                 this.PhysicsType.unregisterBehaviorInstance(this.uid);
@@ -1269,6 +1436,222 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             return { x: x / s, y: y / s, z: z / s };
         }
 
+        // --- Compound collider helpers ---------------------------------
+        // A "compound helper" is an instance whose compound group tag matches
+        // the tag given to AddRevoluteJoint. Its shape is merged into the
+        // joint body's colliders; its own physics body is removed and it
+        // visually follows the joint body from then on.
+
+        _quatToPhysicsObject(q) {
+            const quatObj = quatToObject(q);
+            return {
+                x: quatObj.x ?? 0,
+                y: quatObj.y ?? 0,
+                z: quatObj.z ?? 0,
+                w: quatObj.w ?? 1,
+            };
+        }
+
+        _getWorldQuaternion() {
+            const inst = this.instance;
+            if (this.pluginType === "GltfStaticPlugin") {
+                return this._quatToPhysicsObject(inst.quaternion);
+            }
+            if (this.pluginType === "Model3DPlugin" && typeof inst.getQuaternion === "function") {
+                return this._quatToPhysicsObject(inst.getQuaternion());
+            }
+            const quat = globalThis.glMatrix.quat;
+            const q = quat.create();
+            quat.fromEuler(q, 0, 0, ((inst.angle ?? 0) * 180) / Math.PI);
+            return { x: q[0], y: q[1], z: q[2], w: q[3] };
+        }
+
+        // Physics-body world position using the same per-plugin origin
+        // conventions as _buildBodyCommand/_create3DObjectShape
+        _getBodyWorldPosition() {
+            const inst = this.instance;
+            if (this.pluginType === "GltfStaticPlugin") {
+                return { x: inst.x, y: inst.y, z: inst.z };
+            }
+            if (this.pluginType === "Model3DPlugin") {
+                return {
+                    x: inst.x + (inst.offsetX || 0),
+                    y: inst.y + (inst.offsetY || 0),
+                    z: inst.z + (inst.offsetZ || 0),
+                };
+            }
+            return {
+                x: this.pluginType === "SpritePlugin" ? inst.x - inst.width / 2 : inst.x,
+                y: this.pluginType === "SpritePlugin" ? inst.y - inst.height / 2 : inst.y,
+                z: inst.z + (this.pluginType === "Shape3DPlugin" ? (inst.depth || 0) / 2 : 0),
+            };
+        }
+
+        // Inverse of _getBodyWorldPosition: apply a physics-body world pose to
+        // the C3 instance
+        _setBodyWorldTransform(position, rotation) {
+            const inst = this.instance;
+            const rot = this._quatToPhysicsObject(rotation);
+            if (this.pluginType === "GltfStaticPlugin") {
+                inst.x = position.x;
+                inst.y = position.y;
+                inst.z = position.z;
+                inst.quaternion = rot;
+                return;
+            }
+            if (this.pluginType === "Model3DPlugin") {
+                inst.x = position.x - (inst.offsetX || 0);
+                inst.y = position.y - (inst.offsetY || 0);
+                inst.z = position.z - (inst.offsetZ || 0);
+                if (typeof inst.setQuaternion === "function") {
+                    inst.setQuaternion(rot.x, rot.y, rot.z, rot.w);
+                }
+                return;
+            }
+            if (this.pluginType === "SpritePlugin") {
+                inst.x = position.x + (inst.width || 0) / 2;
+                inst.y = position.y + (inst.height || 0) / 2;
+            } else {
+                inst.x = position.x;
+                inst.y = position.y;
+            }
+            inst.z = position.z - (this.pluginType === "Shape3DPlugin" ? (inst.depth || 0) / 2 : 0);
+            const q = globalThis.glMatrix.quat.fromValues(rot.x, rot.y, rot.z, rot.w);
+            const angles = this._quaternionToEuler(q);
+            inst.angle = angles[2];
+        }
+
+        _worldToLocalPoint(parent, position) {
+            const vec3 = globalThis.glMatrix.vec3;
+            const quat = globalThis.glMatrix.quat;
+            const parentPos = parent._getBodyWorldPosition();
+            const parentRot = parent._getWorldQuaternion();
+            const inv = quat.create();
+            quat.invert(inv, quat.fromValues(parentRot.x, parentRot.y, parentRot.z, parentRot.w));
+            const local = vec3.fromValues(
+                position.x - parentPos.x,
+                position.y - parentPos.y,
+                position.z - parentPos.z
+            );
+            vec3.transformQuat(local, local, inv);
+            return { x: local[0], y: local[1], z: local[2] };
+        }
+
+        _worldToLocalRotation(parent, rotation) {
+            const quat = globalThis.glMatrix.quat;
+            const parentRot = parent._getWorldQuaternion();
+            const inv = quat.create();
+            quat.invert(inv, quat.fromValues(parentRot.x, parentRot.y, parentRot.z, parentRot.w));
+            const local = quat.create();
+            const rot = this._quatToPhysicsObject(rotation);
+            quat.multiply(local, inv, quat.fromValues(rot.x, rot.y, rot.z, rot.w));
+            return { x: local[0], y: local[1], z: local[2], w: local[3] };
+        }
+
+        _attachAsCompoundVisual(parent) {
+            this._compoundParentUid = parent.uid;
+            this._compoundLocalPosition = this._worldToLocalPoint(parent, this._getBodyWorldPosition());
+            this._compoundLocalRotation = this._worldToLocalRotation(parent, this._getWorldQuaternion());
+            this._disableOwnBodyForCompoundHelper();
+        }
+
+        _updateCompoundHelperVisual() {
+            if (!this._compoundParentUid || !this._compoundLocalPosition || !this._compoundLocalRotation) return;
+            const parentBody = globalThis.Mikal_Rapier_Bodies?.get(this._compoundParentUid);
+            if (!parentBody) return;
+            const vec3 = globalThis.glMatrix.vec3;
+            const quat = globalThis.glMatrix.quat;
+            const parentRot = quat.fromValues(
+                parentBody.rotation.x,
+                parentBody.rotation.y,
+                parentBody.rotation.z,
+                parentBody.rotation.w
+            );
+            const offset = vec3.fromValues(
+                this._compoundLocalPosition.x,
+                this._compoundLocalPosition.y,
+                this._compoundLocalPosition.z
+            );
+            vec3.transformQuat(offset, offset, parentRot);
+            const worldPosition = {
+                x: parentBody.translation.x + offset[0],
+                y: parentBody.translation.y + offset[1],
+                z: parentBody.translation.z + offset[2],
+            };
+            const localRot = this._compoundLocalRotation;
+            const worldRot = quat.create();
+            quat.multiply(worldRot, parentRot, quat.fromValues(localRot.x, localRot.y, localRot.z, localRot.w));
+            this._setBodyWorldTransform(worldPosition, {
+                x: worldRot[0],
+                y: worldRot[1],
+                z: worldRot[2],
+                w: worldRot[3],
+            });
+        }
+
+        _getBodyWorldDimensions() {
+            const inst = this.instance;
+            return {
+                width: inst.width || this.bodySizeWidth || 1,
+                height: inst.height || this.bodySizeHeight || 1,
+                depth: inst.depth || this.bodySizeDepth || 1,
+            };
+        }
+
+        // Match against this instance's compound group tag property
+        // (comma-separated values supported)
+        _hasCompoundColliderTag(tag) {
+            const wanted = String(tag ?? "").trim();
+            if (!wanted) return false;
+            return String(this.compoundColliderTag ?? "")
+                .split(",")
+                .map((part) => part.trim())
+                .includes(wanted);
+        }
+
+        _disableOwnBodyForCompoundHelper() {
+            if (this._compoundHelperDisabled) return;
+            this._compoundHelperDisabled = true;
+            if (!this.bodyDefined) return;
+            this.PhysicsType.commands.push({
+                type: this.CommandType.RemoveBody,
+                uid: this.uid,
+            });
+            this.bodyDefined = false;
+        }
+
+        _compoundColliderDescriptor() {
+            const position = this._getBodyWorldPosition();
+            const size = this._getBodyWorldDimensions();
+            const shape = this.pluginType === "Shape3DPlugin"
+                ? mapShapeToNumber(this.instance.shape)
+                : null;
+            return {
+                uid: this.uid,
+                position: this._vecToPhysics(position.x, position.y, position.z),
+                rotation: this._getWorldQuaternion(),
+                width: this._toPhysics(size.width),
+                height: this._toPhysics(size.height),
+                depth: this._toPhysics(size.depth),
+                mass: this.mass,
+                shapeType: this.shapeProperty,
+                shape,
+            };
+        }
+
+        _collectCompoundCollidersByTag(tag) {
+            const wanted = String(tag ?? "").trim();
+            if (!wanted || !this.PhysicsType?.behaviorInstancesByUid) return [];
+            const colliders = [];
+            for (const helper of this.PhysicsType.behaviorInstancesByUid.values()) {
+                if (!helper || helper === this) continue;
+                if (!helper._hasCompoundColliderTag?.(wanted)) continue;
+                colliders.push(helper._compoundColliderDescriptor());
+                helper._attachAsCompoundVisual(this);
+            }
+            return colliders;
+        }
+
         // Normalize bounding box from {x,y,z} or [x,y,z] format
         _normalizeBBox(min, max) {
             const getCoord = (v, i) => v[['x', 'y', 'z'][i]] ?? v[i] ?? 0;
@@ -1289,6 +1672,12 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             const inst = this.instance;
             const zHeight = inst.depth || 0;
             const bodyDefined = this.bodyDefined;
+            // Compound helpers have no body of their own; they follow their
+            // parent body visually
+            if (this._compoundHelperDisabled) {
+                this._updateCompoundHelperVisual();
+                return;
+            }
 
             // GltfStatic - auto-create body after model loads
             if (this.pluginType === "GltfStaticPlugin" && !bodyDefined) {
@@ -1830,6 +2219,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 filterGroups,
                 solid,
                 uid: this.uid,
+                excludeUID: this.uid,
                 tag,
             };
             this.PhysicsType.commands.push(command);
@@ -1841,7 +2231,78 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
         _RaycastResultAsJSON(tag) {
             const result = this.raycastResults.get(tag);
-            return JSON.stringify(result ?? { hasHit: false, hitUID: -1 });
+            return JSON.stringify(result ?? this._emptyRaycastResult(tag));
+        }
+
+        _emptyRaycastResult(tag = "") {
+            return {
+                hasHit: false,
+                hitFaceIndex: -1,
+                hitPointWorld: [0, 0, 0],
+                hitPointX: 0,
+                hitPointY: 0,
+                hitPointZ: 0,
+                hitPointWorldX: 0,
+                hitPointWorldY: 0,
+                hitPointWorldZ: 0,
+                hitNormalWorld: [0, 0, 0],
+                hitNormalX: 0,
+                hitNormalY: 0,
+                hitNormalZ: 0,
+                hitNormalWorldX: 0,
+                hitNormalWorldY: 0,
+                hitNormalWorldZ: 0,
+                distance: 0,
+                timeOfImpact: -1,
+                maxDistance: 0,
+                sequence: 0,
+                hitUID: -1,
+                tag,
+            };
+        }
+
+        _RaycastResult(tag) {
+            return this.raycastResults.get(tag) ?? this._emptyRaycastResult(tag);
+        }
+
+        _RaycastHasHit(tag) {
+            return this._RaycastResult(tag).hasHit ? 1 : 0;
+        }
+
+        _RaycastHitUID(tag) {
+            return this._RaycastResult(tag).hitUID ?? -1;
+        }
+
+        _RaycastDistance(tag) {
+            return this._RaycastResult(tag).distance ?? 0;
+        }
+
+        _RaycastHitPointX(tag) {
+            return this._RaycastResult(tag).hitPointX ?? 0;
+        }
+
+        _RaycastHitPointY(tag) {
+            return this._RaycastResult(tag).hitPointY ?? 0;
+        }
+
+        _RaycastHitPointZ(tag) {
+            return this._RaycastResult(tag).hitPointZ ?? 0;
+        }
+
+        _RaycastHitNormalX(tag) {
+            return this._RaycastResult(tag).hitNormalX ?? 0;
+        }
+
+        _RaycastHitNormalY(tag) {
+            return this._RaycastResult(tag).hitNormalY ?? 0;
+        }
+
+        _RaycastHitNormalZ(tag) {
+            return this._RaycastResult(tag).hitNormalZ ?? 0;
+        }
+
+        _RaycastSequence(tag) {
+            return this._RaycastResult(tag).sequence ?? 0;
         }
 
         // Scripting-only: raycast from this instance's center to toX,toY,toZ.
@@ -1956,7 +2417,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetEnabledRotations(x, y, z) {
-            if (!this.bodyDefined) return;
             const command = {
                 uid: this.uid,
                 type: this.CommandType.SetEnabledRotations,
@@ -1968,7 +2428,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetEnabledTranslations(x, y, z) {
-            if (!this.bodyDefined) return;
             const command = {
                 uid: this.uid,
                 type: this.CommandType.SetEnabledTranslations,
@@ -1980,7 +2439,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetGravityScale(scale) {
-            if (!this.bodyDefined) return;
             const command = {
                 uid: this.uid,
                 type: this.CommandType.SetGravityScale,
@@ -1990,7 +2448,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _ApplyAngularImpulse(x, y, z) {
-            if (!this.bodyDefined) return;
             const command = {
                 uid: this.uid,
                 type: this.CommandType.ApplyAngularImpulse,
@@ -2002,12 +2459,10 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _WakeUp() {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({ uid: this.uid, type: this.CommandType.WakeUp });
         }
 
         _Sleep() {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({ uid: this.uid, type: this.CommandType.Sleep });
         }
 
@@ -2083,7 +2538,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _TranslateCharacterController(tag, x, y, z) {
-            if (!this.bodyDefined) return;
             const command = {
                 type: this.CommandType.TranslateCharacterController,
                 uid: this.uid,
@@ -2187,7 +2641,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetRestitutionCombineRule(rule) {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({
                 type: this.CommandType.SetRestitutionCombineRule,
                 uid: this.uid,
@@ -2196,7 +2649,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetSleepThreshold(threshold) {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({
                 type: this.CommandType.SetSleepThreshold,
                 uid: this.uid,
@@ -2277,7 +2729,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetAngularVelocity(x, y, z) {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({
                 type: this.CommandType.SetAngularVelocity,
                 uid: this.uid,
@@ -2286,7 +2737,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetBodyType(bodyType) {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({
                 type: this.CommandType.SetBodyType,
                 uid: this.uid,
@@ -2295,7 +2745,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetNextKinematicTranslation(x, y, z) {
-            if (!this.bodyDefined) return;
             this.PhysicsType.commands.push({
                 type: this.CommandType.SetNextKinematicTranslation,
                 uid: this.uid,
@@ -2304,7 +2753,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetNextKinematicRotation(x, y, z) {
-            if (!this.bodyDefined) return;
             const quat = globalThis.glMatrix.quat;
             const rotation = quat.create();
             quat.fromEuler(rotation, x, y, z);
@@ -2421,7 +2869,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _ApplyImpulse(x, y, z) {
-            if (!this.bodyDefined) return;
             const impulse = { x: x, y: y, z: z };
             const command = {
                 type: this.CommandType.ApplyImpulse,
@@ -2432,7 +2879,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _ApplyImpulseAtPoint(x, y, z, pointX, pointY, pointZ) {
-            if (!this.bodyDefined) return;
             const impulse = { x: x, y: y, z: z };
             const point = { x: pointX, y: pointY, z: pointZ };
             const command = {
@@ -2445,7 +2891,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetMass(mass) {
-            if (!this.bodyDefined) return;
             const command = {
                 type: this.CommandType.SetMass,
                 uid: this.uid,
@@ -2467,7 +2912,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetCollisionGroups(membership, filter) {
-            if (!this.bodyDefined) return;
             this._collisionMembership = parseInt(membership, 16);
             this._collisionFilter = parseInt(filter, 16);
             this.PhysicsType.commands.push({
@@ -2479,8 +2923,8 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _SetLightOccluder(enable) {
-            if (!this.bodyDefined) return;
             const LIGHT_OCCLUDER_BIT = 0x8000; // bit 15, reserved for light occlusion
+            enable = enable === true || enable === 1 || enable === "1" || enable === "true";
             if (enable) {
                 this._collisionMembership |= LIGHT_OCCLUDER_BIT;
             } else {
@@ -2496,7 +2940,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _ApplyForce(x, y, z, pointX, pointY, pointZ) {
-            if (!this.bodyDefined) return;
             const force = { x: x, y: y, z: z };
             const point = { x: pointX, y: pointY, z: pointZ };
             const command = {
@@ -2509,7 +2952,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _ApplyTorque(x, y, z) {
-            if (!this.bodyDefined) return;
             const command = {
                 type: this.CommandType.ApplyTorque,
                 uid: this.uid,
@@ -2535,7 +2977,18 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             otherY,
             otherZ
         ) {
-            console.warn("AttachSpring is deprecated, not implemented");
+            this._recordJointType(otherUID, "spring");
+            this.PhysicsType.commands.push({
+                type: this.CommandType.AttachSpring,
+                uid: this.uid,
+                tag,
+                targetUID: otherUID,
+                restLength: this._toPhysics(restLength),
+                stiffness,
+                damping,
+                anchor: this._vecToPhysics(x, y, z),
+                targetAnchor: this._vecToPhysics(otherX, otherY, otherZ),
+            });
         }
 
         _VelocityX() {
@@ -2575,16 +3028,44 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             targetAnchorX,
             targetAnchorY,
             targetAnchorZ,
-            targetUID
+            targetUID,
+            preserveRelativePosition = true
         ) {
+            this._recordJointType(targetUID, "spherical");
             const command = {
                 type: this.CommandType.AddSphericalJoint,
                 uid: this.uid,
                 anchor: this._vecToPhysics(anchorX, anchorY, anchorZ),
                 targetAnchor: this._vecToPhysics(targetAnchorX, targetAnchorY, targetAnchorZ),
                 targetUID,
+                preserveRelativePosition,
             };
             this.PhysicsType.commands.push(command);
+        }
+
+        _AddFixedJoint(
+            anchorX,
+            anchorY,
+            anchorZ,
+            targetAnchorX,
+            targetAnchorY,
+            targetAnchorZ,
+            targetUID,
+            contactsEnabled = true,
+            preserveRelativeRotation = true,
+            preserveRelativePosition = true
+        ) {
+            this._recordJointType(targetUID, "fixed");
+            this.PhysicsType.commands.push({
+                type: this.CommandType.AddFixedJoint,
+                uid: this.uid,
+                anchor: this._vecToPhysics(anchorX, anchorY, anchorZ),
+                targetAnchor: this._vecToPhysics(targetAnchorX, targetAnchorY, targetAnchorZ),
+                targetUID,
+                contactsEnabled,
+                preserveRelativeRotation,
+                preserveRelativePosition,
+            });
         }
 
         _AddRevoluteJoint(
@@ -2597,8 +3078,11 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             axisX,
             axisY,
             axisZ,
-            targetUID
+            targetUID,
+            contactsEnabled = true,
+            compoundColliderTag = ""
         ) {
+            this._recordJointType(targetUID, "revolute");
             const command = {
                 type: this.CommandType.AddRevoluteJoint,
                 uid: this.uid,
@@ -2606,8 +3090,61 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 targetAnchor: this._vecToPhysics(targetAnchorX, targetAnchorY, targetAnchorZ),
                 targetUID,
                 axis: { x: axisX, y: axisY, z: axisZ },
+                contactsEnabled,
+                compoundColliderTag,
+                compoundColliders: this._collectCompoundCollidersByTag(compoundColliderTag),
             };
             this.PhysicsType.commands.push(command);
+        }
+
+        _AddPrismaticJoint(
+            anchorX,
+            anchorY,
+            anchorZ,
+            targetAnchorX,
+            targetAnchorY,
+            targetAnchorZ,
+            axisX,
+            axisY,
+            axisZ,
+            targetUID,
+            contactsEnabled = true
+        ) {
+            this._recordJointType(targetUID, "prismatic");
+            this.PhysicsType.commands.push({
+                type: this.CommandType.AddPrismaticJoint,
+                uid: this.uid,
+                anchor: this._vecToPhysics(anchorX, anchorY, anchorZ),
+                targetAnchor: this._vecToPhysics(targetAnchorX, targetAnchorY, targetAnchorZ),
+                targetUID,
+                axis: { x: axisX, y: axisY, z: axisZ },
+                contactsEnabled,
+            });
+        }
+
+        _AddRopeJoint(
+            length,
+            anchorX,
+            anchorY,
+            anchorZ,
+            targetAnchorX,
+            targetAnchorY,
+            targetAnchorZ,
+            targetUID,
+            contactsEnabled = true,
+            preserveRelativePosition = true
+        ) {
+            this._recordJointType(targetUID, "rope");
+            this.PhysicsType.commands.push({
+                type: this.CommandType.AddRopeJoint,
+                uid: this.uid,
+                length: this._toPhysics(length),
+                anchor: this._vecToPhysics(anchorX, anchorY, anchorZ),
+                targetAnchor: this._vecToPhysics(targetAnchorX, targetAnchorY, targetAnchorZ),
+                targetUID,
+                contactsEnabled,
+                preserveRelativePosition,
+            });
         }
 
         _SetRevoluteMotor(targetUID, targetVelocity, maxForce) {
@@ -2620,8 +3157,20 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             });
         }
 
+        _SetPrismaticMotor(targetUID, targetVelocity, maxForce) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetPrismaticMotor,
+                uid: this.uid,
+                targetUID,
+                targetVelocity: this._toPhysics(targetVelocity),
+                maxForce,
+            });
+        }
+
         _SetRevoluteLimits(targetUID, minAngle, maxAngle, enabledStr) {
-            const enabled = enabledStr === "yes";
+            // Combo params arrive as the item index (0 = "Enable"); accept
+            // boolean/string forms for scripting callers
+            const enabled = enabledStr === true || enabledStr === "yes" || enabledStr === 0 || enabledStr === "0";
             this.PhysicsType.commands.push({
                 type: this.CommandType.SetRevoluteLimits,
                 uid: this.uid,
@@ -2630,6 +3179,40 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 maxAngle: maxAngle * Math.PI / 180,
                 enabled,
             });
+        }
+
+        _SetPrismaticLimits(targetUID, minDistance, maxDistance, enabled) {
+            // Boolean param (not a combo): accept boolean-ish truthy forms
+            enabled = enabled === true || enabled === 1 || enabled === "1" || enabled === "true";
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetPrismaticLimits,
+                uid: this.uid,
+                targetUID,
+                minDistance: this._toPhysics(minDistance),
+                maxDistance: this._toPhysics(maxDistance),
+                enabled,
+            });
+        }
+
+        _SetRevoluteContactsEnabled(targetUID, contactsEnabled) {
+            this.PhysicsType.commands.push({
+                type: this.CommandType.SetRevoluteContactsEnabled,
+                uid: this.uid,
+                targetUID,
+                contactsEnabled,
+            });
+        }
+
+        _recordJointType(targetUID, type) {
+            this._knownJointTypes.set(Number(targetUID), type);
+        }
+
+        _JointExists(targetUID) {
+            return this._knownJointTypes.has(Number(targetUID)) ? 1 : 0;
+        }
+
+        _JointType(targetUID) {
+            return this._knownJointTypes.get(Number(targetUID)) ?? "";
         }
 
         _SetPositionOffset(x, y, z) {
@@ -2678,7 +3261,17 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             // Calculate direction
             let direction = vec3.create();
             vec3.sub(direction, to, origin);
-            // vec3.normalize(direction, direction); // Normalize the direction vector (Foozle: I don't believe it should be normalized.)
+            const castDistance = vec3.distance(origin, to);
+            if (castDistance <= 0) {
+                this.castShapeResults.set(tag, this._emptyCastShapeResult(tag));
+                return;
+            }
+            vec3.normalize(direction, direction);
+            // With a normalized direction, maxToI acts as a multiplier of the
+            // origin->endpoint distance (1 = cast exactly to the endpoint)
+            const castDistanceMultiplier = Number(maxToI ?? 1);
+            const castMaxToI = castDistance * (Number.isFinite(castDistanceMultiplier) ? castDistanceMultiplier : 1);
+            const normalizedExcludeUID = excludeUID === -1 ? this.uid : excludeUID;
 
             // Map shapeType to string if necessary
             const shapeTypeMap = {
@@ -2712,13 +3305,13 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                     y: rotY,
                     z: rotZ,
                 },
-                maxToI,
+                maxToI: castMaxToI,
                 targetDistance: this._toPhysics(targetDistance),
                 filterGroups,
-                excludeUID,
+                excludeUID: normalizedExcludeUID,
                 solid,
                 tag,
-                uid: this.instance.uid,
+                uid: this.uid,
             };
 
             this.PhysicsType.commands.push(command);
@@ -2730,7 +3323,42 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
 
         _CastShapeResultAsJSON(tag) {
             const result = this.castShapeResults.get(tag);
-            return JSON.stringify(result ?? { hasHit: false, hitUID: -1 });
+            return JSON.stringify(result ?? this._emptyCastShapeResult(tag));
+        }
+
+        _emptyCastShapeResult(tag = "") {
+            return {
+                hasHit: false,
+                hitPointWorld: [0, 0, 0],
+                hitPointX: 0,
+                hitPointY: 0,
+                hitPointZ: 0,
+                hitPointWorldX: 0,
+                hitPointWorldY: 0,
+                hitPointWorldZ: 0,
+                witness1: [0, 0, 0],
+                witness1X: 0,
+                witness1Y: 0,
+                witness1Z: 0,
+                witness2: [0, 0, 0],
+                witness2X: 0,
+                witness2Y: 0,
+                witness2Z: 0,
+                normal1: [0, 0, 0],
+                normal1X: 0,
+                normal1Y: 0,
+                normal1Z: 0,
+                normal2: [0, 0, 0],
+                normal2X: 0,
+                normal2Y: 0,
+                normal2Z: 0,
+                distance: 0,
+                timeOfImpact: -1,
+                maxToI: 0,
+                sequence: 0,
+                hitUID: -1,
+                tag,
+            };
         }
 
         _OnAnyCastShapeResult() {

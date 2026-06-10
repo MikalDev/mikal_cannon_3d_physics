@@ -322,6 +322,198 @@
         ]
       },
       {
+        "id": "RaycastHasHit",
+        "scriptName": "RaycastHasHit",
+        "expressionName": "RaycastHasHit",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": "\"\""
+          }
+        ]
+      },
+      {
+        "id": "RaycastHitUID",
+        "scriptName": "RaycastHitUID",
+        "expressionName": "RaycastHitUID",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": "\"\""
+          }
+        ]
+      },
+      {
+        "id": "RaycastDistance",
+        "scriptName": "RaycastDistance",
+        "expressionName": "RaycastDistance",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": "\"\""
+          }
+        ]
+      },
+      {
+        "id": "RaycastHitPointX",
+        "scriptName": "RaycastHitPointX",
+        "expressionName": "RaycastHitPointX",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": "\"\""
+          }
+        ]
+      },
+      {
+        "id": "RaycastHitPointY",
+        "scriptName": "RaycastHitPointY",
+        "expressionName": "RaycastHitPointY",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": "\"\""
+          }
+        ]
+      },
+      {
+        "id": "RaycastHitPointZ",
+        "scriptName": "RaycastHitPointZ",
+        "expressionName": "RaycastHitPointZ",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": "\"\""
+          }
+        ]
+      },
+      {
+        "id": "RaycastHitNormalX",
+        "scriptName": "RaycastHitNormalX",
+        "expressionName": "RaycastHitNormalX",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": "\"\""
+          }
+        ]
+      },
+      {
+        "id": "RaycastHitNormalY",
+        "scriptName": "RaycastHitNormalY",
+        "expressionName": "RaycastHitNormalY",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": "\"\""
+          }
+        ]
+      },
+      {
+        "id": "RaycastHitNormalZ",
+        "scriptName": "RaycastHitNormalZ",
+        "expressionName": "RaycastHitNormalZ",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": "\"\""
+          }
+        ]
+      },
+      {
+        "id": "RaycastSequence",
+        "scriptName": "RaycastSequence",
+        "expressionName": "RaycastSequence",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": [
+          {
+            "id": "tag",
+            "type": "string",
+            "initialValue": "\"\""
+          }
+        ]
+      },
+      {
+        "id": "JointExists",
+        "scriptName": "JointExists",
+        "expressionName": "JointExists",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "number",
+        "isVariadicParameters": false,
+        "params": [
+          {
+            "id": "targetUID",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "JointType",
+        "scriptName": "JointType",
+        "expressionName": "JointType",
+        "highlight": false,
+        "deprecated": false,
+        "returnType": "string",
+        "isVariadicParameters": false,
+        "params": [
+          {
+            "id": "targetUID",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
         "id": "CastShapeCurrentTag",
         "scriptName": "CastShapeCurrentTag",
         "expressionName": "CastShapeCurrentTag",
@@ -1136,7 +1328,7 @@
         "id": "AttachSpring",
         "scriptName": "AttachSpring",
         "highlight": false,
-        "deprecated": true,
+        "deprecated": false,
         "isAsync": false,
         "params": [
           {
@@ -1292,6 +1484,11 @@
             "id": "targetUID",
             "type": "number",
             "initialValue": "0"
+          },
+          {
+            "id": "preserveRelativePosition",
+            "type": "boolean",
+            "initialValue": "true"
           }
         ]
       },
@@ -1351,6 +1548,270 @@
             "id": "targetUID",
             "type": "number",
             "initialValue": 0
+          },
+          {
+            "id": "contactsEnabled",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "compoundColliderTag",
+            "type": "string",
+            "initialValue": "\"\""
+          }
+        ]
+      },
+      {
+        "id": "SetRevoluteContactsEnabled",
+        "scriptName": "SetRevoluteContactsEnabled",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "targetUID",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "contactsEnabled",
+            "type": "boolean",
+            "initialValue": "true"
+          }
+        ]
+      },
+      {
+        "id": "AddFixedJoint",
+        "scriptName": "AddFixedJoint",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "anchorX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "anchorY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "anchorZ",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "targetAnchorX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "targetAnchorY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "targetAnchorZ",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "targetUID",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "contactsEnabled",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "preserveRelativeRotation",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "preserveRelativePosition",
+            "type": "boolean",
+            "initialValue": "true"
+          }
+        ]
+      },
+      {
+        "id": "AddPrismaticJoint",
+        "scriptName": "AddPrismaticJoint",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "anchorX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "anchorY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "anchorZ",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "targetAnchorX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "targetAnchorY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "targetAnchorZ",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "axisX",
+            "type": "number",
+            "initialValue": "1"
+          },
+          {
+            "id": "axisY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "axisZ",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "targetUID",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "contactsEnabled",
+            "type": "boolean",
+            "initialValue": "true"
+          }
+        ]
+      },
+      {
+        "id": "AddRopeJoint",
+        "scriptName": "AddRopeJoint",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "length",
+            "type": "number",
+            "initialValue": "100"
+          },
+          {
+            "id": "anchorX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "anchorY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "anchorZ",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "targetAnchorX",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "targetAnchorY",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "targetAnchorZ",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "targetUID",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "contactsEnabled",
+            "type": "boolean",
+            "initialValue": "true"
+          },
+          {
+            "id": "preserveRelativePosition",
+            "type": "boolean",
+            "initialValue": "true"
+          }
+        ]
+      },
+      {
+        "id": "SetPrismaticLimits",
+        "scriptName": "SetPrismaticLimits",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "targetUID",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "minDistance",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "maxDistance",
+            "type": "number",
+            "initialValue": "100"
+          },
+          {
+            "id": "enabled",
+            "type": "boolean",
+            "initialValue": "true"
+          }
+        ]
+      },
+      {
+        "id": "SetPrismaticMotor",
+        "scriptName": "SetPrismaticMotor",
+        "highlight": false,
+        "deprecated": false,
+        "isAsync": false,
+        "params": [
+          {
+            "id": "targetUID",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "targetVelocity",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "maxForce",
+            "type": "number",
+            "initialValue": "1"
           }
         ]
       },
