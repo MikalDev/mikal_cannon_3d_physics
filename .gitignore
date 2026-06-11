@@ -128,3 +128,6 @@ dist
 
 # Test output (generated)
 tests/output/
+
+# Reference copy of the community-patched addon (port completed in 2.36.0)
+patched-addon-for-review/
