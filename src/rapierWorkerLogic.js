@@ -945,6 +945,7 @@ function raycast(config) {
     const solid = boolParam(config.solid);
     const uid = config.uid;
     let filterGroups = parseInt(config.filterGroups, 16);
+    if (!Number.isFinite(filterGroups)) filterGroups = 0xffff;
     filterGroups = 0xffff0000 | filterGroups;
     let excludeBody = null;
     if (config.excludeUID !== undefined) {
@@ -1144,7 +1145,7 @@ function castShape(config) {
         );
         let shape2 = getShapeFromConfig(config.shape); // A function to get the shape based on config
         const maxToI = Number(config.maxToI ?? 1);
-        const targetDistance = config.targetDistance || 1; // Use the targetDistance from the config, default to 1 if not provided
+        const targetDistance = config.targetDistance ?? 1; // 0 is a valid margin; default to 1 only when not provided
         const stopAtPenetration = boolParam(config.solid);
         let filterGroups = parseInt(config.filterGroups, 16);
         if (!Number.isFinite(filterGroups)) filterGroups = 0xffff;
@@ -1154,7 +1155,7 @@ function castShape(config) {
         let excludeRigidBody = null;
         if (config.excludeUID !== -1) {
             const handle = uidHandle.get(config.excludeUID);
-            if (handle) {
+            if (handle !== undefined) {
                 excludeRigidBody = rapierWorld.bodies.get(handle);
             }
         }

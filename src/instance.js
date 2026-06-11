@@ -303,7 +303,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         }
 
         _updateCompoundHelperVisual() {
-            if (!this._compoundParentUid || !this._compoundLocalPosition || !this._compoundLocalRotation) return;
+            if (this._compoundParentUid == null || !this._compoundLocalPosition || !this._compoundLocalRotation) return;
             const parentBody = globalThis.Mikal_Rapier_Bodies?.get(this._compoundParentUid);
             if (!parentBody) return;
             const vec3 = globalThis.glMatrix.vec3;
