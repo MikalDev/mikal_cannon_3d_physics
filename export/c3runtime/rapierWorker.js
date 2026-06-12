@@ -9967,10 +9967,19 @@ function runCommands(commands) {
     for (let i = 0; i < commands.length; i++) {
         const command = commands[i];
         const commandFunction = commandFunctions[command.type];
-        if (commandFunction) {
-            commandFunction(command);
-        } else {
+        if (!commandFunction) {
             console.error("Unknown command type", command.type);
+            continue;
+        }
+        // One bad command must not kill the rest of the batch (the RPC
+        // layer swallows errors for fire-and-forget messages)
+        try {
+            commandFunction(command);
+        } catch (error) {
+            console.error(
+                `[rapierWorker] command type ${command.type} (uid ${command.uid ?? "?"}) threw:`,
+                error
+            );
         }
     }
     return true;
