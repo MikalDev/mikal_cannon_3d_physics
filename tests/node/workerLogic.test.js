@@ -158,5 +158,67 @@ console.log("\n--- joint registry: removeBody pruning ---");
 }
 
 // ---------------------------------------------------------------------------
+console.log("\n--- per-collider actions cover ALL colliders (compound bodies) ---");
+function makeBody(colliderMasses) {
+    const colliders = colliderMasses.map((m) => ({
+        _mass: m,
+        _groups: null,
+        mass() { return this._mass; },
+        setMass(v) { this._mass = v; },
+        setCollisionGroups(g) { this._groups = g; },
+    }));
+    return {
+        colliders,
+        numColliders: () => colliders.length,
+        collider: (i) => colliders[i],
+    };
+}
+
+{
+    const { t } = loadWorkerLogic();
+    const body = makeBody([1, 1]);
+    t.__setWorld({ bodies: { get: () => body }, removeRigidBody: () => {} });
+    t.uidHandle.set(10, 1);
+
+    t.commandFunctions[t.CommandType.SetCollisionGroups]({
+        type: t.CommandType.SetCollisionGroups,
+        uid: 10,
+        membership: "0x0002",
+        filter: "0xFFFF",
+    });
+    const expected = (0x0002 << 16) | 0xffff;
+    check(body.colliders[0]._groups === expected, "collision groups applied to collider 0");
+    check(body.colliders[1]._groups === expected, "collision groups applied to the merged compound collider too");
+}
+
+{
+    const { t } = loadWorkerLogic();
+    const body = makeBody([2, 6]);
+    t.__setWorld({ bodies: { get: () => body }, removeRigidBody: () => {} });
+    t.uidHandle.set(11, 1);
+
+    t.commandFunctions[t.CommandType.SetMass]({ type: t.CommandType.SetMass, uid: 11, mass: 16 });
+    check(Math.abs(body.colliders[0]._mass - 4) < 1e-9 && Math.abs(body.colliders[1]._mass - 12) < 1e-9,
+        "set mass scales compound collider masses proportionally (2,6 -> 4,12)");
+    check(Math.abs(body.colliders[0]._mass + body.colliders[1]._mass - 16) < 1e-9,
+        "body total equals the requested mass");
+}
+
+{
+    const { t } = loadWorkerLogic();
+    const single = makeBody([3]);
+    t.__setWorld({ bodies: { get: () => single }, removeRigidBody: () => {} });
+    t.uidHandle.set(12, 1);
+    t.commandFunctions[t.CommandType.SetMass]({ type: t.CommandType.SetMass, uid: 12, mass: 10 });
+    check(Math.abs(single.colliders[0]._mass - 10) < 1e-9, "single-collider body gets exactly the requested mass (old behavior preserved)");
+
+    const zero = makeBody([0, 0]);
+    t.__setWorld({ bodies: { get: () => zero }, removeRigidBody: () => {} });
+    t.uidHandle.set(13, 2);
+    t.commandFunctions[t.CommandType.SetMass]({ type: t.CommandType.SetMass, uid: 13, mass: 5 });
+    check(zero.colliders[0]._mass === 5, "zero-total body falls back to assigning collider 0");
+}
+
+// ---------------------------------------------------------------------------
 console.log(`\n=== node worker-logic tests: ${passed} passed, ${failed} failed ===`);
 process.exit(failed === 0 ? 0 : 1);

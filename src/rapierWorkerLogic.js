@@ -671,12 +671,12 @@ function setCollisionGroups(config) {
     if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
     if (body) {
-        const collider = body.collider(0);
-        if (collider) {
-            collider.setCollisionGroups(group);
-        } else {
+        // All colliders: compound bodies must filter consistently (light
+        // occluder also routes through collision groups)
+        if (body.numColliders() === 0) {
             console.warn("No collider found for body with UID:", uid);
         }
+        applyToBodyColliders(body, (collider) => collider.setCollisionGroups(group));
     } else {
         console.warn("setCollisonGroup: body not found", uid);
     }
@@ -885,8 +885,18 @@ function setMass(config) {
     const handle = uidHandle.get(uid);
     if (bufferIfNoHandle(handle, config)) return;
     const body = rapierWorld.bodies.get(handle);
-    if (body) {
-        // Get collider
+    if (!body) return;
+    // "Set mass" sets the body TOTAL: scale collider masses proportionally
+    // so compound bodies keep their distribution (identical to the old
+    // behavior for single-collider bodies)
+    let total = 0;
+    applyToBodyColliders(body, (collider) => {
+        total += collider.mass();
+    });
+    if (total > 0) {
+        const factor = mass / total;
+        applyToBodyColliders(body, (collider) => collider.setMass(collider.mass() * factor));
+    } else {
         const collider = body.collider(0);
         if (collider) collider.setMass(mass);
     }
