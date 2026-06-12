@@ -1783,6 +1783,24 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             const quatRot = wBody.rotation;
 
             this._setBodyWorldTransform(position, quatRot);
+
+            // r489 box semantics: the physics size is the instance box, but
+            // the plugin can resize the box after body creation (model load
+            // applies scale). Recreate the body when the box changes.
+            if (
+                !this.sizeOverride &&
+                this._createdBoxDims &&
+                (this.pluginType === "Model3DPlugin" || this.pluginType === "GltfStaticPlugin")
+            ) {
+                const dims = this._createdBoxDims;
+                if (
+                    Math.abs(inst.width - dims.width) > 0.5 ||
+                    Math.abs(inst.height - dims.height) > 0.5 ||
+                    Math.abs(inst.depth - dims.depth) > 0.5
+                ) {
+                    this._UpdateBody();
+                }
+            }
         }
 
         _postCreate() {
@@ -2138,6 +2156,15 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             };
 
             this.PhysicsType.commands.push(command);
+
+            // Snapshot the box so _tick2 can detect post-creation resizes
+            // (the plugin applies model scale to the box on load, which can
+            // land after this body was created)
+            this._createdBoxDims = {
+                width: inst.width,
+                height: inst.height,
+                depth: inst.depth,
+            };
 
             // Mark body as defined and trigger ready event
             this.bodyDefined = true;

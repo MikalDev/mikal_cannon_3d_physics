@@ -8532,6 +8532,14 @@ function updateBody(config) {
 
 function addBody(config) {
     if (!rapierWorld) return;
+    // Replace any existing body for this uid (size override, box resize):
+    // without this the old rigid body is orphaned in the world
+    const existingHandle = uidHandle.get(config.uid);
+    if (existingHandle !== undefined) {
+        const existingBody = rapierWorld.bodies.get(existingHandle);
+        if (existingBody) rapierWorld.removeRigidBody(existingBody);
+        uidHandle.delete(config.uid);
+    }
     let rigidBodyDesc;
     let x = config.x || 0;
     let y = config.y || 0;
