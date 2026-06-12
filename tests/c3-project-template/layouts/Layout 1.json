@@ -19,7 +19,7 @@
 						"z-rotation": 0,
 						"x-scale": 1,
 						"y-scale": 1,
-						"z-scale": 1,
+						"z-scale": 0.1,
 						"mesh": "",
 						"animation": "",
 						"mesh-render-mode": "hierarchy",
