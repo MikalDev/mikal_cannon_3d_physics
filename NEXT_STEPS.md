@@ -3,25 +3,20 @@
 Deferred items from the 2.36.0 patch-port review and the 2.37.x work, in priority order.
 (Severity × likelihood × effort; details in the review: all were CONFIRMED findings.)
 
-## 1. Worker command batch survives a throwing command — HIGH, small
-`runCommands` has no per-command try/catch: one throwing handler silently kills the rest of
-that frame's command batch (fire-and-forget messages swallow the error — no log, no trigger).
-Wrap each command, log failures. This is the cheap mitigation for #2 and protects everything
-else too.
+## ~~1. Worker command batch survives a throwing command~~ DONE (ecae356)
+Per-command try/catch in `runCommands`, failures log type + uid. Node harness + adversarial
+C3 suite (test_worker_resilience).
 
-## 2. Joint identity is per body PAIR, not per joint — HIGH, medium
-`jointMap` and `pendingJointCommands` key on the uid pair, so a second joint between the same
-bodies (revolute + the newly un-deprecated spring — a natural wheel+suspension setup)
-overwrites the first. `SetRevoluteMotor` then resolves to the spring joint and
-`configureMotorVelocity` THROWS (spring has no motor methods) — combined with #1, physics
-commands randomly stop applying with no error. Needs per-joint keying (e.g. pair+type) and
-pending-queue keys to match.
+## ~~2. Joint identity is per body PAIR, not per joint~~ DONE (a2e5c70)
+`jointMap`/`pendingJointCommands` keyed `"minUid:maxUid:type"`; typed lookup/queue/replay;
+shared `pruneJointEntriesForUid`. Node harness (18 checks) + adversarial C3 suite
+(test_joint_identity: revolute+spring same pair, typed queue replay). NOTE: re-creating the
+SAME type on the same pair still overwrites without removing the old Rapier joint — see #9.
 
-## 3. Per-collider actions skip merged compound colliders — MEDIUM-HIGH, small
-`setCollisionGroups` and `setMass` still operate on `collider(0)` only; compound bodies keep
-stale groups/mass on merged colliders, and **Set Light Occluder routes through groups so it's
-broken on compound bodies too**. `applyToBodyColliders` already exists — use it (mass needs a
-distribution decision: scale per-collider masses vs `additionalMass`).
+## ~~3. Per-collider actions skip merged compound colliders~~ DONE (9941f56)
+`setCollisionGroups` applies to all colliders; `setMass` sets the body TOTAL by scaling
+collider masses proportionally (zero-total → collider 0). Node multi-collider stubs +
+adversarial C3 suite (test_compound_actions).
 
 ## 4. Compound collider lifecycle — MEDIUM, medium
 All inherited from the community patch, all confirmed:
@@ -59,6 +54,9 @@ Z-only Shape3D path needs reworking, and tests should exist before that lands.
 - `setPrismaticMotor/Limits` are verbatim copies of the revolute handlers — merge.
 - `_knownJointTypes` is optimistic (JointExists can report phantom joints) — fine if
   documented; worker-confirmed joint state would ride the existing results batch.
+- Re-creating a joint of the same type on the same pair overwrites the registry entry
+  without removing the old Rapier joint (leak); a remove-or-replace in `registerJoint`
+  would close it.
 
 ## Watch list
 - **C3 3D Shape full rotation** (r489 `SetIsRotatable3D` prep): when enabled, Shape3D needs
