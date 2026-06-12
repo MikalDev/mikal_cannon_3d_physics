@@ -21,6 +21,15 @@ export function getPhysics(inst: any): any {
     return inst.behaviors.Rapier3DPhysics;
 }
 
+// r489+: inst.z is the configurable origin point (originZ 0..1, 0 = back/bottom).
+export function topZ(inst: any): number {
+    return inst.z + (1 - (inst.originZ ?? 0.5)) * (inst.depth || 0);
+}
+
+export function bottomZ(inst: any): number {
+    return inst.z - (inst.originZ ?? 0.5) * (inst.depth || 0);
+}
+
 function makeAssert(testName: string) {
     let failed = false;
     const check = (pass: boolean, msg: string) => {

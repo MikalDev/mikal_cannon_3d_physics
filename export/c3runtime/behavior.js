@@ -1466,25 +1466,66 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             return { x: q[0], y: q[1], z: q[2], w: q[3] };
         }
 
-        // Physics-body world position using the same per-plugin origin
-        // conventions as _buildBodyCommand/_create3DObjectShape
+        // C3 r489+: instance position is the configurable origin point
+        // (IWorldInstance.originX/Y/Z, 0..1). The physics body center is the
+        // geometric center of the instance box, so the origin offset must be
+        // rotated by the instance/body rotation.
+        // Exception: Sprite bodies keep their top-left convention because the
+        // trimesh collider vertices are built relative to the top-left.
+        _originOffsetLocal() {
+            const inst = this.instance;
+            return [
+                (0.5 - (inst.originX ?? 0.5)) * (inst.width || 0),
+                (0.5 - (inst.originY ?? 0.5)) * (inst.height || 0),
+                (0.5 - (inst.originZ ?? 0.5)) * (inst.depth || 0),
+            ];
+        }
+
+        _bodyCenterFromInstance(rotation) {
+            const inst = this.instance;
+            const vec3 = globalThis.glMatrix.vec3;
+            const quat = globalThis.glMatrix.quat;
+            const offset = vec3.fromValues(...this._originOffsetLocal());
+            vec3.transformQuat(
+                offset,
+                offset,
+                quat.fromValues(rotation.x, rotation.y, rotation.z, rotation.w)
+            );
+            return {
+                x: inst.x + offset[0],
+                y: inst.y + offset[1],
+                z: inst.z + offset[2],
+            };
+        }
+
+        _instancePosFromBodyCenter(position, rotation) {
+            const vec3 = globalThis.glMatrix.vec3;
+            const quat = globalThis.glMatrix.quat;
+            const offset = vec3.fromValues(...this._originOffsetLocal());
+            vec3.transformQuat(
+                offset,
+                offset,
+                quat.fromValues(rotation.x, rotation.y, rotation.z, rotation.w)
+            );
+            return {
+                x: position.x - offset[0],
+                y: position.y - offset[1],
+                z: position.z - offset[2],
+            };
+        }
+
+        // Physics-body world position (body center, except Sprite trimesh
+        // which keeps its top-left body origin)
         _getBodyWorldPosition() {
             const inst = this.instance;
-            if (this.pluginType === "GltfStaticPlugin") {
-                return { x: inst.x, y: inst.y, z: inst.z };
-            }
-            if (this.pluginType === "Model3DPlugin") {
+            if (this.pluginType === "SpritePlugin") {
                 return {
-                    x: inst.x + (inst.offsetX || 0),
-                    y: inst.y + (inst.offsetY || 0),
-                    z: inst.z + (inst.offsetZ || 0),
+                    x: inst.x - inst.width / 2,
+                    y: inst.y - inst.height / 2,
+                    z: inst.z,
                 };
             }
-            return {
-                x: this.pluginType === "SpritePlugin" ? inst.x - inst.width / 2 : inst.x,
-                y: this.pluginType === "SpritePlugin" ? inst.y - inst.height / 2 : inst.y,
-                z: inst.z + (this.pluginType === "Shape3DPlugin" ? (inst.depth || 0) / 2 : 0),
-            };
+            return this._bodyCenterFromInstance(this._getWorldQuaternion());
         }
 
         // Inverse of _getBodyWorldPosition: apply a physics-body world pose to
@@ -1492,30 +1533,26 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         _setBodyWorldTransform(position, rotation) {
             const inst = this.instance;
             const rot = this._quatToPhysicsObject(rotation);
-            if (this.pluginType === "GltfStaticPlugin") {
-                inst.x = position.x;
-                inst.y = position.y;
+            if (this.pluginType === "SpritePlugin") {
+                inst.x = position.x + (inst.width || 0) / 2;
+                inst.y = position.y + (inst.height || 0) / 2;
                 inst.z = position.z;
+            } else {
+                const pos = this._instancePosFromBodyCenter(position, rot);
+                inst.x = pos.x;
+                inst.y = pos.y;
+                inst.z = pos.z;
+            }
+            if (this.pluginType === "GltfStaticPlugin") {
                 inst.quaternion = rot;
                 return;
             }
             if (this.pluginType === "Model3DPlugin") {
-                inst.x = position.x - (inst.offsetX || 0);
-                inst.y = position.y - (inst.offsetY || 0);
-                inst.z = position.z - (inst.offsetZ || 0);
                 if (typeof inst.setQuaternion === "function") {
                     inst.setQuaternion(rot.x, rot.y, rot.z, rot.w);
                 }
                 return;
             }
-            if (this.pluginType === "SpritePlugin") {
-                inst.x = position.x + (inst.width || 0) / 2;
-                inst.y = position.y + (inst.height || 0) / 2;
-            } else {
-                inst.x = position.x;
-                inst.y = position.y;
-            }
-            inst.z = position.z - (this.pluginType === "Shape3DPlugin" ? (inst.depth || 0) / 2 : 0);
             const q = globalThis.glMatrix.quat.fromValues(rot.x, rot.y, rot.z, rot.w);
             const angles = this._quaternionToEuler(q);
             inst.angle = angles[2];
@@ -1670,7 +1707,6 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
         _tick2() {
             // SDK v2: Use public IWorldInstance interface
             const inst = this.instance;
-            const zHeight = inst.depth || 0;
             const bodyDefined = this.bodyDefined;
             // Compound helpers have no body of their own; they follow their
             // parent body visually
@@ -1746,35 +1782,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             const position = wBody.translation;
             const quatRot = wBody.rotation;
 
-            if (this.pluginType == "GltfStaticPlugin") {
-                inst.x = position.x;
-                inst.y = position.y;
-                inst.z = position.z;
-                inst.quaternion = quatRot;
-
-            } else if (this.pluginType === "Model3DPlugin") {
-                // Set Model3D world position (origin is at center)
-                inst.x = position.x;
-                inst.y = position.y;
-                inst.z = position.z;
-
-                inst.setQuaternion(quatRot.x, quatRot.y, quatRot.z, quatRot.w);
-            } else {
-                const zElevation = position.z - zHeight / 2;
-                inst.z = zElevation;
-                inst.x = position.x;
-                inst.y = position.y;
-                // Extract Z-axis rotation from quaternion
-                const quat = globalThis.glMatrix.quat;
-                const zRot = quat.fromValues(
-                    quatRot.x,
-                    quatRot.y,
-                    quatRot.z,
-                    quatRot.w
-                );
-                const angles = this._quaternionToEuler(zRot);
-                inst.angle = angles[2];
-            }
+            this._setBodyWorldTransform(position, quatRot);
         }
 
         _postCreate() {
@@ -1849,9 +1857,23 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             const isShape3D = this.pluginType === "Shape3DPlugin";
             const isSprite = this.pluginType === "SpritePlugin";
 
-            const posX = isSprite ? inst.x - inst.width / 2 : inst.x;
-            const posY = isSprite ? inst.y - inst.height / 2 : inst.y;
-            const posZ = inst.z + (isShape3D ? zHeight / 2 : 0);
+            let posX, posY, posZ;
+            if (isSprite) {
+                // Trimesh body origin is the sprite's top-left
+                posX = inst.x - inst.width / 2;
+                posY = inst.y - inst.height / 2;
+                posZ = inst.z;
+            } else {
+                const center = this._bodyCenterFromInstance({
+                    x: initialQuat[0],
+                    y: initialQuat[1],
+                    z: initialQuat[2],
+                    w: initialQuat[3],
+                });
+                posX = center.x;
+                posY = center.y;
+                posZ = center.z;
+            }
 
             const base = {
                 type,
@@ -2006,41 +2028,24 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             const inst = this.instance;
             const enableRot = [true, true, true]; // Both plugins can rotate on all axes
 
-            // Get initial position and rotation based on plugin type
-            let posX, posY, posZ;
+            // Get initial rotation based on plugin type; the body center is
+            // derived from the instance box and its 3D origin (r489+)
             let initialQuat;
 
             if (this.pluginType === "GltfStaticPlugin") {
-                posX = inst.x;
-                posY = inst.y;
-                posZ = inst.z;
                 initialQuat = quatToObject(inst.quaternion);
-
             } else if (this.pluginType === "Model3DPlugin") {
-                // Model3D has base position (x, y, z) plus offsets (origin is at center)
-                posX = inst.x + (inst.offsetX || 0);
-                posY = inst.y + (inst.offsetY || 0);
-                posZ = inst.z + (inst.offsetZ || 0);
-
                 initialQuat = quatToObject(inst.getQuaternion());
             }
 
-            // Determine dimensions: from extracted bounding box, bounding box, or manual override
+            const center = this._bodyCenterFromInstance(initialQuat);
+            const posX = center.x;
+            const posY = center.y;
+            const posZ = center.z;
+
+            // Determine dimensions: model bounding box (GltfStatic), manual
+            // override, or the instance box (Model3D)
             let width, height, depth;
-
-            // Try extracted bounding box first (Model3D only)
-            if (this.pluginType === "Model3DPlugin" && !overrideSize && this._extractedBBoxMin && this._extractedBBoxMax) {
-                const bbox = this._normalizeBBox(this._extractedBBoxMin, this._extractedBBoxMax);
-                const bboxWidth = Math.abs(bbox.max.x - bbox.min.x);
-                const bboxHeight = Math.abs(bbox.max.y - bbox.min.y);
-                const bboxDepth = Math.abs(bbox.max.z - bbox.min.z);
-
-                if (bboxWidth > 0 || bboxHeight > 0 || bboxDepth > 0) {
-                    width = bboxWidth;
-                    height = bboxHeight;
-                    depth = bboxDepth;
-                }
-            }
 
             // Try to get dimensions from bounding box if available
             if (!overrideSize && inst.xMinBB && inst.xMaxBB) {
@@ -2080,18 +2085,9 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
                 return false;
             }
 
-            // Apply Model3D scale if applicable
-            if (this.pluginType === "Model3DPlugin" && (width !== undefined && height !== undefined && depth !== undefined)) {
-                const scaleX = inst.scaleX || 1;
-                const scaleY = inst.scaleY || 1;
-                const scaleZ = inst.scaleZ || 1;
-
-                
-
-                width *= scaleX;
-                height *= scaleY;
-                depth *= scaleZ;
-            }
+            // r489+: the instance box (width/height/depth) is the physics
+            // size. Model scale/offset only transform the model inside its
+            // box (fit/stretch modes), so they are not applied here.
 
 
 

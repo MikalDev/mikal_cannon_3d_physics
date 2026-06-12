@@ -1,4 +1,4 @@
-import { registerSuite, waitTicks, getPhysics } from "./testRunner.ts";
+import { registerSuite, waitTicks, getPhysics, topZ, bottomZ } from "./testRunner.ts";
 
 registerSuite("Basic Physics", [
     {
@@ -13,11 +13,12 @@ registerSuite("Basic Physics", [
     {
         name: "DynBox is resting on Ground",
         fn: async (runtime: IRuntime, assert: any) => {
+            const ground = runtime.objects.Ground.getFirstInstance()!;
             const dynBox = runtime.objects.DynBox.getFirstInstance()!;
-            const z = dynBox.z;
-            // By the time tests run, box should have settled on ground
-            assert.ok(z > -60, `DynBox should be above ground, z=${z}`);
-            assert.ok(z < 200, `DynBox should not be flying, z=${z}`);
+            // By the time tests run, the box should have settled with its
+            // bottom on the ground's top face
+            const groundTop = topZ(ground);
+            assert.near(bottomZ(dynBox), groundTop, 30, `DynBox bottom (${bottomZ(dynBox)}) should rest on ground top (${groundTop})`);
         },
     },
     {

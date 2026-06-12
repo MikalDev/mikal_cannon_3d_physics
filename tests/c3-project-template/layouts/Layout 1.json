@@ -17,8 +17,8 @@
 						"x-rotation": 0,
 						"y-rotation": 0,
 						"z-rotation": 0,
-						"x-scale": 10,
-						"y-scale": 10,
+						"x-scale": 1,
+						"y-scale": 1,
 						"z-scale": 1,
 						"mesh": "",
 						"animation": "",
@@ -65,8 +65,8 @@
 					"world": {
 						"x": 360,
 						"y": 291,
-						"width": 100,
-						"height": 100,
+						"width": 1000,
+						"height": 1000,
 						"originX": 0.5,
 						"originY": 0.5,
 						"color": [

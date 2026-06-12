@@ -119,34 +119,37 @@ method exposure.
 
 ## Supported Plugins
 
+**Requires Construct 3 r489+** (uses `IWorldInstance.originX/Y/Z`, numeric, 0..1).
+
 The physics behavior supports the following Construct 3 object types:
 
 ### 3D Objects
 - **3D Shape** (Shape3D plugin) - Limited to Z-axis rotation only
 - **GltfStatic** - Full 3D rotation with quaternions, auto-detects bounding box
-- **Model3D** - Full 3D rotation with quaternions via `getQuaternion()`/`setQuaternion()`, requires manual size override or bounding box extraction
+- **Model3D** - Full 3D rotation with quaternions via `getQuaternion()`/`setQuaternion()`
 
 ### 2D Objects
 - **Sprite** - 2D physics with mesh collision support
 
-### Model3D Integration Details
+### Origin & Size Conventions (since 2.37.0, C3 r489+)
 
-**Rotation Format:**
-- Model3D uses quaternions via `getQuaternion()` and `setQuaternion()` methods
-- Same pattern as GltfStatic for consistent handling
+- `inst.x/y/z` is the instance's configurable **origin point** (`originX/Y/Z`,
+  numeric 0..1; `originZ` 0 = back/bottom). The physics body center is the
+  geometric center of the instance box: `instPos + R(quat) · ((0.5−originX)·w,
+  (0.5−originY)·h, (0.5−originZ)·d)`.
+- One transform pair handles every instance↔body conversion:
+  `_bodyCenterFromInstance(quat)` / `_instancePosFromBodyCenter(pos, quat)` in
+  `instance.js` — used by body creation, the per-tick sync, and compound
+  helpers. Do NOT reintroduce per-plugin position offsets.
+- **Physics size = the instance box** (`width`/`height`/`depth`). Model3D
+  `scaleX/Y/Z` and `offsetX/Y/Z` only transform the model *inside* its box
+  (r489 fit/stretch transform modes) and are NOT applied to physics.
+- Exception: Sprite trimesh bodies keep their top-left body-origin convention
+  (mesh vertices are built relative to the top-left).
 
-**Position Properties:**
-- Model3D: `x`, `y`, `z` (world position)
-- GltfStatic: `x`, `y`, `z`
-
-**Scale Handling:**
-- Model3D scale (`scaleX`, `scaleY`, `scaleZ`) is automatically applied to physics body dimensions
-- Visual size matches physics size for intuitive behavior
-
-**Body Creation:**
-- Use "Set size override" action to manually specify dimensions
-- Auto-creation triggers when model loads AND (bounding box extracted OR size override enabled)
-- Bounding box extraction attempts to access internal `AnimatedModel` object (may not always succeed)
+**Model3D body creation:** auto-creates when the model loads (via
+`getAllMeshes()`) and the instance box has dimensions, or when size override
+is enabled ("Set size override" action).
 
 ## Physics Features
 
