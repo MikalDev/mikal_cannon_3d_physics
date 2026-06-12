@@ -26,6 +26,16 @@ export function topZ(inst: any): number {
     return inst.z + (1 - (inst.originZ ?? 0.5)) * (inst.depth || 0);
 }
 
+// Wait until the instance's physics body exists in the worker batch
+// (Model3D bodies are created asynchronously after the model loads).
+export async function waitForBody(runtime: IRuntime, inst: any, maxTicks: number = 300): Promise<boolean> {
+    for (let i = 0; i < maxTicks; i++) {
+        if ((globalThis as any).Mikal_Rapier_Bodies?.get(inst.uid)) return true;
+        await waitTicks(runtime, 1);
+    }
+    return false;
+}
+
 export function bottomZ(inst: any): number {
     return inst.z - (inst.originZ ?? 0.5) * (inst.depth || 0);
 }

@@ -4,7 +4,7 @@
  * Required template objects: CCBox (KinematicPosition/Box), DynBox (Dynamic/Box), Ground (Fixed/Box)
  */
 
-import { registerSuite, waitTicks, getPhysics } from "./testRunner.ts";
+import { registerSuite, waitTicks, getPhysics, waitForBody } from "./testRunner.ts";
 
 registerSuite("Character Controller", [
     {
@@ -12,6 +12,12 @@ registerSuite("Character Controller", [
         fn: async (runtime: IRuntime, assert: any) => {
             const ccBox = runtime.objects.CCBox.getFirstInstance()!;
             const phys = getPhysics(ccBox);
+
+            // The CCBox body is created asynchronously after its model loads;
+            // commands issued before that are buffered, so wait for the body
+            // or the grounded read below races the buffered translate.
+            const hasBody = await waitForBody(runtime, ccBox);
+            assert.ok(hasBody, "CCBox body should exist before creating the controller");
 
             phys._CreateCharacterController(
                 "cc-test", 0.01, 0, 0, 1, 60, 60,
@@ -97,17 +103,24 @@ registerSuite("Character Controller", [
     {
         name: "CC push DynBox",
         fn: async (runtime: IRuntime, assert: any) => {
-            const dynBox = runtime.objects.DynBox.getFirstInstance()!;
             const ccBox = runtime.objects.CCBox.getFirstInstance()!;
             const phys = getPhysics(ccBox);
-            const dynStartX = dynBox.x;
+
+            // Spawn a box directly in the CC's +X path (getFirstInstance
+            // would return the original DynBox far away from the CC)
+            const target = runtime.objects.DynBox.createInstance("Layer 0", ccBox.x + 50, ccBox.y);
+            target.z = ccBox.z;
+            const hasBody = await waitForBody(runtime, target);
+            assert.ok(hasBody, "push target body should exist");
+            const dynStartX = target.x;
 
             for (let i = 0; i < 30; i++) {
                 phys._TranslateCharacterController("cc-test", 5, 0, 0);
                 await waitTicks(runtime, 5);
             }
 
-            assert.ok(dynBox.x > dynStartX, `DynBox should be pushed: start=${dynStartX}, now=${dynBox.x}`);
+            assert.ok(target.x > dynStartX, `DynBox should be pushed: start=${dynStartX}, now=${target.x}`);
+            target.destroy();
         },
     },
     {

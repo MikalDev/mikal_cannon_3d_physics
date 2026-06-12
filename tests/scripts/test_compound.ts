@@ -28,21 +28,25 @@ registerSuite("Compound Colliders", [
             // Tag the helper at runtime (normally set in the editor property)
             physHelper.compoundColliderTag = "grp1";
 
-            // Record the helper's offset relative to the parent
-            const offsetBefore = { x: helper.x - parent.x, y: helper.y - parent.y };
+            // Record the helper's distance to the parent. The parent is
+            // hinged to the target, so the impulse also ROTATES it — the
+            // helper correctly orbits the parent, meaning world-frame axis
+            // offsets change but the distance must be preserved.
+            const distBefore = Math.hypot(helper.x - parent.x, helper.y - parent.y);
 
             physParent._AddRevoluteJoint(0, 0, 0, 0, 0, 0, 0, 0, 1, target.uid, false, "grp1");
             await waitTicks(runtime, 5);
 
             assert.ok(physHelper._compoundHelperDisabled, "helper body should be disabled");
 
-            // Push the parent; the helper must follow, keeping its offset
+            // Push the parent; the helper must follow it (rotating with it).
+            // A frozen helper also fails this: the distance to the moving
+            // parent would grow.
             physParent._ApplyImpulse(50, 0, 0);
             await waitTicks(runtime, 20);
 
-            const offsetAfter = { x: helper.x - parent.x, y: helper.y - parent.y };
-            assert.near(offsetAfter.x, offsetBefore.x, 20, `helper keeps x offset: ${offsetBefore.x} -> ${offsetAfter.x}`);
-            assert.near(offsetAfter.y, offsetBefore.y, 20, `helper keeps y offset: ${offsetBefore.y} -> ${offsetAfter.y}`);
+            const distAfter = Math.hypot(helper.x - parent.x, helper.y - parent.y);
+            assert.near(distAfter, distBefore, 10, `helper keeps distance to parent: ${distBefore} -> ${distAfter}`);
         },
     },
     {
