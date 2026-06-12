@@ -50,16 +50,18 @@ registerSuite("Origin & Box Semantics", [
             box.scaleZ = 3;
             await waitTicks(runtime, 90); // body created + settled
 
-            // Expected rest height from the BOX depth (read at assert time,
-            // in case scaling the model also resizes the box itself)
+            // Expected rest height from the BOX depth (read at assert time —
+            // scaling the model also resizes the box itself)
             const expected = groundTop + box.depth / 2;
             assert.near(box.z, expected, 10, `physics size must come from the box, not box*scale: z=${box.z}, expected=${expected} (depth=${box.depth})`);
 
-            // And changing scale after creation must not move the body
-            const restZ = box.z;
+            // Changing scale post-creation resizes the box, and the body
+            // must FOLLOW the box (the resize watch recreates it): the box
+            // re-settles at the new depth's rest height
             box.scaleZ = 1;
-            await waitTicks(runtime, 30);
-            assert.near(box.z, restZ, 2, `body must not move when model scale changes post-creation: ${restZ} -> ${box.z}`);
+            await waitTicks(runtime, 60);
+            const expected2 = groundTop + box.depth / 2;
+            assert.near(box.z, expected2, 10, `body must track the resized box: z=${box.z}, expected=${expected2} (depth=${box.depth})`);
 
             box.destroy();
         },
