@@ -22,7 +22,7 @@ let raycastSequence = 0;
 let castShapeSequence = 0;
 let castShapeResults = [];
 let isPaused = false;
-const jointMap = new Map(); // Map<uid, Map<targetUID, joint>>, registered both directions
+const jointMap = new Map(); // Map<"minUid:maxUid:type", joint> — one joint per body pair per type
 const pendingJointCommands = new Map(); // Map<pairKey, command[]> — joint commands waiting for the joint to exist
 
 const CommandType = {
@@ -1601,25 +1601,13 @@ function setNextKinematicRotation(config) {
 }
 
 // --- Joint registry -------------------------------------------------------
-// Joints are registered under both (uid, targetUID) and (targetUID, uid) so
-// joint commands work regardless of which body issues them. Commands that
-// arrive before the joint exists are queued per body pair and replayed when
-// the joint is created. Joint creation commands that arrive before the
-// *target* body exists are buffered via addPostDefineCommandsForUid.
-
-function registerJoint(uid, targetUID, joint) {
-    let targets = jointMap.get(uid);
-    if (!targets) jointMap.set(uid, targets = new Map());
-    targets.set(targetUID, joint);
-
-    let reverseTargets = jointMap.get(targetUID);
-    if (!reverseTargets) jointMap.set(targetUID, reverseTargets = new Map());
-    reverseTargets.set(uid, joint);
-}
-
-function getJoint(uid, targetUID) {
-    return jointMap.get(uid)?.get(targetUID) || jointMap.get(targetUID)?.get(uid) || null;
-}
+// Joint identity is (body pair, joint type): multiple joints of different
+// types can coexist between the same two bodies (e.g. revolute + spring on
+// a suspended wheel). The pair key is order-independent, so joint commands
+// work regardless of which body issues them. Commands that arrive before
+// the joint exists are queued per (pair, type) and replayed when that joint
+// is created. Joint creation commands that arrive before the *target* body
+// exists are buffered via addPostDefineCommandsForUid.
 
 function jointPairKey(uid, targetUID) {
     const a = Number(uid);
@@ -1627,20 +1615,41 @@ function jointPairKey(uid, targetUID) {
     return a < b ? `${a}:${b}` : `${b}:${a}`;
 }
 
-function queueJointCommand(config) {
-    const key = jointPairKey(config.uid, config.targetUID);
+function jointKey(uid, targetUID, type) {
+    return `${jointPairKey(uid, targetUID)}:${type}`;
+}
+
+function registerJoint(uid, targetUID, type, joint) {
+    jointMap.set(jointKey(uid, targetUID, type), joint);
+}
+
+function getJoint(uid, targetUID, type) {
+    return jointMap.get(jointKey(uid, targetUID, type)) || null;
+}
+
+function queueJointCommand(config, type) {
+    const key = jointKey(config.uid, config.targetUID, type);
     const configCopy = JSON.parse(JSON.stringify(config));
     let commands = pendingJointCommands.get(key);
     if (!commands) pendingJointCommands.set(key, commands = []);
     commands.push(configCopy);
 }
 
-function runPendingJointCommands(uid, targetUID) {
-    const key = jointPairKey(uid, targetUID);
+function runPendingJointCommands(uid, targetUID, type) {
+    const key = jointKey(uid, targetUID, type);
     const commands = pendingJointCommands.get(key);
     if (!commands) return;
     pendingJointCommands.delete(key);
     runCommands(commands);
+}
+
+function pruneJointEntriesForUid(uid) {
+    for (const map of [jointMap, pendingJointCommands]) {
+        for (const key of map.keys()) {
+            const [uidA, uidB] = key.split(":");
+            if (Number(uidA) === uid || Number(uidB) === uid) map.delete(key);
+        }
+    }
 }
 
 // Resolve both joint bodies, buffering the command if either is not yet
@@ -1676,8 +1685,8 @@ function addSphericalJoint(config) {
         targetBody,
         true
     );
-    registerJoint(uid, targetUID, joint);
-    runPendingJointCommands(uid, targetUID);
+    registerJoint(uid, targetUID, "spherical", joint);
+    runPendingJointCommands(uid, targetUID, "spherical");
 }
 
 function addFixedJoint(config) {
@@ -1698,8 +1707,8 @@ function addFixedJoint(config) {
     const params = RAPIER.JointData.fixed(anchor, frame1, effectiveTargetAnchor, frame2);
     const joint = rapierWorld.createImpulseJoint(params, body, targetBody, true);
     joint.setContactsEnabled(boolParam(contactsEnabled));
-    registerJoint(uid, targetUID, joint);
-    runPendingJointCommands(uid, targetUID);
+    registerJoint(uid, targetUID, "fixed", joint);
+    runPendingJointCommands(uid, targetUID, "fixed");
 }
 
 function attachSpring(config) {
@@ -1720,8 +1729,8 @@ function attachSpring(config) {
         targetBody,
         true
     );
-    registerJoint(uid, targetUID, joint);
-    runPendingJointCommands(uid, targetUID);
+    registerJoint(uid, targetUID, "spring", joint);
+    runPendingJointCommands(uid, targetUID, "spring");
 }
 
 function addRopeJoint(config) {
@@ -1741,8 +1750,8 @@ function addRopeJoint(config) {
     const params = RAPIER.JointData.rope(effectiveLength, anchor, targetAnchor);
     const joint = rapierWorld.createImpulseJoint(params, body, targetBody, true);
     joint.setContactsEnabled(boolParam(contactsEnabled));
-    registerJoint(uid, targetUID, joint);
-    runPendingJointCommands(uid, targetUID);
+    registerJoint(uid, targetUID, "rope", joint);
+    runPendingJointCommands(uid, targetUID, "rope");
 }
 
 function addRevoluteJoint(config) {
@@ -1760,8 +1769,8 @@ function addRevoluteJoint(config) {
         true
     );
     joint.setContactsEnabled(boolParam(contactsEnabled));
-    registerJoint(uid, targetUID, joint);
-    runPendingJointCommands(uid, targetUID);
+    registerJoint(uid, targetUID, "revolute", joint);
+    runPendingJointCommands(uid, targetUID, "revolute");
 }
 
 function addPrismaticJoint(config) {
@@ -1773,15 +1782,15 @@ function addPrismaticJoint(config) {
     const params = RAPIER.JointData.prismatic(anchor, targetAnchor, axis);
     const joint = rapierWorld.createImpulseJoint(params, body, targetBody, true);
     joint.setContactsEnabled(boolParam(contactsEnabled));
-    registerJoint(uid, targetUID, joint);
-    runPendingJointCommands(uid, targetUID);
+    registerJoint(uid, targetUID, "prismatic", joint);
+    runPendingJointCommands(uid, targetUID, "prismatic");
 }
 
 function setRevoluteMotor(config) {
     const { uid, targetUID, targetVelocity, maxForce } = config;
-    const joint = getJoint(uid, targetUID);
+    const joint = getJoint(uid, targetUID, "revolute");
     if (!joint) {
-        queueJointCommand(config);
+        queueJointCommand(config, "revolute");
         return;
     }
     // configureMotorVelocity(targetVel, dampingCoeff) — dampingCoeff=0 disables motor force
@@ -1790,9 +1799,9 @@ function setRevoluteMotor(config) {
 
 function setPrismaticMotor(config) {
     const { uid, targetUID, targetVelocity, maxForce } = config;
-    const joint = getJoint(uid, targetUID);
+    const joint = getJoint(uid, targetUID, "prismatic");
     if (!joint) {
-        queueJointCommand(config);
+        queueJointCommand(config, "prismatic");
         return;
     }
     joint.configureMotorVelocity(targetVelocity, maxForce);
@@ -1800,9 +1809,9 @@ function setPrismaticMotor(config) {
 
 function setRevoluteLimits(config) {
     const { uid, targetUID, minAngle, maxAngle, enabled } = config;
-    const joint = getJoint(uid, targetUID);
+    const joint = getJoint(uid, targetUID, "revolute");
     if (!joint) {
-        queueJointCommand(config);
+        queueJointCommand(config, "revolute");
         return;
     }
     if (enabled) {
@@ -1815,9 +1824,9 @@ function setRevoluteLimits(config) {
 
 function setPrismaticLimits(config) {
     const { uid, targetUID, minDistance, maxDistance, enabled } = config;
-    const joint = getJoint(uid, targetUID);
+    const joint = getJoint(uid, targetUID, "prismatic");
     if (!joint) {
-        queueJointCommand(config);
+        queueJointCommand(config, "prismatic");
         return;
     }
     if (enabled) {
@@ -1829,9 +1838,9 @@ function setPrismaticLimits(config) {
 
 function setRevoluteContactsEnabled(config) {
     const { uid, targetUID, contactsEnabled } = config;
-    const joint = getJoint(uid, targetUID);
+    const joint = getJoint(uid, targetUID, "revolute");
     if (!joint) {
-        queueJointCommand(config);
+        queueJointCommand(config, "revolute");
         return;
     }
     joint.setContactsEnabled(boolParam(contactsEnabled));
@@ -1972,12 +1981,7 @@ function removeBody(config) {
         rapierWorld.removeRigidBody(body);
     }
     // Prune stale joint entries and pending joint commands for this uid
-    jointMap.delete(uid);
-    for (const targets of jointMap.values()) targets.delete(uid);
-    for (const key of pendingJointCommands.keys()) {
-        const [uidA, uidB] = key.split(":").map(Number);
-        if (uidA === uid || uidB === uid) pendingJointCommands.delete(key);
-    }
+    pruneJointEntriesForUid(uid);
 }
 
 function bufferIfNoHandle(handle, config) {
