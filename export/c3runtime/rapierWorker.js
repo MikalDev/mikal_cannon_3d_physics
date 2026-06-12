@@ -9676,7 +9676,8 @@ function getJointBodies(config) {
 
 function addSphericalJoint(config) {
     const { uid, targetUID, anchor, targetAnchor } = config;
-    const preserveRelativePosition = config.preserveRelativePosition ?? true;
+    // Default false: pre-2.36.0 projects expect the entered target anchor to be honored
+    const preserveRelativePosition = config.preserveRelativePosition ?? false;
     const bodies = getJointBodies(config);
     if (!bodies) return;
     const { body, targetBody } = bodies;

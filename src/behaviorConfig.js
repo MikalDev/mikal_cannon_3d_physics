@@ -2313,9 +2313,9 @@ module.exports = {
                 {
                     id: "preserveRelativePosition",
                     name: "Preserve relative position",
-                    desc: "Keep the current position offset between the two bodies by computing the target anchor at creation time.",
+                    desc: "Keep the current position offset between the two bodies by computing the target anchor at creation time (ignores the entered target anchor).",
                     type: "boolean",
-                    initialValue: "true",
+                    initialValue: "false",
                 },
             ],
             listName: "Add spherical joint",

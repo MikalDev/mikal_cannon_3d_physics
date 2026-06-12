@@ -1776,7 +1776,7 @@ function getInstanceJs(parentClass, addonTriggers, C3) {
             targetAnchorY,
             targetAnchorZ,
             targetUID,
-            preserveRelativePosition = true
+            preserveRelativePosition = false
         ) {
             this._recordJointType(targetUID, "spherical");
             const command = {

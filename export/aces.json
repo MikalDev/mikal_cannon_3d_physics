@@ -1488,7 +1488,7 @@
           {
             "id": "preserveRelativePosition",
             "type": "boolean",
-            "initialValue": "true"
+            "initialValue": "false"
           }
         ]
       },
