@@ -20,12 +20,20 @@
 						"x-scale": 1,
 						"y-scale": 1,
 						"z-scale": 0.1,
-						"mesh": "",
-						"animation": "",
+						"x-origin": "middle",
+						"y-origin": "middle",
+						"z-origin": "middle",
+						"axis-scale-mode": "legacy",
+						"meshes": {
+							"Cube_Cube001": true
+						},
 						"mesh-render-mode": "hierarchy",
+						"enable-collisions": true,
+						"back-face-culling": false,
+						"animation": "",
+						"loop": true,
 						"initially-playing": true,
 						"initial-animation-progress": 0,
-						"enable-collisions": true,
 						"bounding-box": false,
 						"bounding-box-color": [
 							1,
@@ -52,13 +60,15 @@
 								"body-size-height": -1,
 								"body-size-width": -1,
 								"body-size-depth": -1,
-								"lightOccluder": false
+								"lightOccluder": false,
+								"compound-collider-tag": ""
 							}
 						}
 					},
-					"instanceFolderItem": {
-						"sid": 445658591818088,
-						"expanded": true
+					"ownData": {
+						"version": "0",
+						"modelSID": 948966453009882,
+						"name": "crate"
 					},
 					"showing": true,
 					"locked": false,
@@ -69,7 +79,6 @@
 						"height": 1000,
 						"originX": 0.5,
 						"originY": 0.5,
-						"originZ": 0.5,
 						"color": [
 							1,
 							1,
@@ -77,8 +86,14 @@
 							1
 						],
 						"z": -100,
-						"depth": 10,
-						"angle": 0
+						"depth": 100,
+						"angle": 0,
+						"quaternion": [
+							0,
+							0,
+							0,
+							1
+						]
 					}
 				},
 				{
@@ -95,12 +110,20 @@
 						"x-scale": 1,
 						"y-scale": 1,
 						"z-scale": 1,
-						"mesh": "",
-						"animation": "",
+						"x-origin": "middle",
+						"y-origin": "middle",
+						"z-origin": "middle",
+						"axis-scale-mode": "legacy",
+						"meshes": {
+							"Cube_Cube001": true
+						},
 						"mesh-render-mode": "hierarchy",
+						"enable-collisions": true,
+						"back-face-culling": false,
+						"animation": "",
+						"loop": true,
 						"initially-playing": true,
 						"initial-animation-progress": 0,
-						"enable-collisions": true,
 						"bounding-box": false,
 						"bounding-box-color": [
 							1,
@@ -127,13 +150,15 @@
 								"body-size-height": -1,
 								"body-size-width": -1,
 								"body-size-depth": -1,
-								"lightOccluder": false
+								"lightOccluder": false,
+								"compound-collider-tag": ""
 							}
 						}
 					},
-					"instanceFolderItem": {
-						"sid": 699355624037398,
-						"expanded": true
+					"ownData": {
+						"version": "0",
+						"modelSID": 948966453009882,
+						"name": "crate"
 					},
 					"showing": true,
 					"locked": false,
@@ -144,7 +169,6 @@
 						"height": 30,
 						"originX": 0.5,
 						"originY": 0.5,
-						"originZ": 0.5,
 						"color": [
 							1,
 							0,
@@ -153,7 +177,13 @@
 						],
 						"z": 100,
 						"depth": 30,
-						"angle": 0
+						"angle": 0,
+						"quaternion": [
+							0,
+							0,
+							0,
+							1
+						]
 					}
 				},
 				{
@@ -170,12 +200,20 @@
 						"x-scale": 1,
 						"y-scale": 1,
 						"z-scale": 1,
-						"mesh": "",
-						"animation": "",
+						"x-origin": "middle",
+						"y-origin": "middle",
+						"z-origin": "middle",
+						"axis-scale-mode": "legacy",
+						"meshes": {
+							"Cube_Cube001": true
+						},
 						"mesh-render-mode": "hierarchy",
+						"enable-collisions": true,
+						"back-face-culling": false,
+						"animation": "",
+						"loop": true,
 						"initially-playing": true,
 						"initial-animation-progress": 0,
-						"enable-collisions": true,
 						"bounding-box": false,
 						"bounding-box-color": [
 							1,
@@ -202,13 +240,15 @@
 								"body-size-height": -1,
 								"body-size-width": -1,
 								"body-size-depth": -1,
-								"lightOccluder": false
+								"lightOccluder": false,
+								"compound-collider-tag": ""
 							}
 						}
 					},
-					"instanceFolderItem": {
-						"sid": 940246750026624,
-						"expanded": true
+					"ownData": {
+						"version": "0",
+						"modelSID": 948966453009882,
+						"name": "crate"
 					},
 					"showing": true,
 					"locked": false,
@@ -219,7 +259,6 @@
 						"height": 30,
 						"originX": 0.5,
 						"originY": 0.5,
-						"originZ": 0.5,
 						"color": [
 							0,
 							1,
@@ -228,7 +267,13 @@
 						],
 						"z": 100,
 						"depth": 30,
-						"angle": 0
+						"angle": 0,
+						"quaternion": [
+							0,
+							0,
+							0,
+							1
+						]
 					}
 				},
 				{
@@ -245,12 +290,20 @@
 						"x-scale": 1,
 						"y-scale": 1,
 						"z-scale": 1,
-						"mesh": "",
-						"animation": "",
+						"x-origin": "middle",
+						"y-origin": "middle",
+						"z-origin": "middle",
+						"axis-scale-mode": "legacy",
+						"meshes": {
+							"Cube_Cube001": true
+						},
 						"mesh-render-mode": "hierarchy",
+						"enable-collisions": true,
+						"back-face-culling": false,
+						"animation": "",
+						"loop": true,
 						"initially-playing": true,
 						"initial-animation-progress": 0,
-						"enable-collisions": true,
 						"bounding-box": false,
 						"bounding-box-color": [
 							1,
@@ -277,13 +330,15 @@
 								"body-size-height": -1,
 								"body-size-width": -1,
 								"body-size-depth": -1,
-								"lightOccluder": false
+								"lightOccluder": false,
+								"compound-collider-tag": ""
 							}
 						}
 					},
-					"instanceFolderItem": {
-						"sid": 229092806713890,
-						"expanded": true
+					"ownData": {
+						"version": "0",
+						"modelSID": 948966453009882,
+						"name": "crate"
 					},
 					"showing": true,
 					"locked": false,
@@ -294,7 +349,6 @@
 						"height": 50,
 						"originX": 0.5,
 						"originY": 0.5,
-						"originZ": 0.5,
 						"color": [
 							0.16862745098039217,
 							0,
@@ -303,7 +357,13 @@
 						],
 						"z": 100,
 						"depth": 50,
-						"angle": 0
+						"angle": 0,
+						"quaternion": [
+							0,
+							0,
+							0,
+							1
+						]
 					}
 				}
 			],
@@ -338,10 +398,6 @@
 			"global": false
 		}
 	],
-	"scene-graphs-folder-root": {
-		"items": [],
-		"subfolders": []
-	},
 	"sid": 699259099282563,
 	"nonworld-instances": [],
 	"effectTypes": [],
