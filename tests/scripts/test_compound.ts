@@ -42,9 +42,13 @@ registerSuite("Compound Colliders", [
             // Push the parent; the helper must follow it (rotating with it).
             // A frozen helper also fails this: the distance to the moving
             // parent would grow.
+            const parentStartX = parent.x;
             physParent._ApplyImpulse(50, 0, 0);
             await waitTicks(runtime, 20);
 
+            // Guard against a vacuous pass: if the impulse did nothing, a
+            // frozen helper would also "keep" its distance
+            assert.ok(Math.abs(parent.x - parentStartX) > 15, `parent must move for this test to mean anything: ${parentStartX} -> ${parent.x}`);
             const distAfter = Math.hypot(helper.x - parent.x, helper.y - parent.y);
             assert.near(distAfter, distBefore, 10, `helper keeps distance to parent: ${distBefore} -> ${distAfter}`);
         },

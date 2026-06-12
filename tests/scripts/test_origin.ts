@@ -38,24 +38,30 @@ registerSuite("Origin & Box Semantics", [
         },
     },
     {
-        name: "model scale set after creation does not move the physics body",
+        name: "model scale is not multiplied into the physics size",
         fn: async (runtime: IRuntime, assert: any) => {
             const ground = runtime.objects.Ground.getFirstInstance()!;
             const groundTop = topZ(ground);
 
-            const scaled = spawnDynBox(runtime, ground.x - 50, ground.y + 100, groundTop + 80);
-            const plain = spawnDynBox(runtime, ground.x + 50, ground.y + 100, groundTop + 80);
-            await waitTicks(runtime, 10); // bodies created
+            // Scale BEFORE body creation (model loads async): pre-2.37.0
+            // semantics multiplied scaleZ into the physics depth, which
+            // would rest this box scaleZ times higher
+            const box = spawnDynBox(runtime, ground.x - 50, ground.y + 100, groundTop + 80);
+            box.scaleZ = 3;
+            await waitTicks(runtime, 90); // body created + settled
 
-            // Visual-only transform: must not affect the physics box
-            scaled.scaleZ = 3;
+            // Expected rest height from the BOX depth (read at assert time,
+            // in case scaling the model also resizes the box itself)
+            const expected = groundTop + box.depth / 2;
+            assert.near(box.z, expected, 10, `physics size must come from the box, not box*scale: z=${box.z}, expected=${expected} (depth=${box.depth})`);
 
-            await waitTicks(runtime, 90); // settle
+            // And changing scale after creation must not move the body
+            const restZ = box.z;
+            box.scaleZ = 1;
+            await waitTicks(runtime, 30);
+            assert.near(box.z, restZ, 2, `body must not move when model scale changes post-creation: ${restZ} -> ${box.z}`);
 
-            assert.near(scaled.z, plain.z, 5, `scaled box rests at ${scaled.z}, plain at ${plain.z} — model scale must not affect physics`);
-
-            scaled.destroy();
-            plain.destroy();
+            box.destroy();
         },
     },
 ]);

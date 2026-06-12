@@ -99,13 +99,15 @@ registerSuite("Character Controller", [
         fn: async (runtime: IRuntime, assert: any) => {
             const ccBox = runtime.objects.CCBox.getFirstInstance()!;
             const phys = getPhysics(ccBox);
+            const startX = ccBox.x;
+            const startY = ccBox.y;
 
             for (let i = 0; i < 15; i++) {
                 phys._TranslateCharacterController("cc-test", -5, -5, 0);
                 await waitTicks(runtime, 5);
             }
 
-            assert.ok(true, "walked back toward origin");
+            assert.ok(ccBox.x < startX && ccBox.y < startY, `walked back: (${startX}, ${startY}) -> (${ccBox.x}, ${ccBox.y})`);
         },
     },
     {
@@ -115,11 +117,14 @@ registerSuite("Character Controller", [
             const phys = getPhysics(ccBox);
 
             // Spawn a box directly in the CC's +X path (getFirstInstance
-            // would return the original DynBox far away from the CC)
-            const target = runtime.objects.DynBox.createInstance("Layer 0", ccBox.x + 50, ccBox.y);
+            // would return the original DynBox far away from the CC).
+            // +100 keeps it clear of the ring boxes at +/-60 — spawning
+            // overlapped would let depenetration move it without the CC.
+            const target = runtime.objects.DynBox.createInstance("Layer 0", ccBox.x + 100, ccBox.y);
             target.z = ccBox.z;
             const hasBody = await waitForBody(runtime, target);
             assert.ok(hasBody, "push target body should exist");
+            await waitTicks(runtime, 20); // let it settle on the ground
             const dynStartX = target.x;
 
             for (let i = 0; i < 30; i++) {
@@ -127,7 +132,8 @@ registerSuite("Character Controller", [
                 await waitTicks(runtime, 5);
             }
 
-            assert.ok(target.x > dynStartX, `DynBox should be pushed: start=${dynStartX}, now=${target.x}`);
+            // Demand a real shove, not numeric drift
+            assert.ok(target.x > dynStartX + 20, `DynBox should be pushed: start=${dynStartX}, now=${target.x}`);
             target.destroy();
         },
     },
