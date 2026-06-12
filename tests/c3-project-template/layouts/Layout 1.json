@@ -69,6 +69,7 @@
 						"height": 1000,
 						"originX": 0.5,
 						"originY": 0.5,
+						"originZ": 0.5,
 						"color": [
 							1,
 							1,
@@ -143,6 +144,7 @@
 						"height": 30,
 						"originX": 0.5,
 						"originY": 0.5,
+						"originZ": 0.5,
 						"color": [
 							1,
 							0,
@@ -217,6 +219,7 @@
 						"height": 30,
 						"originX": 0.5,
 						"originY": 0.5,
+						"originZ": 0.5,
 						"color": [
 							0,
 							1,
@@ -291,6 +294,7 @@
 						"height": 50,
 						"originX": 0.5,
 						"originY": 0.5,
+						"originZ": 0.5,
 						"color": [
 							0.16862745098039217,
 							0,
