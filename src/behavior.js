@@ -122,35 +122,60 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
 
     updateBodies(bodies) {
         if (!bodies) return;
-        globalThis.Mikal_Rapier_Bodies = new Map();
+        // Mutate persistent rows instead of rebuilding the map each frame:
+        // the old per-frame Map + 5 objects per body was the main thread's
+        // dominant steady-state allocation (O(bodies) per frame GC churn)
+        let map = globalThis.Mikal_Rapier_Bodies;
+        if (!(map instanceof Map)) {
+            map = new Map();
+            globalThis.Mikal_Rapier_Bodies = map;
+        }
         const scale = this.scale;
+        const frameStamp = (this._bodyFrameStamp = (this._bodyFrameStamp || 0) + 1);
+        const count = bodies.length / 17;
         for (let i = 0; i < bodies.length; i += 17) {
             const uid = bodies[i];
-            const x = bodies[i + 1] * scale;
-            const y = bodies[i + 2] * scale;
-            const z = bodies[i + 3] * scale;
-            const rx = bodies[i + 4];
-            const ry = bodies[i + 5];
-            const rz = bodies[i + 6];
-            const rw = bodies[i + 7];
-            const vx = bodies[i + 8] * scale;
-            const vy = bodies[i + 9] * scale;
-            const vz = bodies[i + 10] * scale;
-            const ax = bodies[i + 11];
-            const ay = bodies[i + 12];
-            const az = bodies[i + 13];
-            const sleeping = bodies[i + 14] === 1;
-            const bodyType = bodies[i + 15];
-            const mass = bodies[i + 16];
-            globalThis.Mikal_Rapier_Bodies.set(uid, {
-                translation: { x, y, z },
-                rotation: { x: rx, y: ry, z: rz, w: rw },
-                velocity: { x: vx, y: vy, z: vz },
-                angularVelocity: { x: ax, y: ay, z: az },
-                sleeping,
-                bodyType,
-                mass,
-            });
+            let row = map.get(uid);
+            if (!row) {
+                row = {
+                    translation: { x: 0, y: 0, z: 0 },
+                    rotation: { x: 0, y: 0, z: 0, w: 1 },
+                    velocity: { x: 0, y: 0, z: 0 },
+                    angularVelocity: { x: 0, y: 0, z: 0 },
+                    sleeping: false,
+                    bodyType: 0,
+                    mass: 0,
+                    _frame: 0,
+                };
+                map.set(uid, row);
+            }
+            row._frame = frameStamp;
+            const t = row.translation;
+            t.x = bodies[i + 1] * scale;
+            t.y = bodies[i + 2] * scale;
+            t.z = bodies[i + 3] * scale;
+            const r = row.rotation;
+            r.x = bodies[i + 4];
+            r.y = bodies[i + 5];
+            r.z = bodies[i + 6];
+            r.w = bodies[i + 7];
+            const v = row.velocity;
+            v.x = bodies[i + 8] * scale;
+            v.y = bodies[i + 9] * scale;
+            v.z = bodies[i + 10] * scale;
+            const av = row.angularVelocity;
+            av.x = bodies[i + 11];
+            av.y = bodies[i + 12];
+            av.z = bodies[i + 13];
+            row.sleeping = bodies[i + 14] === 1;
+            row.bodyType = bodies[i + 15];
+            row.mass = bodies[i + 16];
+        }
+        // Prune rows for removed bodies (only when something disappeared)
+        if (map.size > count) {
+            for (const [uid, row] of map) {
+                if (row._frame !== frameStamp) map.delete(uid);
+            }
         }
     }
 
