@@ -19,10 +19,12 @@ registerSuite("Character Controller", [
             const hasBody = await waitForBody(runtime, ccBox);
             assert.ok(hasBody, "CCBox body should exist before creating the controller");
 
+            // offset is in PIXELS (the instance scales it to physics units);
+            // 0.01px is a degenerate skin gap, use a few pixels
             phys._CreateCharacterController(
-                "cc-test", 0.01, 0, 0, 1, 60, 60,
+                "cc-test", 5, 0, 0, 1, 60, 60,
                 true,       // applyImpulsesToDynamicBodies
-                true, 20, 20, true, 1, true
+                true, 20, 20, true, 10, true
             );
             phys._SetCCMass("cc-test", 50);
 
@@ -30,6 +32,12 @@ registerSuite("Character Controller", [
             phys._TranslateCharacterController("cc-test", 0, 0, -500);
             await waitTicks(runtime, 10);
 
+            // grounded reflects the LAST computeColliderMovement; settle with
+            // a small downward probe like a per-tick gravity step would
+            phys._TranslateCharacterController("cc-test", 0, 0, -5);
+            await waitTicks(runtime, 5);
+
+            console.log(`[diag] CC z after landing: ${ccBox.z}, ccResults: ${JSON.stringify(phys._ccResults)}`);
             const grounded = phys._CCGrounded();
             assert.equal(grounded, 1, "CC should be grounded");
         },
