@@ -162,6 +162,18 @@ function boolParam(value) {
     return value === true || value === 1 || value === "1" || value === "true";
 }
 
+// Validate a vector before it reaches the WASM boundary: wasm-bindgen
+// silently coerces garbage to NaN in places, and a NaN-poisoned body can
+// panic Rapier inside a LATER world step (killing the whole world)
+function isFiniteVec(v) {
+    return (
+        !!v &&
+        Number.isFinite(v.x) &&
+        Number.isFinite(v.y) &&
+        Number.isFinite(v.z)
+    );
+}
+
 function setRestitution(config) {
     const uid = config.uid;
     const handle = uidHandle.get(uid);
@@ -873,6 +885,10 @@ function applyTorque(config) {
     const torque = config.torque;
     const handle = uidHandle.get(uid);
     if (bufferIfNoHandle(handle, config)) return;
+    if (!isFiniteVec(torque)) {
+        console.warn("[rapierWorker] applyTorque: invalid torque for uid", uid, torque);
+        return;
+    }
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.applyTorque(torque);
@@ -908,6 +924,10 @@ function applyImpulse(config) {
     const impulse = config.impulse;
     const handle = uidHandle.get(uid);
     if (bufferIfNoHandle(handle, config)) return;
+    if (!isFiniteVec(impulse)) {
+        console.warn("[rapierWorker] applyImpulse: invalid impulse for uid", uid, impulse);
+        return;
+    }
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         const iV = new RAPIER.Vector3(impulse.x, impulse.y, impulse.z);
@@ -921,6 +941,10 @@ function applyImpulseAtPoint(config) {
     if (bufferIfNoHandle(handle, config)) return;
     const impulse = config.impulse;
     const point = config.point;
+    if (!isFiniteVec(impulse) || !isFiniteVec(point)) {
+        console.warn("[rapierWorker] applyImpulseAtPoint: invalid input for uid", uid, impulse, point);
+        return;
+    }
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.applyImpulseAtPoint(impulse, point);
@@ -934,6 +958,10 @@ function applyForce(config) {
     const point = config.point;
     const handle = uidHandle.get(uid);
     if (bufferIfNoHandle(handle, config)) return;
+    if (!isFiniteVec(force)) {
+        console.warn("[rapierWorker] applyForce: invalid force for uid", uid, force);
+        return;
+    }
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.addForce(force, point, true);
@@ -1577,6 +1605,10 @@ function setVelocity(config) {
 function setAngularVelocity(config) {
     const handle = uidHandle.get(config.uid);
     if (bufferIfNoHandle(handle, config)) return;
+    if (!isFiniteVec(config)) {
+        console.warn("[rapierWorker] setAngularVelocity: invalid velocity for uid", config.uid);
+        return;
+    }
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.setAngvel({ x: config.x, y: config.y, z: config.z }, true);

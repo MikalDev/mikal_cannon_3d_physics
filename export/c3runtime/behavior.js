@@ -1098,10 +1098,22 @@ C3.Behaviors[BEHAVIOR_INFO.id] = class extends globalThis.ISDKBehaviorBase {
         this.currentPhysicsFrameRequest++;
         const stepDt = this.totalDt;
         this.totalDt = 0;
-        const worldData = await WorkerRPC.call("stepWorld", [
-            stepDt,
-            this.currentPhysicsFrameRequest,
-        ]);
+        let worldData;
+        try {
+            worldData = await WorkerRPC.call("stepWorld", [
+                stepDt,
+                this.currentPhysicsFrameRequest,
+            ]);
+        } catch (error) {
+            // A failed step must not jam the request/response gate forever:
+            // mark the frame answered so the next tick can step again
+            console.error(
+                `[rapier] stepWorld failed (frame ${this.currentPhysicsFrameRequest}):`,
+                error
+            );
+            this.currentPhysicsFrameResponse = this.currentPhysicsFrameRequest;
+            return;
+        }
         this.currentPhysicsFrameResponse = worldData.frame;
         const bodies = worldData.bodiesData;
         const collisionEvents = worldData.collisionEvents;

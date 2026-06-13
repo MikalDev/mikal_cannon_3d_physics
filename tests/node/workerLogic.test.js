@@ -24,7 +24,13 @@ function loadWorkerLogic() {
         self: { addEventListener: () => {}, postMessage: () => {} },
         // rapierLib.js exports the RAPIER namespace as `Og`; the logic file
         // does `const RAPIER = Og;` after build-time concatenation
-        Og: {},
+        Og: {
+            Vector3: function (x, y, z) {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+            },
+        },
     };
     sandbox.globalThis = sandbox;
     vm.createContext(sandbox);
@@ -217,6 +223,40 @@ function makeBody(colliderMasses) {
     t.uidHandle.set(13, 2);
     t.commandFunctions[t.CommandType.SetMass]({ type: t.CommandType.SetMass, uid: 13, mass: 5 });
     check(zero.colliders[0]._mass === 5, "zero-total body falls back to assigning collider 0");
+}
+
+// ---------------------------------------------------------------------------
+console.log("\n--- vector input validation (NaN must not reach WASM) ---");
+{
+    const { t } = loadWorkerLogic();
+    const calls = [];
+    const body = {
+        applyImpulse: (v) => calls.push(["impulse", v]),
+        addForce: (v) => calls.push(["force", v]),
+        applyTorque: (v) => calls.push(["torque", v]),
+        setAngvel: (v) => calls.push(["angvel", v]),
+        applyImpulseAtPoint: (v, p) => calls.push(["impulseAt", v, p]),
+        numColliders: () => 1,
+        collider: () => ({}),
+    };
+    t.__setWorld({ bodies: { get: () => body }, removeRigidBody: () => {} });
+    t.uidHandle.set(20, 1);
+
+    // Garbage inputs: missing vector, NaN component — all must be no-ops
+    t.commandFunctions[t.CommandType.ApplyImpulse]({ type: 0, uid: 20 });
+    t.commandFunctions[t.CommandType.ApplyImpulse]({ type: 0, uid: 20, impulse: { x: NaN, y: 0, z: 0 } });
+    t.commandFunctions[t.CommandType.ApplyForce]({ type: 0, uid: 20, force: { x: 1, y: undefined, z: 0 } });
+    t.commandFunctions[t.CommandType.ApplyTorque]({ type: 0, uid: 20 });
+    t.commandFunctions[t.CommandType.SetAngularVelocity]({ type: 0, uid: 20, x: 1, y: Infinity, z: 0 });
+    t.commandFunctions[t.CommandType.ApplyImpulseAtPoint]({ type: 0, uid: 20, impulse: { x: 1, y: 1, z: 1 } }); // missing point
+    check(calls.length === 0, "garbage vectors never reach the body (no WASM NaN poisoning)");
+
+    // Valid inputs still go through
+    t.commandFunctions[t.CommandType.ApplyImpulse]({ type: 0, uid: 20, impulse: { x: 1, y: 2, z: 3 } });
+    t.commandFunctions[t.CommandType.ApplyForce]({ type: 0, uid: 20, force: { x: 1, y: 0, z: 0 } });
+    t.commandFunctions[t.CommandType.SetAngularVelocity]({ type: 0, uid: 20, x: 0, y: 0, z: 1 });
+    check(calls.length === 3, "valid vectors still apply");
+    check(calls[0][0] === "impulse" && calls[0][1].x === 1 && calls[0][1].z === 3, "impulse values pass through unchanged");
 }
 
 // ---------------------------------------------------------------------------
