@@ -30,6 +30,15 @@ function loadWorkerLogic() {
                 this.y = y;
                 this.z = z;
             },
+            RotationOps: { identity: () => ({ x: 0, y: 0, z: 0, w: 1 }) },
+            JointData: {
+                spherical: () => ({ kind: "spherical" }),
+                fixed: () => ({ kind: "fixed" }),
+                spring: () => ({ kind: "spring" }),
+                rope: () => ({ kind: "rope" }),
+                revolute: () => ({ kind: "revolute" }),
+                prismatic: () => ({ kind: "prismatic" }),
+            },
         },
     };
     sandbox.globalThis = sandbox;
@@ -257,6 +266,57 @@ console.log("\n--- vector input validation (NaN must not reach WASM) ---");
     t.commandFunctions[t.CommandType.SetAngularVelocity]({ type: 0, uid: 20, x: 0, y: 0, z: 1 });
     check(calls.length === 3, "valid vectors still apply");
     check(calls[0][0] === "impulse" && calls[0][1].x === 1 && calls[0][1].z === 3, "impulse values pass through unchanged");
+}
+
+// ---------------------------------------------------------------------------
+console.log("\n--- joint creation input validation (NaN joints hang the step) ---");
+{
+    const { t } = loadWorkerLogic();
+    const created = [];
+    const bodyStub = {
+        rotation: () => ({ x: 0, y: 0, z: 0, w: 1 }),
+        translation: () => ({ x: 0, y: 0, z: 0 }),
+    };
+    t.__setWorld({
+        bodies: { get: () => bodyStub },
+        removeRigidBody: () => {},
+        createImpulseJoint: (params) => {
+            created.push(params.kind);
+            return { setContactsEnabled: () => {} };
+        },
+    });
+    t.uidHandle.set(30, 1);
+    t.uidHandle.set(31, 2);
+
+    // The exact command that froze the C3 run: joint with missing anchors.
+    // It must be rejected BEFORE JointData/createImpulseJoint — wasm-bindgen
+    // coerces undefined to NaN without throwing, and the NaN joint
+    // poisons/hangs the next world step.
+    t.commandFunctions[t.CommandType.AddRevoluteJoint]({ type: 0, uid: 30, targetUID: 31 });
+    t.commandFunctions[t.CommandType.AddFixedJoint]({ type: 0, uid: 30, targetUID: 31, anchor: { x: NaN, y: 0, z: 0 }, targetAnchor: { x: 0, y: 0, z: 0 } });
+    t.commandFunctions[t.CommandType.AttachSpring]({ type: 0, uid: 30, targetUID: 31, anchor: { x: 0, y: 0, z: 0 }, targetAnchor: { x: 0, y: 0, z: 0 }, restLength: NaN, stiffness: 1, damping: 1 });
+    t.commandFunctions[t.CommandType.AddRopeJoint]({ type: 0, uid: 30, targetUID: 31, anchor: { x: 0, y: 0, z: 0 }, targetAnchor: { x: 0, y: 0, z: 0 } }); // length missing
+    check(created.length === 0, "garbage joint params never reach createImpulseJoint");
+    check(t.getJoint(30, 31, "revolute") === null, "no joint registered for rejected creation");
+
+    // Valid joints still create and register
+    const v = { x: 0, y: 0, z: 0 };
+    const axis = { x: 0, y: 0, z: 1 };
+    t.commandFunctions[t.CommandType.AddRevoluteJoint]({ type: 0, uid: 30, targetUID: 31, anchor: v, targetAnchor: v, axis });
+    t.commandFunctions[t.CommandType.AttachSpring]({ type: 0, uid: 30, targetUID: 31, anchor: v, targetAnchor: v, restLength: 1, stiffness: 2, damping: 0.5 });
+    check(created.length === 2 && created[0] === "revolute" && created[1] === "spring", "valid joints still create");
+    check(t.getJoint(30, 31, "revolute") !== null && t.getJoint(30, 31, "spring") !== null, "valid joints registered under their types");
+}
+
+console.log("\n--- state injector validation ---");
+{
+    const { t } = loadWorkerLogic();
+    const world = { gravity: { x: 0, y: 0, z: -9.81 }, bodies: { get: () => null }, removeRigidBody: () => {} };
+    t.__setWorld(world);
+    t.commandFunctions[t.CommandType.SetWorldGravity]({ type: 0, gravity: { x: 0, y: NaN, z: 0 } });
+    check(world.gravity.z === -9.81, "NaN gravity rejected (would poison every dynamic body)");
+    t.commandFunctions[t.CommandType.SetWorldGravity]({ type: 0, gravity: { x: 0, y: 0, z: -5 } });
+    check(world.gravity.z === -5, "valid gravity applies");
 }
 
 // ---------------------------------------------------------------------------

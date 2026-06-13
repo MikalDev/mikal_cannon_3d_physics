@@ -8197,6 +8197,16 @@ function isFiniteVec(v) {
     );
 }
 
+function isFiniteQuat(q) {
+    return (
+        !!q &&
+        Number.isFinite(q.x) &&
+        Number.isFinite(q.y) &&
+        Number.isFinite(q.z) &&
+        Number.isFinite(q.w)
+    );
+}
+
 function setRestitution(config) {
     const uid = config.uid;
     const handle = uidHandle.get(uid);
@@ -8722,6 +8732,10 @@ function translate(config) {
     const translation = config.translation;
     const handle = uidHandle.get(uid);
     if (bufferIfNoHandle(handle, config)) return;
+    if (!isFiniteVec(translation)) {
+        console.warn("[rapierWorker] translate: invalid translation for uid", uid);
+        return;
+    }
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.setTranslation(translation);
@@ -9343,6 +9357,10 @@ function getShapeFromConfig(shapeConfig) {
 // Function to set the gravity
 function setWorldGravity(config) {
     const gravity = config.gravity;
+    if (!isFiniteVec(gravity)) {
+        console.warn("[rapierWorker] setWorldGravity: invalid gravity", gravity);
+        return;
+    }
     rapierWorld.gravity = gravity;
 }
 
@@ -9440,6 +9458,10 @@ function translateCharacterController(config) {
     const { uid, tag, translation, filterGroups: filterGroupsRaw } = config;
     const handle = uidHandle.get(uid);
     if (bufferIfNoHandle(handle, config)) return;
+    if (!isFiniteVec(translation)) {
+        console.warn("[rapierWorker] translateCharacterController: invalid translation", tag);
+        return;
+    }
     const body = rapierWorld.bodies.get(handle);
     if (!body) {
         console.warn(
@@ -9650,6 +9672,10 @@ function setBodyType(config) {
 function setNextKinematicTranslation(config) {
     const handle = uidHandle.get(config.uid);
     if (bufferIfNoHandle(handle, config)) return;
+    if (!isFiniteVec(config.translation)) {
+        console.warn("[rapierWorker] setNextKinematicTranslation: invalid translation for uid", config.uid);
+        return;
+    }
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.setNextKinematicTranslation(config.translation);
@@ -9659,6 +9685,10 @@ function setNextKinematicTranslation(config) {
 function setNextKinematicRotation(config) {
     const handle = uidHandle.get(config.uid);
     if (bufferIfNoHandle(handle, config)) return;
+    if (!isFiniteQuat(config.rotation)) {
+        console.warn("[rapierWorker] setNextKinematicRotation: invalid rotation for uid", config.uid);
+        return;
+    }
     const body = rapierWorld.bodies.get(handle);
     if (body) {
         body.setNextKinematicRotation(config.rotation);
@@ -9735,6 +9765,10 @@ function getJointBodies(config) {
 
 function addSphericalJoint(config) {
     const { uid, targetUID, anchor, targetAnchor } = config;
+    if (!isFiniteVec(anchor) || !isFiniteVec(targetAnchor)) {
+        console.warn("[rapierWorker] addSphericalJoint: invalid anchors", uid, targetUID);
+        return;
+    }
     // Default false: pre-2.36.0 projects expect the entered target anchor to be honored
     const preserveRelativePosition = config.preserveRelativePosition ?? false;
     const bodies = getJointBodies(config);
@@ -9756,6 +9790,10 @@ function addSphericalJoint(config) {
 
 function addFixedJoint(config) {
     const { uid, targetUID, anchor, targetAnchor } = config;
+    if (!isFiniteVec(anchor) || !isFiniteVec(targetAnchor)) {
+        console.warn("[rapierWorker] addFixedJoint: invalid anchors", uid, targetUID);
+        return;
+    }
     const contactsEnabled = config.contactsEnabled ?? true;
     const preserveRelativeRotation = config.preserveRelativeRotation ?? true;
     const preserveRelativePosition = config.preserveRelativePosition ?? true;
@@ -9778,6 +9816,11 @@ function addFixedJoint(config) {
 
 function attachSpring(config) {
     const { uid, targetUID, restLength, stiffness, damping, anchor, targetAnchor } = config;
+    if (!isFiniteVec(anchor) || !isFiniteVec(targetAnchor) ||
+        !Number.isFinite(restLength) || !Number.isFinite(stiffness) || !Number.isFinite(damping)) {
+        console.warn("[rapierWorker] attachSpring: invalid params", uid, targetUID);
+        return;
+    }
     const bodies = getJointBodies(config);
     if (!bodies) return;
     const { body, targetBody } = bodies;
@@ -9800,6 +9843,10 @@ function attachSpring(config) {
 
 function addRopeJoint(config) {
     const { uid, targetUID, length, anchor, targetAnchor } = config;
+    if (!isFiniteVec(anchor) || !isFiniteVec(targetAnchor) || !Number.isFinite(Number(length))) {
+        console.warn("[rapierWorker] addRopeJoint: invalid params", uid, targetUID);
+        return;
+    }
     const contactsEnabled = config.contactsEnabled ?? true;
     const preserveRelativePosition = config.preserveRelativePosition ?? true;
     const bodies = getJointBodies(config);
@@ -9821,6 +9868,10 @@ function addRopeJoint(config) {
 
 function addRevoluteJoint(config) {
     const { uid, targetUID, anchor, targetAnchor, axis } = config;
+    if (!isFiniteVec(anchor) || !isFiniteVec(targetAnchor) || !isFiniteVec(axis)) {
+        console.warn("[rapierWorker] addRevoluteJoint: invalid anchors/axis", uid, targetUID);
+        return;
+    }
     const contactsEnabled = config.contactsEnabled ?? true;
     const bodies = getJointBodies(config);
     if (!bodies) return;
@@ -9840,6 +9891,10 @@ function addRevoluteJoint(config) {
 
 function addPrismaticJoint(config) {
     const { uid, targetUID, anchor, targetAnchor, axis } = config;
+    if (!isFiniteVec(anchor) || !isFiniteVec(targetAnchor) || !isFiniteVec(axis)) {
+        console.warn("[rapierWorker] addPrismaticJoint: invalid anchors/axis", uid, targetUID);
+        return;
+    }
     const contactsEnabled = config.contactsEnabled ?? true;
     const bodies = getJointBodies(config);
     if (!bodies) return;
