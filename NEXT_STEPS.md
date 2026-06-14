@@ -32,6 +32,15 @@ and GltfStatic bbox sizing have zero in-C3 coverage. Matters more soon: r489 add
 `isRotatable3d` SDK prep — when Scirra enables full 3D rotation for 3D Shape, the addon's
 Z-only Shape3D path needs reworking, and tests should exist before that lands.
 
+## 5b. Sprite body position ignores originX/originY — LOW, small
+`_getBodyWorldPosition`/`_setBodyWorldTransform` hardcode `inst.x - width/2` for the Sprite
+branch, assuming a centered origin. Per the SDK `inst.x` is the configurable origin point, so
+a Sprite with a non-center origin gets its collider offset from its visual. The 3D plugins
+honor origin correctly via `_originOffsetLocal`; only the Sprite special-case (top-left, for
+trimesh vertex construction) doesn't. No demonstrated failure (Sprites default to centered);
+fold the origin offset into the Sprite branch when touching that path. Verified the rest of
+the origin/center handling is faithful to the r489 SDK contract (June 2026 review).
+
 ## 6. Unbounded worker buffers — MEDIUM-LOW, small
 - `pendingJointCommands`: a typo'd targetUID pair is never pruned while the source body lives;
   per-tick motor commands accumulate (JSON-cloned) and replay as one giant batch if the joint
